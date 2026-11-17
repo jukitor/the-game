@@ -1,0 +1,937 @@
+<title>Mopsen som försvann</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;600&display=swap">
+<style>
+/* Layout: en arkivmapp för ett fall. Statusrad överst, maskinskrivet protokoll i mitten, inmatningsrad längst ner. */
+:root {
+  --bg: #e6dbbd;       /* manilamapp */
+  --paper: #f4eedc;    /* papper */
+  --ink: #2a251d;      /* skrivmaskinsbläck */
+  --muted: #6e6552;
+  --stamp: #a8281f;    /* stämpelrött */
+  --rule: #cdbf98;
+  --font-type: "Courier Prime", "Courier New", Courier, monospace;
+  --font-head: "Oswald", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141922; --paper: #1c2330; --ink: #e5e0d2; --muted: #8e95a3; --stamp: #ff7c6c; --rule: #2e3746;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141922; --paper: #1c2330; --ink: #e5e0d2; --muted: #8e95a3; --stamp: #ff7c6c; --rule: #2e3746;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-type); font-size: 16px; line-height: 1.55;
+  display: flex; flex-direction: column;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg);
+}
+.wrap {
+  width: 100%; max-width: 46rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.status {
+  border-bottom: 2px solid var(--ink);
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .06em;
+}
+header.status .wrap {
+  display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; justify-content: space-between;
+  padding-block: 10px 8px;
+}
+.status .title { font-weight: 600; font-size: 1.05rem; color: var(--stamp); }
+.status .where { font-weight: 500; font-size: 1rem; flex: 1 1 auto; min-width: 0; }
+.status .nums { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+main {
+  flex: 1 1 auto; overflow-y: auto; min-height: 0;
+}
+#log { padding-block: 20px 12px; display: flex; flex-direction: column; gap: 12px; }
+#log p { margin: 0; max-width: 65ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+#log .cmd { color: var(--muted); }
+#log .cmd::before { content: "> "; }
+#log .room { font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; font-size: 1.05rem; margin-top: 6px; }
+#log .sys { color: var(--muted); font-style: italic; }
+#log .stamp {
+  align-self: flex-start; color: var(--stamp); border: 3px double var(--stamp);
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .12em; font-weight: 600;
+  padding: 4px 12px; transform: rotate(-2deg); margin-block: 4px;
+}
+#log .banner {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .1em;
+  font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.05; font-weight: 600; text-wrap: balance;
+}
+#log .score { color: var(--stamp); font-weight: 700; }
+footer.input { border-top: 2px solid var(--ink); background: var(--paper); padding-bottom: env(safe-area-inset-bottom, 0px); }
+footer.input .wrap { padding-block: 10px; display: flex; flex-direction: column; gap: 8px; }
+form { display: flex; gap: 8px; align-items: center; }
+form label { font-weight: 700; color: var(--stamp); }
+#cmd {
+  flex: 1 1 auto; min-width: 0; font: inherit; color: var(--ink); background: transparent;
+  border: none; border-bottom: 1px dashed var(--rule); padding: 6px 2px; outline: none;
+}
+#cmd:focus-visible { border-bottom-color: var(--stamp); }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick button {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .06em; font-size: .8rem;
+  color: var(--ink); background: transparent; border: 1px solid var(--rule); border-radius: 2px;
+  padding: 4px 10px; cursor: pointer;
+}
+.quick button:hover { border-color: var(--ink); }
+.quick button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 1px; }
+</style>
+
+<header class="status">
+  <div class="wrap">
+    <span class="title">Mopsen som försvann</span>
+    <span class="where" id="where">–</span>
+    <span class="nums" id="nums">Poäng 0/100 · Drag 0</span>
+  </div>
+</header>
+<main id="scroller">
+  <div class="wrap"><div id="log" aria-live="polite"></div></div>
+</main>
+<footer class="input">
+  <div class="wrap">
+    <form id="f" autocomplete="off">
+      <label for="cmd">&gt;</label>
+      <input id="cmd" type="text" spellcheck="false" autocapitalize="off" aria-label="Skriv ett kommando" placeholder="Skriv vad du vill göra…">
+    </form>
+    <div class="quick" id="quick">
+      <button type="button" data-c="titta">Titta</button>
+      <button type="button" data-c="inventarie">Ägodelar</button>
+      <button type="button" data-c="upp">Upp</button>
+      <button type="button" data-c="ner">Ner</button>
+      <button type="button" data-c="in">In</button>
+      <button type="button" data-c="ut">Ut</button>
+      <button type="button" data-c="ledtråd">Ledtråd</button>
+      <button type="button" data-c="hjälp">Hjälp</button>
+    </div>
+  </div>
+</footer>
+
+<script>
+"use strict";
+// ================================================================
+//  VÄRLDEN
+// ================================================================
+const MAX_SCORE = 100;
+
+const STATIONS = {
+  p_main:  { name: "Main Street", words: ["main", "mainstreet", "main street", "centrum", "kontoret", "hem"] },
+  p_park:  { name: "Park Avenue", words: ["park", "parkavenue", "park avenue", "avenue"] },
+  p_china: { name: "Chinatown",   words: ["chinatown", "china", "china town"] },
+  p_pir:   { name: "Pir 9",       words: ["pir", "pir 9", "pir9", "piren", "hamnen", "hamn", "9"] },
+};
+
+const ROOMS = {
+  kontor: {
+    name: "Ditt kontor",
+    desc: s => "Ditt kontor på femte våningen i Hendersonhuset. Ett skrivbord, två stolar (en för dig och en för kunder som aldrig kommer), en klädhängare och ett fönster mot regnet. På dörrens frostade glas står det TYKETEDTAVIRP, vilket är rätt stavat från andra sidan. Trappan leder ner till gatan." +
+      (s.f.svarare ? "" : "\n\nPå skrivbordet blinkar telefonsvararen ilsket rött."),
+    exits: { ner: "mainst", ut: "mainst" },
+  },
+  mainst: {
+    name: "Main Street",
+    desc: () => "Main Street, mitt i Grand Harbor. Regnet smattrar på markiserna och bilarna tutar på varandra som gamla grannar som aldrig blivit sams. Vid trottoarkanten står en korvkiosk med en ångande kastrull, och bredvid den ett tidningsställ. Ovanför dig ligger kontorshuset, och en trappa med en emaljerad skylt leder ner till tunnelbanan.",
+    exits: { upp: "kontor", in: "kontor", ner: "p_main" },
+  },
+  p_main: {
+    name: "Perrongen vid Main Street",
+    desc: () => "Tunnelbaneperrongen under Main Street. Det luktar järn, regnrockar och gårdagens jordnötter. En linjekarta på väggen visar fyra stationer: MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp till gatan.",
+    exits: { upp: "mainst", ut: "mainst" }, station: true,
+  },
+  p_park: {
+    name: "Perrongen vid Park Avenue",
+    desc: () => "Den finaste perrongen i hela systemet. Någon har till och med torkat av bänkarna, och en gatumusikant spelar Bach på en fiol som är värd mer än din bil. Linjekartan visar MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp.",
+    exits: { upp: "parkave", ut: "parkave" }, station: true,
+  },
+  p_china: {
+    name: "Perrongen vid Chinatown",
+    desc: () => "Perrongen under Chinatown är fylld av folk med matkassar, och det doftar ingefära hela vägen ner hit. Linjekartan visar MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp.",
+    exits: { upp: "china", ut: "china" }, station: true,
+  },
+  p_pir: {
+    name: "Perrongen vid Pir 9",
+    desc: () => "Den sista stationen på linjen. Lysrören blinkar som om de försöker säga något i morsekod, troligen \"åk härifrån\". Linjekartan visar MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp mot hamnen.",
+    exits: { upp: "pir", ut: "pir" }, station: true,
+  },
+  parkave: {
+    name: "Park Avenue",
+    desc: s => "Park Avenue, där även duvorna verkar ha butler. Framför dig reser sig Pettigrew Towers i vit marmor och mässing. " +
+      "En portier i grön uniform med guldknappar står vid entrén och betraktar dig som om du vore en fläck på hans matta." +
+      " Tunnelbanetrappan leder ner.",
+    exits: { ner: "p_park", in: "vaning" },
+  },
+  vaning: {
+    name: "Pettigrews takvåning",
+    desc: s => "En takvåning så stor att den har eget väder. Kristallkronor, persiska mattor och ett porträtt i olja av en mops i amiralsuniform. Under porträttet står en tom hundkorg sammetsklädd i purpur." +
+      (s.f.vunnit ? "" : " Fru Pettigrew sitter i en vit soffa och snyftar i en spetsnäsduk.") +
+      " Hissen tar dig ut igen.",
+    exits: { ut: "parkave", ner: "parkave" },
+  },
+  china: {
+    name: "Chinatown",
+    desc: () => "Chinatown. Röda lyktor gungar i regnet över smala gator fulla av folk, cyklar och stånd med torkad bläckfisk. Rakt fram lyser en neonskylt: GOLDEN DRAGON, NUDLAR & DUMPLINGS, ÖPPET TILL SENT. Tunnelbanan ligger under dina fötter.",
+    exits: { ner: "p_china", in: "restaurang" },
+  },
+  restaurang: {
+    name: "Golden Dragon",
+    desc: () => "En smal restaurang med röda bås, ett akvarium med en djupt uttråkad karp och ett kök som syns genom en lucka. Bakom luckan står kocken Benny och slår upp wokpannan i lågor som en trollkarl. Vid kassan står en skål med lyckokakor.",
+    exits: { ut: "china" },
+  },
+  pir: {
+    name: "Pir 9",
+    desc: s => "Pir 9 i hamnen. Dimman ligger tjock över vattnet och mistlurarna låter som valar med halsont. Längs kajen står slitna lagerlokaler. På den närmaste står en stor sjua bredvid en ännu större trea: LAGER 13." +
+      (s.f.bruno ? "" : " Framför dörren står en man byggd som ett kylskåp med två kylskåp på axlarna.") +
+      (s.f.dorr ? " Dörren står på glänt." : "") +
+      " Tunnelbanetrappan leder ner.",
+    exits: { ner: "p_pir", in: "lager" },
+  },
+  lager: {
+    name: "Lager 13",
+    desc: s => "Ett dammigt lager fullt av trälådor märkta FRUKTKONSERVER, vilket inte förklarar varför det luktar friterade räkor. På golvet står tolv tomma hämtmatskartonger från Golden Dragon." +
+      (s.loc.mops === "lager" ? " Mitt på golvet står en hundbur, och i den sitter en mops med en liten krona broderad på halsbandet. Han ser ut som en mycket upprörd potatis." : "") +
+      " Dörren leder ut till piren.",
+    exits: { ut: "pir" },
+  },
+};
+
+// Föremål. start = rum-id, "player", ett annat föremål (behållare) eller null (finns inte än).
+const OBJ = {
+  skrivbord: { names: ["skrivbord", "skrivbordet", "bord", "bordet"], short: "ett skrivbord", start: "kontor", fixed: true,
+    desc: "Ett bastant ekskrivbord med brännmärken efter cigaretter som inte är dina. Det har en låda." },
+  lada: { names: ["låda", "lådan", "skrivbordslåda", "skrivbordslådan"], short: "en låda", start: "kontor", fixed: true, container: true, openable: true,
+    desc: s => s.f.ladaOppen ? "Skrivbordslådan är öppen." : "Skrivbordslådan är stängd. Den kärvar lite, som allt annat i ditt liv." },
+  svarare: { names: ["telefonsvarare", "telefonsvararen", "svarare", "svararen", "telefon", "telefonen", "knapp", "knappen", "maskin", "maskinen"], short: "en telefonsvarare", start: "kontor", fixed: true,
+    desc: s => s.f.svarare ? "Telefonsvararen har slutat blinka. Den ser nöjd ut." : "En telefonsvarare med en blinkande röd lampa. Ett meddelande väntar. Du kan LYSSNA på det." },
+  hangare: { names: ["klädhängare", "klädhängaren", "hängare", "hängaren"], short: "en klädhängare", start: "kontor", fixed: true,
+    desc: "En klädhängare av böjträ. Den har sett bättre dagar, och bättre rockar." },
+  rock: { names: ["rock", "rocken", "trenchcoat", "trenchcoaten", "kappa", "kappan", "ficka", "fickan", "fickor", "fickorna"], short: "din trenchcoat", start: "kontor",
+    desc: "Din beigea trenchcoat. Den har två fickor, tre fläckar och en historia." },
+  fonster: { names: ["fönster", "fönstret", "regn", "regnet", "utsikt", "utsikten", "stad", "staden"], short: "ett fönster", start: "kontor", fixed: true,
+    desc: "Grand Harbor ligger utbredd nedanför, grå och blank av regn. Någonstans där ute finns ett fall. Förhoppningsvis ett som betalar." },
+  kort: { names: ["tunnelbanekort", "tunnelbanekortet", "kort", "kortet", "månadskort", "månadskortet", "biljett", "biljetten"], short: "ett tunnelbanekort", start: "lada",
+    desc: "Ditt tunnelbanekort, giltigt på alla stationer. Fotot på det är taget en dag när du hade ännu mindre sömn än vanligt." },
+  dyrk: { names: ["dyrk", "dyrken", "dyrkar", "dyrkset", "dyrkverktyg"], short: "en dyrk", start: "lada",
+    desc: "En dyrk i fjäderstål. Strikt taget olaglig att bära. Strikt taget." },
+  dollar: { names: ["dollar", "dollarn", "dollarsedel", "dollarsedeln", "sedel", "sedeln", "pengar", "pengarna"], short: "en skrynklig dollarsedel", start: null,
+    desc: "En skrynklig dollarsedel. George Washington ser lika trött ut som du." },
+  kiosk: { names: ["korvkiosk", "korvkiosken", "kiosk", "kiosken", "sal", "försäljare", "försäljaren", "korvgubbe", "korvgubben", "kastrull", "kastrullen"], short: "en korvkiosk", start: "mainst", fixed: true, person: true,
+    desc: "Korvkiosken drivs av Sal, en man med en mustasch så stor att den borde ha egen hyra. På skylten står VARMKORV 1 $. MED SENAP 1 $. UTAN SENAP OCKSÅ 1 $." },
+  tidning: { names: ["tidning", "tidningen", "tidningar", "tidningarna", "tidningsställ", "tidningsstället", "rubrik", "rubriken"], short: "ett tidningsställ", start: "mainst", fixed: true,
+    desc: "Grand Harbor Gazette. Löpsedeln skriker: \"FAVORITEN LORD WAFFLES KLAR FÖR LÖRDAGENS HUNDUTSTÄLLNING\". Under den, med mindre stil: \"Borgmästaren lovar mindre regn\"." },
+  korv: { names: ["varmkorv", "varmkorven", "korv", "korven", "hotdog"], short: "en varmkorv med senap", start: null,
+    desc: "En varmkorv med extra senap, insvept i papper. Den doftar som en barndom du aldrig hade." },
+  karta: { names: ["linjekarta", "linjekartan", "karta", "kartan", "skylt", "skylten"], short: "en linjekarta", start: "*station", fixed: true,
+    desc: "Linjekartan visar en enda linje: MAIN STREET – PARK AVENUE – CHINATOWN – PIR 9. Skriv till exempel ÅK TILL CHINATOWN för att resa." },
+  portier: { names: ["portier", "portiern", "dörrvakt", "dörrvakten", "reginald", "man", "mannen"], short: "en portier", start: "parkave", fixed: true, person: true,
+    desc: "Portiern heter Reginald, enligt mässingsskylten på bröstet. Han har en näsa som är byggd för att se ner på folk, och han använder den flitigt." },
+  pettigrew: { names: ["pettigrew", "fru", "frun", "änka", "änkan", "dam", "damen", "kvinna", "kvinnan", "klient", "klienten"], short: "fru Pettigrew", start: "vaning", fixed: true, person: true,
+    desc: "Fru Cornelia Pettigrew, änka efter konservkungen Horace Pettigrew. Hon bär tillräckligt med pärlor för att sänka en mindre båt." },
+  portratt: { names: ["porträtt", "porträttet", "tavla", "tavlan", "målning", "målningen", "korg", "korgen", "hundkorg", "hundkorgen"], short: "ett porträtt", start: "vaning", fixed: true,
+    desc: "Lord Waffles i amiralsuniform, målad i olja. Konstnären har varit generös med hakan. Mopsar har ingen haka." },
+  foto: { names: ["foto", "fotot", "fotografi", "fotografiet", "bild", "bilden"], short: "ett foto av Lord Waffles", start: null,
+    desc: "Ett fotografi av Lord Waffles: en ljusbrun mops med svart nos, utstående ögon och ett halsband med en liten broderad krona." },
+  brev: { names: ["lösenbrev", "lösenbrevet", "brev", "brevet", "papper", "papperet", "meny", "menyn"], short: "ett lösenbrev", start: null,
+    desc: "Lösenbrevet är hopklistrat av urklippta tidningsbokstäver: \"VI HAR HUNDEN. 50 000 $ ANNARS MISSAR HAN UTSTÄLLNINGEN. INVÄNTA INSTRUKTIONER.\" När du vänder på det ser du att det är klistrat på baksidan av en meny. Överst står det GOLDEN DRAGON, CHINATOWN. Någon har spillt sötsur sås på nummer 47." },
+  kex: { names: ["hundkex", "kex", "kexen", "kexet", "påse", "påsen", "kexpåse", "kexpåsen"], short: "en påse hundkex", start: null,
+    desc: "En liten sidenpåse med hundkex. Påsen är broderad med orden FÖR HANS NÅD." },
+  benny: { names: ["benny", "kock", "kocken", "kök", "köket", "lucka", "luckan", "wok", "wokpanna", "wokpannan"], short: "kocken Benny", start: "restaurang", fixed: true, person: true,
+    desc: "Benny är kock på Golden Dragon och kan allt om alla i kvarteret. Han lagar mat med ena handen och läser travresultat med den andra." },
+  akvarium: { names: ["akvarium", "akvariet", "karp", "karpen", "fisk", "fisken"], short: "ett akvarium", start: "restaurang", fixed: true,
+    desc: "Karpen tittar på dig. Du tittar på karpen. Ingen av er får ut något av det." },
+  lyckokaka: { names: ["lyckokaka", "lyckokakan", "lyckokakor", "lyckokakorna", "kaka", "kakan", "skål", "skålen"], short: "en lyckokaka", start: "restaurang",
+    desc: "En lyckokaka. Det ligger en lapp inuti. Du får BRYTA den för att läsa den." },
+  bruno: { names: ["bruno", "gorilla", "gorillan", "vakt", "vakten", "kylskåp", "kylskåpet", "man", "mannen", "torped", "torpeden"], short: "en jättelik vakt", start: "pir", fixed: true, person: true,
+    desc: "Han har en tatuering på knogarna som stavar B-R-U-N-O, och en på andra handen som stavar M-A-M-M-A. Hans mage kurrar så högt att måsarna lyfter." },
+  dorr: { names: ["dörr", "dörren", "lager", "lagret", "lagerdörr", "lagerdörren", "lås", "låset", "hänglås", "hänglåset"], short: "en dörr", start: "pir", fixed: true,
+    desc: s => s.f.dorr ? "Lagerdörren står på glänt. Hänglåset hänger öppet och skäms." : "En plåtdörr med ett stort hänglås. Ett ganska enkelt lås, för den som har rätt verktyg." },
+  mops: { names: ["mops", "mopsen", "hund", "hunden", "lord", "waffles", "lord waffles", "bur", "buren", "hundbur", "hundburen", "potatis"], short: "Lord Waffles", start: "lager", person: true,
+    desc: s => s.f.mopsVan ? "Lord Waffles flämtar förnöjt och har kexsmulor i rynkorna. Han litar på dig nu. I alla fall tills kexen tar slut." :
+      "Lord Waffles sitter i en olåst bur och morrar mot dig. Han är kanske tjugo centimeter hög, men hans självförtroende är minst två meter." },
+  ladar: { names: ["trälåda", "trälådor", "trälådorna", "lådor", "lådorna", "kartong", "kartonger", "kartongerna", "hämtmat", "konserver"], short: "lådor", start: "lager", fixed: true,
+    desc: "Du öppnar en låda märkt FRUKTKONSERVER. Den innehåller frukt i konserv. Det här är uppenbarligen en mycket genomtänkt kamouflering." },
+};
+
+const SCORES = {
+  svarare: [5, "lyssnat på telefonsvararen"],
+  dollar:  [5, "hittat en dollar i rocken"],
+  kort:    [5, "hittat tunnelbanekortet"],
+  korv:    [5, "köpt en varmkorv"],
+  klient:  [10, "träffat fru Pettigrew"],
+  adress:  [15, "fått adressen av Benny"],
+  bruno:   [15, "blivit av med Bruno"],
+  dorr:    [10, "dyrkat upp lagerdörren"],
+  mops:    [15, "vunnit Lord Waffles förtroende"],
+  vunnit:  [15, "lämnat tillbaka Lord Waffles"],
+};
+
+// ================================================================
+//  TILLSTÅND
+// ================================================================
+let S;
+function newState() {
+  const loc = {};
+  for (const [id, o] of Object.entries(OBJ)) loc[id] = o.start;
+  return { room: "kontor", moves: 0, score: 0, loc, f: {}, scored: {}, seen: {}, over: false };
+}
+
+// ================================================================
+//  UTSKRIFT
+// ================================================================
+const logEl = document.getElementById("log");
+const scroller = document.getElementById("scroller");
+function out(text, cls) {
+  const p = document.createElement("p");
+  if (cls) p.className = cls;
+  p.textContent = text;
+  logEl.appendChild(p);
+  return p;
+}
+function scrollDown() { requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; }); }
+function updateStatus() {
+  document.getElementById("where").textContent = ROOMS[S.room].name;
+  document.getElementById("nums").textContent = `Poäng ${S.score}/${MAX_SCORE} · Drag ${S.moves}`;
+}
+function award(key) {
+  if (S.scored[key]) return;
+  S.scored[key] = true;
+  S.score += SCORES[key][0];
+  out(`[Din poäng ökade med ${SCORES[key][0]}.]`, "score");
+}
+function stamp(t) { out(t, "stamp"); }
+
+// ================================================================
+//  HJÄLPFUNKTIONER FÖR FÖREMÅL
+// ================================================================
+const here = id => {
+  const l = S.loc[id];
+  return l === S.room || (l === "*station" && ROOMS[S.room].station);
+};
+const carried = id => S.loc[id] === "player";
+const desc = (o) => typeof o.desc === "function" ? o.desc(S) : o.desc;
+const isOpen = id => id === "lada" ? !!S.f.ladaOppen : true;
+
+function inScope(id) {
+  if (here(id) || carried(id)) return true;
+  const c = S.loc[id];
+  if (c && OBJ[c] && OBJ[c].container && isOpen(c) && inScope(c)) return true;
+  return false;
+}
+function scopeList() { return Object.keys(OBJ).filter(inScope); }
+
+// Hitta ett föremål utifrån orden i en fras. Prioritera det som är i närheten.
+function resolve(phrase) {
+  if (!phrase) return null;
+  const p = " " + phrase + " ";
+  let best = null, bestLen = 0;
+  for (const id of scopeList()) {
+    for (const n of OBJ[id].names) {
+      if (p.includes(" " + n + " ") && n.length > bestLen) { best = id; bestLen = n.length; }
+    }
+  }
+  return best;
+}
+// Känns ordet igen alls (även om föremålet inte är här)?
+function knownAnywhere(phrase) {
+  const p = " " + phrase + " ";
+  return Object.keys(OBJ).some(id => OBJ[id].names.some(n => p.includes(" " + n + " ")));
+}
+
+function listRoomItems() {
+  const items = Object.keys(OBJ).filter(id => here(id) && !OBJ[id].fixed && !OBJ[id].person);
+  if (items.length) out("Här finns " + joinList(items.map(id => OBJ[id].short)) + ".");
+}
+function joinList(a) {
+  if (a.length <= 1) return a.join("");
+  return a.slice(0, -1).join(", ") + " och " + a[a.length - 1];
+}
+
+// ================================================================
+//  RUM OCH FÖRFLYTTNING
+// ================================================================
+function look() {
+  const r = ROOMS[S.room];
+  out(r.name, "room");
+  out(r.desc(S));
+  listRoomItems();
+  S.seen[S.room] = true;
+  updateStatus();
+}
+
+const DIRS = {
+  n: "n", norr: "n", nord: "n", s: "s", söder: "s", syd: "s", ö: "ö", öster: "ö", öst: "ö", o: "ö",
+  v: "v", väster: "v", väst: "v", upp: "upp", uppåt: "upp", u: "upp", ner: "ner", nedåt: "ner", ned: "ner",
+  in: "in", innanför: "in", ut: "ut", utåt: "ut", ute: "ut",
+};
+
+function go(dir) {
+  const r = ROOMS[S.room];
+  const to = r.exits[dir];
+  if (!to) {
+    const lines = ["Du kan inte gå åt det hållet. Inte ens om du ber snällt.", "Där finns bara en vägg, och den är inte intresserad.", "Grand Harbor är stort, men inte åt det hållet."];
+    out(lines[S.moves % lines.length]);
+    return;
+  }
+  // Spärrar
+  if (ROOMS[to].station && !ROOMS[S.room].station) {
+    if (!carried("kort")) {
+      out("Du går ner för trappan, men spärren säger KLONK och vägrar släppa in dig. Utan tunnelbanekort kommer du ingenstans. Det är en metafor för hela ditt liv.");
+      return;
+    }
+    out("Du blippar tunnelbanekortet och spärren släpper motvilligt in dig.");
+  }
+  if (S.room === "parkave" && to === "vaning") {
+    if (!S.f.svarare) {
+      out("Portiern kliver i vägen. \"Är ni väntad, sir?\" Du är inte väntad. Du är knappt ens önskad. Han skickar tillbaka dig ut i regnet.");
+      return;
+    }
+    if (!S.f.klient) out("\"Ah, detektiven! Fru Pettigrew väntar er.\" Portiern håller upp dörren med två fingrar, som om den vore smittsam. Hissen susar upp till takvåningen.");
+  }
+  if (S.room === "pir" && to === "lager") {
+    if (!S.f.bruno) {
+      out("Kylskåpet i mänsklig form kliver i vägen. \"Stängt\", säger han. \"Ingen kommer in. Bruno vaktar. Bruno är hungrig. Bruno vaktar ändå.\"");
+      return;
+    }
+    if (!S.f.dorr) { out("Lagerdörren är låst med ett stort hänglås."); return; }
+  }
+  S.room = to;
+  look();
+  enterEvents();
+}
+
+function enterEvents() {
+  if (S.room === "vaning" && carried("mops") && !S.f.vunnit) { win(); return; }
+  if (S.room === "vaning" && !S.f.klient) {
+    S.f.klient = true;
+    out("Fru Pettigrew rusar fram och griper tag i dina händer. \"Äntligen! Lord Waffles är kidnappad! Han skulle tävla på lördag. Han har vunnit tre år i rad. Han har aldrig förlorat på någonting, utom en gång mot en dammsugare.\"");
+    out("Hon trycker ett fotografi, ett lösenbrev och en liten påse i dina händer. \"Här är ett foto av honom, och det här brevet kom i morse. Och ta hans kex! Han går ingenstans utan sina kex. Han är som sin far på det sättet.\"");
+    S.loc.foto = "player"; S.loc.brev = "player"; S.loc.kex = "player";
+    out("(Du har fått ett foto, ett lösenbrev och en påse hundkex.)", "sys");
+    award("klient");
+  }
+}
+
+function ride(phrase) {
+  if (!ROOMS[S.room].station) {
+    out(ROOMS[S.room].exits.ner && ROOMS[ROOMS[S.room].exits.ner].station ? "Du måste först gå ner till perrongen." : "Det finns ingen tunnelbana här. Leta efter en trappa ner till en perrong.");
+    return;
+  }
+  if (!phrase) { out("Vart vill du åka? Skriv till exempel ÅK TILL CHINATOWN."); return; }
+  const p = " " + phrase + " ";
+  let dest = null;
+  for (const [id, st] of Object.entries(STATIONS)) {
+    if (st.words.some(w => p.includes(" " + w + " "))) { dest = id; break; }
+  }
+  if (!dest) { out("Linjen har bara fyra stationer: Main Street, Park Avenue, Chinatown och Pir 9."); return; }
+  if (dest === S.room) { out("Du är redan här. Tunnelbanan är snabb, men inte så snabb."); return; }
+  const trips = [
+    "Ett tåg dundrar in. Du kliver på och hittar en plats mellan en man med en levande gås och en kvinna som läser din tidning över din axel.",
+    "Vagnen är så full att du åker hela vägen utan att röra golvet. En saxofonist spelar samma låt fyra gånger.",
+    "Du sitter mittemot en man som stirrar på dig hela resan. När du stirrar tillbaka låtsas han vara en reklamskylt.",
+    "Tåget skakar, lamporna blinkar, och en röst i högtalaren säger något som kan vara stationsnamnet eller ett recept.",
+  ];
+  out(trips[S.moves % trips.length]);
+  out(`Du kliver av vid ${STATIONS[dest].name}.`, "sys");
+  S.room = dest;
+  look();
+}
+
+// ================================================================
+//  VERB
+// ================================================================
+function take(phrase) {
+  if (/\b(allt|alla|allting)\b/.test(phrase)) {
+    const items = scopeList().filter(id => !carried(id) && !OBJ[id].fixed && !OBJ[id].person);
+    if (!items.length) { out("Det finns inget här som är värt att ta. Du har kollat."); return; }
+    items.forEach(id => { out(OBJ[id].short.replace(/^./, c => c.toUpperCase()) + ": taget."); takeEffects(id); S.loc[id] = "player"; });
+    return;
+  }
+  const id = resolve(phrase);
+  if (!id) return notHere(phrase);
+  if (carried(id)) { out("Den har du redan."); return; }
+  if (id === "mops") {
+    if (!S.f.mopsVan) { out("Du sträcker in handen i buren. Lord Waffles visar tänderna. Alla tre. Du drar tillbaka handen medan du fortfarande har fem fingrar."); return; }
+    out("Du lyfter upp Lord Waffles. Han är förvånansvärt tung för sin storlek, ungefär som ett bowlingklot med åsikter.");
+    S.loc.mops = "player"; return;
+  }
+  if (id === "lyckokaka") { out("Du tar en lyckokaka ur skålen. Benny tittar upp. \"Gratis\", säger han. \"Fram till att du läser den.\""); S.loc.lyckokaka = "player"; return; }
+  if (OBJ[id].person) { out("Det vore olämpligt. Och troligen olagligt. Och troligen smärtsamt."); return; }
+  if (OBJ[id].fixed) { out("Det sitter fast, eller är för stort, eller både och."); return; }
+  out("Taget.");
+  takeEffects(id);
+  S.loc[id] = "player";
+}
+function takeEffects(id) {
+  if (id === "kort") award("kort");
+}
+
+function drop(phrase) {
+  const id = resolve(phrase);
+  if (!id) return notHere(phrase);
+  if (!carried(id)) { out("Du har inte den."); return; }
+  if (id === "mops") { out("Lord Waffles vägrar att sättas ner. Han har betalat för första klass."); return; }
+  S.loc[id] = S.room;
+  out("Släppt.");
+}
+
+function inventory() {
+  const items = Object.keys(OBJ).filter(carried);
+  out(items.length ? "Du bär på " + joinList(items.map(id => OBJ[id].short)) + "." : "Du har ingenting. Fickorna ekar.");
+  if (!items.length && here("rock")) out("(Din trenchcoat hänger fortfarande på hängaren.)", "sys");
+}
+
+function examine(phrase) {
+  if (!phrase) { look(); return; }
+  const id = resolve(phrase);
+  if (!id) return notHere(phrase);
+  out(desc(OBJ[id]));
+  if (id === "rock") searchCoat();
+  if (id === "lada" && S.f.ladaOppen) listContents("lada");
+  if (id === "skrivbord" && !S.f.ladaOppen) out("Lådan är stängd.", "sys");
+}
+function searchCoat() {
+  if (!S.f.dollar) {
+    S.f.dollar = true;
+    S.loc.dollar = "player";
+    out("Du rotar i fickorna och hittar en skrynklig dollarsedel. Din förmögenhet har just ökat med oändligt många procent.");
+    award("dollar");
+  }
+}
+function listContents(c) {
+  const inside = Object.keys(OBJ).filter(id => S.loc[id] === c);
+  out(inside.length ? "I den ligger " + joinList(inside.map(id => OBJ[id].short)) + "." : "Den är tom.");
+}
+
+function openThing(phrase) {
+  const id = resolve(phrase);
+  if (!id) return notHere(phrase);
+  if (id === "lada" || id === "skrivbord") {
+    if (S.f.ladaOppen) { out("Lådan är redan öppen."); return; }
+    S.f.ladaOppen = true;
+    out("Du rycker i lådan. Den kärvar, du svär, den ger med sig.");
+    listContents("lada");
+    return;
+  }
+  if (id === "dorr") { out(S.f.dorr ? "Den är redan öppen." : "Dörren är låst med ett hänglås. Du skulle kunna försöka DYRKA upp det."); return; }
+  if (id === "mops") { out("Burens dörr är inte låst. Problemet är vad som sitter i den."); return; }
+  if (id === "lyckokaka") return breakCookie();
+  if (id === "kex") return out("Du öppnar påsen och luktar. Leverbiff och vanilj. Det är faktiskt inte så dumt. Du stänger påsen innan du gör något du ångrar.");
+  out("Det går inte att öppna.");
+}
+function closeThing(phrase) {
+  const id = resolve(phrase);
+  if (id === "lada") { S.f.ladaOppen = false; out("Du stänger lådan."); return; }
+  out(id ? "Det går inte att stänga." : "Vad vill du stänga?");
+}
+
+function read(phrase) {
+  const id = resolve(phrase);
+  if (!id) return notHere(phrase);
+  if (id === "lyckokaka") return breakCookie();
+  if (["tidning", "brev", "karta", "kex", "kiosk"].includes(id)) { out(desc(OBJ[id])); return; }
+  if (id === "kort") { out("Det står GRAND HARBOR TRANSIT, GILTIGT TILLS VIDARE. Det är det mest optimistiska du har läst på länge."); return; }
+  out("Det finns inget att läsa på den.");
+}
+
+function listen(phrase) {
+  if (phrase && resolve(phrase) !== "svarare" && !/telefon|svarare|meddelande|knapp/.test(phrase)) {
+    out(S.room === "p_park" ? "Fiolspelaren spelar Bach. Du blir rörd. Det går över." : "Du hör regnet, trafiken och ditt eget samvete. Inget av dem har något nytt att säga.");
+    return;
+  }
+  if (!here("svarare")) { out("Du hör regnet, trafiken och ditt eget samvete. Inget av dem har något nytt att säga."); return; }
+  out("Du trycker på knappen. Bandet spolar tillbaka med ett ljud som en dammsugare som ångrar sig. Sedan en darrande kvinnoröst:");
+  out("\"Det här är Cornelia Pettigrew i Pettigrew Towers på Park Avenue. Min älskade Lord Waffles har blivit kidnappad! Polisen säger att de inte letar efter hundar. Jag har hört att ni är billig. Jag menar diskret. Kom genast! Jag betalar vad som helst!\"");
+  out("Klick. Pip. Vad som helst. Det är din favoritsumma.", "sys");
+  if (!S.f.svarare) { S.f.svarare = true; award("svarare"); }
+}
+
+function buy(phrase) {
+  if (!here("kiosk")) { out("Det finns inget att köpa här. Du skulle ändå inte ha råd."); return; }
+  if (phrase && !/korv|hotdog|mat/.test(phrase)) { out("\"Jag säljer korv\", säger Sal. \"Bara korv. Har alltid sålt korv. Kommer att dö som korvförsäljare.\""); return; }
+  if (S.loc.korv === "player") { out("Du har redan en korv. Sal tittar misstänksamt på dig, som om du samlade på dem."); return; }
+  if (!carried("dollar")) { out("\"En dollar\", säger Sal och håller fram handen. Du klappar på fickorna. Han drar tillbaka handen."); return; }
+  S.loc.dollar = null; S.loc.korv = "player";
+  out("Du ger Sal dollarsedeln. Han lägger en korv i ett bröd, kväver den i senap och räcker över den. \"Smaklig måltid, deckare.\"");
+  award("korv");
+}
+
+function give(objPhrase, toPhrase) {
+  const o = resolve(objPhrase);
+  if (!o) return notHere(objPhrase);
+  if (!carried(o)) { out("Du har inte den."); return; }
+  const t = toPhrase ? resolve(toPhrase) : guessPerson();
+  if (!t) { out("Vem vill du ge den till?"); return; }
+  if (t === "bruno" && o === "korv") {
+    S.loc.korv = null; S.f.bruno = true; S.loc.bruno = null;
+    out("Du håller fram korven. Brunos näsa vrids mot den som en kompassnål. \"Är den till Bruno?\" Du nickar. Han sväljer den hel, papperet också.");
+    out("\"Den behövde mer senap\", säger han tankfullt. \"Bruno går och hämtar senap. Ingen går in medan Bruno är borta, okej?\" Han lunkar bort i dimman utan att vänta på svar.");
+    award("bruno");
+    return;
+  }
+  if (t === "bruno") { out("Bruno tittar på " + OBJ[o].short + ". \"Kan man äta det?\" Det kan man inte. Han tappar intresset."); return; }
+  if (t === "mops" && o === "kex") {
+    if (S.f.mopsVan) { out("Lord Waffles äter ett kex till. Han tackar inte."); return; }
+    S.f.mopsVan = true;
+    out("Du prasslar med kexpåsen. Lord Waffles öron reser sig. Du lägger ett kex på golvet framför buren. Han tittar på kexet, sedan på dig, sedan på kexet igen. Kexet vinner.");
+    out("Han kommer ut ur buren, äter upp kexet och sätter sig sedan på din fot med ett belåtet grymtande. Ni är vänner nu. Han kan bäras.");
+    award("mops");
+    return;
+  }
+  if (t === "mops" && o === "korv") { out("Lord Waffles nosar på korven och vänder bort huvudet med avsmak. Han äter bara kex från Paris."); return; }
+  if (t === "kiosk") { out("Sal skakar på huvudet. \"Jag tar bara kontanter, kompis.\""); return; }
+  if (t === "pettigrew" && o === "mops") { win(); return; }
+  if (t === "benny") { if (o === "foto" || o === "brev") return show(objPhrase, toPhrase); out("Benny skakar på huvudet. \"Behåll den. Jag har nog skräp.\""); return; }
+  if (t === "portier") { out("Portiern tittar på " + OBJ[o].short + " som om det vore något katten släpat in. Han tar inte emot det."); return; }
+  if (t === "pettigrew") { out("\"Nej, nej, behåll den, ni behöver den mer än jag! Hitta bara min lilla Waffles!\""); return; }
+  out("Ingen här verkar intresserad.");
+}
+function guessPerson() {
+  return ["bruno", "mops", "benny", "pettigrew", "portier", "kiosk"].find(id => here(id) && S.loc[id] !== "player") || null;
+}
+
+function show(objPhrase, toPhrase) {
+  const o = resolve(objPhrase);
+  if (!o) return notHere(objPhrase);
+  if (!carried(o)) { out("Du har inte den."); return; }
+  const t = toPhrase ? resolve(toPhrase) : guessPerson();
+  if (!t) { out("Det finns ingen här att visa den för."); return; }
+  if (t === "benny" && (o === "foto" || o === "brev" || o === "mops")) {
+    if (S.f.adress) { out("\"Jag har redan sagt det\", säger Benny. \"Lager 13 på Pir 9. Tolv räkor. Och vatten.\""); return; }
+    S.f.adress = true;
+    if (o === "brev") out("Benny tittar på menyn. \"Det där är vår meny. Och sötsur sås på nummer 47, det är friterade räkor. Bara en kund beställer så mycket nummer 47 just nu.\"");
+    else out("Benny tittar på fotot och skrattar till. \"Den där fula lilla potatisen! Jag såg honom i går. Han satt i en låda medan en kille hämtade mat.\"");
+    out("\"En gorilla som heter Bruno har beställt tolv portioner friterade räkor till Lager 13 på Pir 9 tre dagar i rad. Och en skål vatten. Vem beställer vatten med hämtmat? Någon med en hund, så klart.\"");
+    award("adress");
+    return;
+  }
+  if (t === "benny") { out("Benny rycker på axlarna. \"Snyggt. Ska du beställa något eller?\""); return; }
+  if (t === "kiosk" && o === "foto") { out("Sal kisar mot fotot. \"Snygg korv\", säger han. \"Ah, en hund. Nej. Har inte sett honom. Alla hundar ser ut som korvar för mig.\""); return; }
+  if (t === "portier") { out("Portiern tittar på det utan att röra en min. Det är hans enda min."); return; }
+  if (t === "bruno") { out("Bruno tittar länge på " + OBJ[o].short + ". \"Bruno har inte sett något\", säger han. \"Bruno ser aldrig något. Det är därför Bruno får jobb.\""); return; }
+  if (t === "pettigrew") { out("\"Ja, ja, det vet jag! Hitta honom bara!\""); return; }
+  out("Ingen reaktion.");
+}
+
+function talk(phrase) {
+  const t = resolve(phrase) || guessPerson();
+  if (!t || !OBJ[t].person) { out("Du pratar för dig själv en stund. Det är det bästa samtal du haft på hela veckan."); return; }
+  switch (t) {
+    case "kiosk": out(S.f.korv ? "\"Smakade korven?\" frågar Sal. Han väntar inte på svar." : "\"Varmkorv, en dollar\", säger Sal. \"Vill du ha en får du KÖPA den. Det är så handel fungerar.\""); break;
+    case "portier": out(S.f.svarare ? "\"Fru Pettigrew väntar er, sir. Hissen är till höger. Torka av skorna.\"" : "\"Endast boende och inbjudna gäster, sir. Ni är varken eller. Dessutom droppar ni.\""); break;
+    case "pettigrew":
+      out(S.f.vunnit ? "\"Tack, tack, tusen gånger tack!\"" : "\"Brevet luktade friterade räkor\", snyftar fru Pettigrew. \"Tänk om de matar honom med räkor! Han är van vid kaviar.\""); break;
+    case "benny":
+      out(S.f.adress ? "\"Lager 13, Pir 9. Ta en lyckokaka på vägen ut. De är bättre än mina råd.\"" : "\"Jag vet allt om alla i kvarteret\", säger Benny och vänder en dumpling i luften. \"Men jag behöver något att gå på. Visa mig vad du har.\""); break;
+    case "bruno": out("\"Bruno pratar inte med snutar\", säger Bruno. Du säger att du inte är snut. \"Bruno pratar inte med icke-snutar heller.\" Hans mage kurrar. \"Bruno är hungrig, men Bruno får inte gå.\""); break;
+    case "mops": out(S.f.mopsVan ? "Lord Waffles fnyser vänligt." : "Lord Waffles morrar. Du tolkar det som \"inte utan kex\"."); break;
+  }
+}
+
+function pick(phrase) {
+  if (S.room !== "pir") { out("Det finns inget här att dyrka upp."); return; }
+  if (!carried("dyrk")) { out("Du saknar verktyg. Du har inte ens en hårnål, och du har inget hår att fästa den i."); return; }
+  if (!S.f.bruno) { out("Du böjer dig mot låset. En hand stor som en stekpanna landar på din axel. \"Nej\", säger Bruno. Det är ett ord han är bra på."); return; }
+  if (S.f.dorr) { out("Den är redan öppen."); return; }
+  S.f.dorr = true;
+  out("Du sticker in dyrken i hänglåset, lyssnar efter klick som en kassaskåpssprängare i en gammal film, och ... klick. Hänglåset ger upp. Dörren glider upp på gnisslande gångjärn.");
+  award("dorr");
+}
+
+function breakCookie() {
+  if (!inScope("lyckokaka")) { out("Du har ingen lyckokaka."); return; }
+  S.loc.lyckokaka = null;
+  const fortunes = [
+    "\"DEN SOM FÖLJER RÄKORNA HITTAR SANNINGEN.\"",
+  ];
+  out("Du bryter lyckokakan och vecklar ut lappen. Det står: " + fortunes[0] + " På baksidan: \"Dina lyckotal: 9 och 13.\"");
+  out("Du äter upp kakan. Den smakar papp och förhoppning.", "sys");
+}
+
+function eat(phrase) {
+  const id = resolve(phrase);
+  if (!id) return notHere(phrase);
+  if (id === "lyckokaka") return breakCookie();
+  if (id === "korv") { out("Du höjer korven mot munnen. Sedan sänker du den. Du har en känsla av att den kommer att göra större nytta någon annanstans. Och dessutom är senapen alldeles för gul."); return; }
+  if (id === "kex") { out("Du är desperat, men inte så desperat. Inte än."); return; }
+  out("Det där ska inte ätas. Inte ens i den här stan.");
+}
+
+function search(phrase) {
+  const id = resolve(phrase);
+  if (!id) { out("Du letar runt, men hittar inget du inte redan sett."); return; }
+  if (id === "rock") { if (S.f.dollar) out("Fickorna är tomma nu, bortsett från ludd."); else searchCoat(); return; }
+  if (id === "lada" || id === "skrivbord") { if (!S.f.ladaOppen) out("Lådan är stängd."); else listContents("lada"); return; }
+  examine(phrase);
+}
+
+function wear(phrase) {
+  const id = resolve(phrase);
+  if (id !== "rock") { out("Det kan du inte ta på dig."); return; }
+  if (!carried("rock")) { S.loc.rock = "player"; }
+  out("Du drar på dig trenchcoaten och slår upp kragen. Nu ser du ut som en riktig privatdetektiv. Eller som en man som väntar på en buss.");
+  searchCoat();
+}
+
+function attack() {
+  out("Våld är den sista utvägen för en privatdetektiv. Det är dessutom den första utvägen för Bruno, och han är större.");
+}
+
+// ================================================================
+//  VINST
+// ================================================================
+function win() {
+  S.f.vunnit = true;
+  S.loc.mops = "vaning";
+  S.room = "vaning";
+  out("Lord Waffles hoppar ur dina armar och springer, så fort hans korta ben tillåter, rakt in i fru Pettigrews famn. Hon skriker av lycka. Mopsen slickar hennes pärlor.");
+  out("\"Ni är ett geni! Ett mirakel! En hjälte!\" Hon skriver en check med så många nollor att de inte får plats på raden och fortsätter ut på bordsduken.");
+  out("Samma kväll grips Bruno på en korvkiosk i hamnen med senap på hakan. Han erkänner allt efter tio minuter och ber om mer senap. Hans chef, den ökända hundtjuven Fingers Malloy, grips två dagar senare på ett hundcafé.");
+  out("På lördagen vinner Lord Waffles hundutställningen för fjärde året i rad. Du står längst bak i publiken med hatten nerdragen. Ingen vet vem du är. Det passar dig bra.");
+  award("vunnit");
+  stamp("Fallet avslutat");
+  out(`Du fick ${S.score} av ${MAX_SCORE} möjliga poäng på ${S.moves} drag.`);
+  out("Skriv OMSTART för att spela igen.", "sys");
+  S.over = true;
+  updateStatus();
+}
+
+// ================================================================
+//  META
+// ================================================================
+function help() {
+  out("Du styr spelet genom att skriva korta kommandon på svenska, till exempel:");
+  out("  TITTA (eller L)            UNDERSÖK RÖCKEN (eller X ROCK)\n  TA KORTET / TA ALLT         SLÄPP DYRKEN\n  ÖPPNA LÅDAN                 LÄS BREVET\n  GE KORVEN TILL BRUNO        VISA FOTOT FÖR BENNY\n  PRATA MED PORTIERN          ÅK TILL CHINATOWN\n  UPP, NER, IN, UT            INVENTARIE (eller I)");
+  out("Övrigt: POÄNG, LEDTRÅD, SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.", "sys");
+}
+
+function hint() {
+  const f = S.f;
+  let h;
+  if (!f.svarare) h = "Telefonsvararen på skrivbordet blinkar. Kanske borde du LYSSNA på den?";
+  else if (!carried("kort") && S.loc.kort === "lada") h = "Utan tunnelbanekort kommer du ingenstans. Var brukar man lägga saker man inte vill hitta? I en skrivbordslåda.";
+  else if (!f.dollar) h = "En detektiv utan pengar är bara en man i rock. UNDERSÖK din rock.";
+  else if (!f.klient) h = "Fru Pettigrew bor på Park Avenue. Gå ner i tunnelbanan och ÅK TILL PARK AVENUE.";
+  else if (!f.adress) h = "LÄS lösenbrevet noga. Vems meny är det skrivet på? Visa sedan det du har för någon som kan känna igen det.";
+  else if (!f.korv) h = "Bruno på Pir 9 är hungrig, och Sal på Main Street säljer korv för en dollar.";
+  else if (!f.bruno) h = "Ta med korven till Pir 9 och GE den TILL BRUNO.";
+  else if (!f.dorr) h = (carried("dyrk") ? "Du har en dyrk. DYRKA UPP DÖRREN." : "Dörren är låst. Låg det inte en dyrk i skrivbordslådan på kontoret?");
+  else if (!f.mopsVan) h = "Lord Waffles går ingenstans utan sina kex. GE KEXEN TILL MOPSEN.";
+  else if (!carried("mops")) h = "TA MOPSEN.";
+  else h = "Lämna tillbaka Lord Waffles till fru Pettigrew på Park Avenue.";
+  out("Ledtråd: " + h, "sys");
+}
+
+function scoreReport() {
+  out(`Du har ${S.score} av ${MAX_SCORE} möjliga poäng efter ${S.moves} drag.`);
+  const got = Object.keys(S.scored).map(k => SCORES[k][1]);
+  if (got.length) out("Hittills har du " + joinList(got) + ".", "sys");
+  const rank = S.score >= 100 ? "Mästerdetektiv" : S.score >= 70 ? "Skarpsynt spårhund" : S.score >= 40 ? "Lovande nos" : S.score >= 15 ? "Glasögonlös amatör" : "Kaffeautomat i trenchcoat";
+  out("Rang: " + rank + ".", "sys");
+}
+
+const SAVE_KEY = "mopsen-som-forsvann-sparning";
+function save() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); out("Spelet är sparat.", "sys"); }
+  catch (e) { out("Det gick inte att spara här. Webbläsaren tillåter inte lagring på den här sidan.", "sys"); }
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) { out("Det finns inget sparat spel.", "sys"); return; }
+    S = JSON.parse(raw);
+    out("Sparat spel laddat.", "sys");
+    look();
+  } catch (e) { out("Det gick inte att ladda det sparade spelet.", "sys"); }
+}
+
+function notHere(phrase) {
+  if (!phrase) { out("Du måste säga vad du menar."); return; }
+  if (knownAnywhere(phrase)) out("Det ser du inte här.");
+  else out(`Ordet "${phrase.split(" ").pop()}" känner jag inte till. Försök med något annat.`);
+}
+
+// ================================================================
+//  ORDTOLKAREN
+// ================================================================
+const FILLER = new Set(["den", "det", "de", "en", "ett", "min", "mitt", "mina", "lite", "the", "och", "så", "sedan", "då", "försiktigt", "snabbt"]);
+function clean(words) { return words.filter(w => !FILLER.has(w)).join(" ").trim(); }
+function splitOn(rest, preps) {
+  const words = rest.split(" ");
+  const i = words.findIndex(w => preps.includes(w));
+  if (i < 0) return [clean(words), ""];
+  return [clean(words.slice(0, i)), clean(words.slice(i + 1))];
+}
+
+function exec(raw) {
+  let s = raw.toLowerCase().replace(/[.,!?;:"'()]/g, " ").replace(/\s+/g, " ").trim();
+  if (!s) return out("Ursäkta?");
+  // Flera kommandon med "och sedan" / "sen" / punkt kortas till det första; håll det enkelt.
+  const w = s.split(" ");
+  const v = w[0];
+  const rest = w.slice(1).join(" ");
+  const restClean = clean(w.slice(1));
+
+  // Metakommandon som inte räknas som drag
+  if (["hjälp", "help", "?", "instruktioner"].includes(v)) return help();
+  if (["ledtråd", "tips", "hint"].includes(v)) return hint();
+  if (["poäng", "score", "status"].includes(v)) return scoreReport();
+  if (v === "spara" || v === "save") return save();
+  if (v === "ladda" || v === "load" || v === "återställ") return load();
+  if (v === "omstart" || v === "restart" || s === "börja om") return restart();
+
+  if (S.over) { out("Fallet är redan löst. Skriv OMSTART för att spela igen, eller POÄNG för att se hur det gick.", "sys"); return; }
+
+  S.moves++;
+
+  // Förflyttning
+  if (DIRS[v] && w.length === 1) return go(DIRS[v]);
+  if (["gå", "spring", "promenera", "kliv", "kryp", "gå"].includes(v)) {
+    const d = w.slice(1).find(x => DIRS[x]);
+    if (d) return go(DIRS[d]);
+    if (/tunnelbana|perrong|trappa/.test(rest)) { const dn = ROOMS[S.room].exits.ner; if (dn) return go("ner"); }
+    if (/restaurang|golden|dragon|lager|takvåning|hiss|in /.test(rest + " ")) return go("in");
+    if (/kontor/.test(rest) && S.room === "mainst") return go("upp");
+    if (/gata|ut/.test(rest)) return go(ROOMS[S.room].exits.ut ? "ut" : "upp");
+    out("Vart vill du gå? Prova UPP, NER, IN eller UT.");
+    return;
+  }
+  if (["åk", "res", "ta-tunnelbanan"].includes(v) || s.startsWith("ta tunnelbanan") || s.startsWith("ta tåget") || s.startsWith("ta taxi")) {
+    if (/taxi/.test(s)) { out("Med din ekonomi? Taxichaufförerna i Grand Harbor tar betalt bara för att titta på dig. Ta tunnelbanan."); S.moves--; return; }
+    const m = s.match(/\btill\b (.+)$/);
+    return ride(m ? m[1] : "");
+  }
+
+  switch (v) {
+    case "titta": case "l": case "se": case "beskriv": case "kolla":
+      if (w[1] === "på" || w[1] === "i" || w[1] === "under") return w[1] === "på" ? examine(clean(w.slice(2))) : search(clean(w.slice(2)));
+      if (restClean) return examine(restClean);
+      return look();
+    case "undersök": case "u": case "x": case "granska": case "studera": case "inspektera": case "betrakta":
+      return examine(restClean);
+    case "sök": case "leta": case "rota": case "känn":
+      return search(clean(w.slice(1).filter(x => !["i", "igenom", "genom", "efter", "på"].includes(x))));
+    case "ta": case "plocka": case "hämta": case "grip": case "lyft": case "bär":
+      if (w[1] === "på" && v === "ta") return wear(clean(w.slice(2)));
+      return take(clean(w.slice(1).filter(x => x !== "upp")));
+    case "släpp": case "lägg": case "ställ": case "kasta":
+      return drop(splitOn(restClean.replace(/^ner /, ""), ["i", "på"])[0]);
+    case "i": case "inv": case "inventarie": case "inventering": case "ägodelar": case "fickor":
+      return inventory();
+    case "öppna": return openThing(restClean);
+    case "stäng": return closeThing(restClean);
+    case "läs": return read(restClean);
+    case "lyssna": case "spela": case "tryck": case "lyssna-på":
+      return listen(clean(w.slice(1).filter(x => !["på", "av", "upp"].includes(x))));
+    case "köp": case "beställ": return buy(restClean);
+    case "betala": return buy("korv");
+    case "ge": case "erbjud": case "räck": {
+      const [a, b] = splitOn(rest, ["till", "åt", "för"]);
+      return give(a, b);
+    }
+    case "mata": {
+      const [a, b] = splitOn(rest, ["med"]);
+      return give(b || "kex", a);
+    }
+    case "visa": {
+      const [a, b] = splitOn(rest, ["för", "till", "åt"]);
+      return show(a, b);
+    }
+    case "prata": case "tala": case "fråga": case "säg": case "hälsa": case "förhör":
+      return talk(splitOn(rest, ["med", "till", "på"])[1] || clean(w.slice(1).filter(x => x !== "om")));
+    case "dyrka": case "bänd": return pick(restClean);
+    case "lås":
+      if (w[1] === "upp") return pick(clean(w.slice(2)));
+      out("Du har inget att låsa med."); return;
+    case "bryt": case "knäck": return breakCookie();
+    case "ät": case "smaka": return eat(restClean);
+    case "klappa": case "kela":
+      out(resolve(restClean) === "mops" ? (S.f.mopsVan ? "Lord Waffles låter sig klappas med kunglig nedlåtenhet." : "Lord Waffles hugger efter dina fingrar. Han missar, men bara för att han inte ser så bra.") : "Det vill inte bli klappat.");
+      return;
+    case "slå": case "sparka": case "döda": case "skjut": case "attackera": case "brotta":
+      return attack();
+    case "vänta": case "z":
+      out(["Tiden går. Regnet faller. Ingen ringer.", "Du väntar. Det är en del av jobbet som ingen pratar om.", "Du tänder en imaginär cigarett och funderar."][S.moves % 3]);
+      return;
+    case "sov": out("Du kan sova när du är död, eller när fallet är löst. Helst i den ordningen."); return;
+    case "svär": out("Du svär en ramsa som skulle få en hamnarbetare att rodna. Det hjälper inte, men du mår lite bättre."); return;
+    case "hoppa": out("Du hoppar. Grand Harbor är inte imponerat."); return;
+    case "tänk": case "fundera": hint(); return;
+    case "ring": out("Din telefon kan bara ta emot samtal. Telefonbolaget och du har en överenskommelse."); return;
+    case "bli": case "lukta": case "nosa":
+      out(S.room === "lager" ? "Friterade räkor och skräckslagen mops." : S.room === "restaurang" ? "Ingefära, vitlök och lyckokakor." : "Regn och avgaser. Grand Harbors parfym.");
+      return;
+  }
+  S.moves--;
+  out(`Jag förstår inte ordet "${v}". Skriv HJÄLP för exempel på kommandon.`);
+}
+
+// ================================================================
+//  START
+// ================================================================
+function intro() {
+  out("Mopsen som försvann", "banner");
+  out("Ett interaktivt deckaräventyr", "sys");
+  out("Grand Harbor, 1947. Regnet faller som om det fått betalt per droppe. Du är privatdetektiv, och just nu är du en privatdetektiv utan uppdrag, utan pengar och utan kaffe. Två av tre är ditt eget fel.");
+  out("Skriv HJÄLP om du inte vet vad du ska göra, eller LEDTRÅD om du kör fast.", "sys");
+  look();
+}
+function restart() {
+  S = newState();
+  logEl.innerHTML = "";
+  intro();
+}
+
+const input = document.getElementById("cmd");
+const history = []; let hIdx = 0;
+function submit(text) {
+  const t = text.trim();
+  if (!t) return;
+  out(t, "cmd");
+  history.push(t); hIdx = history.length;
+  exec(t);
+  updateStatus();
+  scrollDown();
+}
+document.getElementById("f").addEventListener("submit", e => {
+  e.preventDefault();
+  submit(input.value);
+  input.value = "";
+});
+input.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp" && hIdx > 0) { hIdx--; input.value = history[hIdx]; e.preventDefault(); }
+  else if (e.key === "ArrowDown") { hIdx = Math.min(history.length, hIdx + 1); input.value = history[hIdx] || ""; e.preventDefault(); }
+});
+document.getElementById("quick").addEventListener("click", e => {
+  const b = e.target.closest("button");
+  if (b) { submit(b.dataset.c); input.focus(); }
+});
+
+function start(data) {
+  if (data && data.state) {
+    S = data.state;
+    out("Du är tillbaka i fallet.", "sys");
+    look();
+  } else {
+    S = newState();
+    intro();
+  }
+  updateStatus();
+  scrollDown();
+  window.claude?.hot?.snapshot?.(() => ({ state: S }));
+  input.focus();
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+
+// Gör spelmotorn testbar från konsolen.
+window.__spel = { exec: t => { exec(t); updateStatus(); }, get state() { return S; } };
+</script>
