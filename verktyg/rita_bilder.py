@@ -4,6 +4,7 @@
 Kör:  python3 verktyg/rita_bilder.py
 Bilderna hamnar i mappen bilder/ som PNG med palett.
 """
+import base64
 import random
 from pathlib import Path
 
@@ -347,6 +348,8 @@ TYPSNITT = {
     "S": ["011", "100", "010", "001", "110"], "T": ["111", "010", "010", "010", "010"],
     "U": ["101", "101", "101", "101", "111"], "W": ["10001", "10001", "10101", "10101", "01010"],
     "Y": ["101", "101", "010", "010", "010"], "1": ["010", "110", "010", "010", "111"],
+    "L": ["100", "100", "100", "100", "111"], "F": ["111", "100", "110", "100", "100"],
+    "K": ["101", "110", "100", "110", "101"], "3": ["111", "001", "011", "001", "111"],
     " ": ["000"] * 5,
 }
 
@@ -753,8 +756,755 @@ def park_avenue(v=None):
     return d
 
 
+# ======================================================================
+#  SPRITAR (små figurer ritade som textrader)
+# ======================================================================
+SPRITFARG = {"k": 0, "f": 9, "d": 8, "w": 15, "p": 14, "c": 10, "r": 13, "n": 2, "g": 4, "s": 5, "b": 7}
+
+
+def sprite(d, x, y, rader, farg=SPRITFARG):
+    for ry, rad in enumerate(rader):
+        for rx, ch in enumerate(rad):
+            if ch != ".":
+                d.px(x + rx, y + ry, farg[ch])
+
+
+# Lord Waffles i olika humör (11 x 11 pixlar)
+MOPS_ARG = ["kk.......kk", "kkfffffffkk", ".ffdfffdff.", ".fwkfffwkf.", ".ffkkkkkff.",
+            ".fkkkkkkkf.", "..kwkwkwk..", "..ffcccff..", ".fffffffff.", ".fffffffff.", "ffkf...fkff"]
+MOPS_ARG2 = MOPS_ARG[:6] + ["..kkwkwkk..", "..ffcccff..", ".fffffffff.", ".fffffffff.", "ffkf...fkff"]
+MOPS_GLAD = MOPS_ARG[:5] + [".fkkkkkkkf.", "..kkpppkk..", "..ffcpcff..", ".fffffffff.", ".fffffffff.", "ffkf...fkff"]
+
+
+def text_stor(d, x, y, s, c, skala):
+    """Text med pixeltypsnittet, förstorad."""
+    for ch in s:
+        for ry, rad in enumerate(TYPSNITT[ch]):
+            for rx, bit in enumerate(rad):
+                if bit == "1":
+                    d.rekt(x + rx * skala, y + ry * skala, x + (rx + 1) * skala, y + (ry + 1) * skala, c)
+        x += (len(TYPSNITT[ch][0]) + 1) * skala
+
+
+def lykta(d, x, y, sving=0):
+    """Röd papperslykta som hänger i en punkt (x, y)."""
+    x += sving
+    d.rekt(x - 1, y, x + 2, y + 1, 10)
+    d.a[d.mask_ellips(x - 3, y + 1, x + 4, y + 8)] = 13
+    d.rekt(x - 2, y + 3, x + 3, y + 4, 14)
+    d.px(x - 1, y + 2, 14)
+    d.rekt(x - 1, y + 8, x + 2, y + 9, 10)
+    d.px(x, y + 9, 10)
+    d.px(x, y + 10, 13)
+
+
+# ======================================================================
+#  PETTIGREWS TAKVÅNING
+# ======================================================================
+def takvaning(v=None):
+    v = v or {}
+    fru = v.get("fru", 0)            # 0, 1 snyftar, 2 lycklig
+    mops = v.get("mops", 0)          # 0 tom korg, 1 Lord Waffles i korgen
+    kristall = v.get("kristall", 0)  # glittrets fas 0..3
+    moln = v.get("moln", 0)          # inomhusregnets fas 0..5
+    rnd = random.Random(1950)
+    d = Duk(3)
+
+    # Väggar med tapetränder och guldlister
+    d.vgrad(0, 0, W, 84, [2, 3, 3])
+    for x in range(2, W, 8):
+        d.ljus((XX >= x) & (XX < x + 3) & (YY < 84), 0.35, MORKARE)
+    d.rekt(0, 0, W, 4, 15)
+    d.rekt(0, 4, W, 5, 10)
+    d.rekt(0, 66, W, 67, 10)
+    d.rekt(0, 67, W, 84, 2)
+    for x in range(4, W, 20):
+        d.rekt(x, 70, x + 14, 71, 10)
+        d.rekt(x, 70, x + 1, 81, 10)
+    # Parkettgolv
+    d.rekt(0, 84, W, H, 8)
+    for y in range(84, H):
+        for x in range(0, W):
+            if ((x + 2 * y) // 6) % 2:
+                d.a[y, x] = 7
+    d.vgrad(0, 84, W, 90, [6, 7])
+    # Persisk matta
+    d.poly([(44, 94), (152, 94), (164, 118), (32, 118)], 13)
+    d.poly([(48, 96), (148, 96), (158, 116), (38, 116)], 6)
+    d.poly([(52, 98), (144, 98), (152, 114), (44, 114)], 13)
+    for x in range(54, 146, 6):
+        for y in range(100, 113, 4):
+            d.px(x + (y // 4) % 2 * 3, y, 10)
+    d.a[d.mask_ellips(86, 101, 110, 111)] = 1
+    d.a[d.mask_ellips(90, 103, 106, 109)] = 10
+
+    # Hissen till vänster
+    d.rekt(4, 20, 32, 86, 10)
+    d.rekt(6, 24, 30, 86, 9)
+    d.rekt(18, 24, 19, 86, 8)
+    d.rekt(7, 25, 17, 85, 10)
+    d.rekt(20, 25, 29, 85, 10)
+    d.ljus(d.mask_poly([(7, 25), (29, 25), (29, 85), (7, 85)]), 0.4, MORKARE)
+    d.a[d.mask_ellips(10, 10, 26, 22)] = 10
+    d.a[d.mask_ellips(12, 12, 24, 22)] = 15
+    d.rekt(10, 18, 27, 22, 2)
+    d.linje(18, 18, 22, 13, 0)
+
+    # Porträttet av Lord Waffles som amiral
+    d.rekt(38, 10, 74, 52, 10)
+    d.rekt(40, 12, 72, 50, 9)
+    d.rekt(42, 14, 70, 48, 1)
+    d.ljus(d.mask_poly([(42, 14), (70, 14), (70, 48), (42, 48)]), 0.3)
+    d.rekt(46, 36, 66, 48, 2)          # uniform
+    d.rekt(45, 36, 49, 38, 10)         # epåletter
+    d.rekt(63, 36, 67, 38, 10)
+    for by in (40, 43, 46):
+        d.px(56, by, 10)
+    sprite(d, 51, 25, MOPS_ARG2[:8])
+    d.poly([(46, 25), (66, 25), (62, 20), (50, 20)], 0)   # tvåkantig hatt
+    d.rekt(48, 23, 64, 24, 10)
+    d.px(56, 21, 10)
+    d.rekt(52, 51, 60, 53, 10)         # mässingsskylt
+
+    # Hundkorgen i purpur
+    if mops:
+        sprite(d, 50, 62, MOPS_GLAD[:8])
+    d.a[d.mask_ellips(42, 68, 70, 82)] = 13
+    d.a[d.mask_ellips(45, 70, 67, 78)] = 6
+    d.rekt(44, 70, 69, 72, 14)
+    if mops:
+        sprite(d, 50, 62, MOPS_GLAD[:8])
+        d.rekt(51, 70, 61, 73, 9)
+
+    # Kristallkrona
+    d.rekt(103, 4, 104, 10, 10)
+    d.poly([(92, 14), (115, 14), (110, 18), (97, 18)], 10)
+    d.rekt(96, 10, 112, 11, 10)
+    for i, kx in enumerate(range(92, 116, 3)):
+        lang = 4 + (i % 3)
+        for ky in range(18, 18 + lang):
+            d.px(kx, ky, 5)
+        glitter = (i + kristall) % 4 == 0
+        d.px(kx, 18 + lang, 11 if glitter else 15)
+    for kx in range(97, 111, 4):
+        d.px(kx, 12, 11)
+    d.radial(104, 16, 22, 0.45, mask=YY < 66)
+
+    # Fönster mot staden långt där nere
+    wx0, wy0, wx1, wy1 = 128, 10, 182, 74
+    d.vgrad(wx0, wy0, wx1, wy1, [0, 1, 1, 2])
+    for _ in range(40):
+        hx, hy = rnd.randint(wx0, wx1 - 4), rnd.randint(46, wy1 - 2)
+        d.rekt(hx, hy, hx + rnd.randint(3, 7), wy1, rnd.choice([0, 1]))
+    for _ in range(90):
+        d.px(rnd.randint(wx0, wx1 - 1), rnd.randint(50, wy1 - 1), rnd.choice([10, 9, 10, 14]))
+    for _ in range(12):
+        d.px(rnd.randint(wx0, wx1 - 1), rnd.randint(wy0, 40), 4)
+    d.rekt(wx0 - 2, wy0 - 2, wx1 + 2, wy0, 15)
+    d.rekt(wx0 - 2, wy1, wx1 + 2, wy1 + 2, 15)
+    d.rekt(wx0 - 2, wy0, wx0, wy1, 15)
+    d.rekt(wx1, wy0, wx1 + 2, wy1, 15)
+    d.rekt(154, wy0, 156, wy1, 15)
+    d.rekt(wx0, 40, wx1, 41, 15)
+    # Draperier
+    for (x0, x1) in [(120, 130), (180, 190)]:
+        d.rekt(x0, 6, x1, 86, 13)
+        for x in range(x0 + 1, x1, 3):
+            d.rekt(x, 6, x + 1, 86, 14 if (x // 3) % 2 else 6)
+    d.rekt(118, 5, 192, 7, 10)
+
+    # Ett eget litet väder: moln som regnar på en palm
+    for (cx, cy, rx, ry) in [(160, 8, 6, 3), (167, 6, 6, 4), (174, 9, 5, 3)]:
+        d.a[d.mask_ellips(cx - rx, cy - ry, cx + rx, cy + ry)] = 4
+    d.a[d.mask_ellips(158, 4, 170, 8)] = 5
+    rrnd = random.Random(3)
+    for _ in range(9):
+        rx, ry = rrnd.randint(156, 178), rrnd.randint(13, 58)
+        ry = 13 + (ry - 13 + moln * 8) % 48
+        d.px(rx, ry, 5)
+        d.px(rx, ry + 1, 15)
+    # Palm i kruka
+    d.rekt(162, 78, 174, 92, 15)
+    d.rekt(162, 78, 174, 80, 10)
+    d.rekt(167, 58, 169, 78, 7)
+    for (ex, ey) in [(150, 66), (186, 64), (156, 56), (180, 55), (168, 52), (146, 72), (190, 72)]:
+        d.linje(168, 58, ex, ey, 12)
+        d.linje(168, 59, ex, ey + 1, 12)
+
+    # Den vita soffan
+    d.a[d.mask_ellips(74, 56, 126, 74)] = 15
+    d.rekt(78, 64, 122, 84, 15)
+    for tx in range(82, 120, 6):
+        d.px(tx, 62, 5)
+        d.px(tx + 3, 66, 5)
+    d.rekt(76, 74, 124, 76, 5)
+    d.a[d.mask_ellips(70, 66, 82, 86)] = 15
+    d.a[d.mask_ellips(118, 66, 130, 86)] = 15
+    d.ljus(d.mask_ellips(70, 76, 82, 86), 0.5, MORKARE)
+    d.ljus(d.mask_ellips(118, 76, 130, 86), 0.5, MORKARE)
+    for lx in (78, 120):
+        d.rekt(lx, 84, lx + 2, 88, 10)
+
+    # Fru Pettigrew
+    fy = 1 if fru == 1 else 0
+    d.rekt(92, 62 + fy, 108, 78, 2)                  # klänning
+    d.rekt(90, 74, 110, 78, 2)
+    d.a[d.mask_ellips(94, 46 + fy, 106, 58 + fy)] = 4   # hår
+    d.a[d.mask_ellips(97, 42 + fy, 103, 48 + fy)] = 5   # knut
+    d.rekt(96, 50 + fy, 105, 59 + fy, 10)            # ansikte
+    d.rekt(96, 50 + fy, 105, 51 + fy, 4)
+    for px_ in range(94, 107, 2):                    # pärlor
+        d.px(px_, 61 + fy + (1 if 96 < px_ < 105 else 0), 15)
+    if fru < 2:
+        d.px(98, 53 + fy, 0)
+        d.px(103, 53 + fy, 0)
+        d.px(99 + fru * 3, 55 + fy, 5)               # tår
+        d.rekt(99, 57 + fy, 103, 58 + fy, 13)
+        hx = 104 if fru == 0 else 95
+        d.rekt(hx, 52 + fy, hx + 5, 57 + fy, 15)     # spetsnäsduk
+        d.px(hx + 1, 53 + fy, 5)
+        d.px(hx + 3, 55 + fy, 5)
+        d.rekt(hx + 1, 57 + fy, hx + 4, 62 + fy, 10)  # handen och armen
+    else:
+        d.px(98, 53, 0)
+        d.px(103, 53, 0)
+        d.rekt(98, 56, 104, 57, 13)
+        d.px(97, 55, 13)
+        d.px(104, 55, 13)
+        d.rekt(86, 60, 92, 62, 10)                   # armarna utsträckta
+        d.rekt(108, 60, 114, 62, 10)
+
+    d.vinjett(0.35)
+    return d
+
+
+# ======================================================================
+#  CHINATOWN
+# ======================================================================
+def chinatown(v=None):
+    v = v or {}
+    regn = v.get("regn", 0)
+    sving = v.get("sving", 0)                       # lyktornas gungning 0..3
+    neon = v.get("neon", 12)                        # hur många bokstäver i GOLDEN DRAGON som lyser
+    anga = v.get("anga", 0)
+    rnd = random.Random(1951)
+    d = Duk(1)
+
+    d.vgrad(0, 0, W, 30, [0, 0, 1])
+    # Gatan som försvinner bort i mitten
+    for i in range(6):
+        x0 = 60 + i * 3
+        x1 = 132 - i * 3
+        top = 12 + i * 5
+        for side in (0, 1):
+            bx0, bx1 = (x0, x0 + 8) if side == 0 else (x1 - 8, x1)
+            d.rekt(bx0, top, bx1, 90, [1, 1, 2, 2, 2, 3][i])
+            for wy in range(top + 2, 84, 4):
+                if rnd.random() < 0.5:
+                    d.px(rnd.randint(bx0 + 1, bx1 - 2), wy, rnd.choice([13, 10, 14, 9]))
+    d.vgrad(78, 40, 114, 90, [1, 2, 3])
+    for _ in range(26):
+        sx, sy = rnd.randint(78, 112), rnd.randint(44, 82)
+        d.rekt(sx, sy, sx + rnd.randint(1, 3), sy + 1, rnd.choice([13, 14, 10, 12]))
+
+    # Vänster husfasad i tegel med brandtrappor
+    d.rekt(0, 0, 60, 92, 7)
+    d.ljus(d.mask_poly([(0, 0), (60, 0), (60, 92), (0, 92)]), 0.5, MORKARE)
+    for fy in (6, 26, 46):
+        for fx in (6, 22, 38):
+            d.rekt(fx, fy, fx + 9, fy + 11, 10 if rnd.random() < 0.5 else 1)
+            d.rekt(fx, fy + 11, fx + 9, fy + 12, 6)
+        d.rekt(2, fy + 14, 52, fy + 15, 0)
+        for rx in range(2, 52, 3):
+            d.px(rx, fy + 13, 0)
+        d.linje(10, fy + 15, 18, fy + 33, 0)
+    # Lodräta skyltar
+    for (sx, c, t) in [(50, 13, 10), (40, 12, 15)]:
+        d.rekt(sx, 18, sx + 7, 58 if c == 13 else 44, c)
+        for yy in range(21, 56 if c == 13 else 42, 6):
+            d.rekt(sx + 2, yy, sx + 5, yy + 1, t)
+            d.rekt(sx + 3, yy + 1, sx + 4, yy + 4, t)
+            d.px(sx + 2, yy + 3, t)
+
+    # Höger husfasad med Golden Dragon
+    d.rekt(132, 0, W, 92, 2)
+    for fy in (6, 20):
+        for fx in (138, 154, 170, 184):
+            d.rekt(fx, fy, fx + 7, fy + 9, 10 if rnd.random() < 0.45 else 1)
+    d.rekt(132, 32, W, 34, 0)
+    # Neonskylten
+    d.rekt(136, 36, 190, 56, 0)
+    d.rekt(136, 36, 190, 37, 14)
+    d.rekt(136, 55, 190, 56, 14)
+    farger = [10 if i < neon else 1 for i in range(12)]
+    text(d, 152, 39, "GOLDEN", 10, farger[:6])
+    text(d, 150, 47, "DRAGON", 10, farger[6:])
+    if neon:
+        d.radial(163, 46, 30, 0.35 * min(neon, 12) / 12, mask=(d.a < 4) & ((YY < 36) | (YY > 56)))
+    # Röd dörr med rund överdel
+    d.rekt(148, 64, 178, 92, 13)
+    d.a[d.mask_ellips(148, 56, 178, 74)] = 13
+    d.rekt(152, 68, 174, 92, 10)
+    d.a[d.mask_ellips(152, 61, 174, 77)] = 10
+    d.vgrad(152, 70, 174, 92, [11, 10, 9])
+    d.rekt(162, 64, 164, 92, 9)
+    for lx in (142, 182):
+        lykta(d, lx, 60, [0, 1, 0, -1][sving])
+
+    # Lyktor på en lina tvärs över gatan
+    pts = []
+    for x in range(0, W):
+        t = (x - 96) / 96
+        pts.append((x, int(16 + 12 * (1 - t * t))))
+    for x, y in pts:
+        d.px(x, y, 0)
+    gung = [0, 1, 0, -1][sving]
+    for lx in range(14, W, 22):
+        ly = pts[lx][1]
+        lykta(d, lx, ly + 1, gung)
+        d.radial(lx + gung, ly + 6, 9, 0.5, mask=(d.a < 5))
+
+    # Stånd med torkad bläckfisk
+    d.rekt(4, 60, 46, 62, 12)
+    for i, x in enumerate(range(4, 46, 4)):
+        d.poly([(x, 56), (x + 4, 56), (x + 4, 60), (x, 60)], 12 if i % 2 else 15)
+    d.rekt(4, 62, 46, 63, 0)
+    for bx in range(8, 44, 5):
+        d.rekt(bx, 63, bx + 1, 64, 0)
+        d.poly([(bx - 1, 64), (bx + 2, 64), (bx + 1, 70), (bx, 70)], 9)
+        d.px(bx - 1, 71, 9)
+        d.px(bx + 2, 71, 9)
+    d.rekt(4, 78, 46, 92, 6)
+    d.rekt(4, 78, 46, 80, 8)
+    d.rekt(30, 72, 40, 78, 4)
+    d.rekt(29, 72, 41, 73, 5)
+    for spar in range(2):
+        sx = 33 + spar * 4
+        for y in range(71, 54, -1):
+            sx += [0, 1, 0, -1][((y + 2 * anga + spar * 3) // 3) % 4]
+            if (y + 2 * anga + spar) % 3:
+                d.px(sx, y, 15 if y > 64 else 5)
+    # Försäljaren
+    d.rekt(14, 70, 22, 78, 1)
+    d.a[d.mask_ellips(15, 64, 21, 71)] = 10
+    d.poly([(12, 66), (24, 66), (18, 61)], 9)
+
+    # Folk med paraplyer
+    for (fx, c, paraply) in [(64, 0, 0), (74, 1, 13), (90, 0, 0), (104, 1, 12), (118, 0, 0)]:
+        h = rnd.randint(14, 18)
+        d.rekt(fx, 92 - h, fx + 6, 92, c)
+        d.a[d.mask_ellips(fx + 1, 92 - h - 5, fx + 5, 92 - h + 1)] = c
+        if paraply:
+            d.poly([(fx - 5, 92 - h - 4), (fx + 11, 92 - h - 4), (fx + 3, 92 - h - 10)], paraply)
+            d.rekt(fx + 3, 92 - h - 4, fx + 4, 92 - h + 2, 0)
+    # Cykel
+    for hx in (124, 138):
+        d.a[d.mask_ellips(hx - 5, 84, hx + 5, 94)] = 0
+        d.a[d.mask_ellips(hx - 3, 86, hx + 3, 92)] = 2
+    d.linje(124, 89, 131, 84, 0)
+    d.linje(131, 84, 138, 89, 0)
+    d.linje(129, 83, 133, 83, 0)
+
+    # Blöt gata med spegelbilder
+    d.rekt(0, 92, W, H, 1)
+    d.vgrad(0, 92, W, H, [2, 1, 0])
+    for lx in range(14, W, 22):
+        for y in range(95, H, 2):
+            if (y // 2 + lx) % 3:
+                d.px(lx + (y % 3) - 1, y, 13 if y < 110 else 6)
+    for y in range(95, H, 2):
+        for x in range(150, 176, 2):
+            if (x + y) % 4 == 0 and neon:
+                d.px(x, y, 10 if y < 106 else 9)
+
+    regn_over(d, random.Random(11), 60, regn)
+    d.vinjett(0.4)
+    return d
+
+
+# ======================================================================
+#  GOLDEN DRAGON (restaurangen)
+# ======================================================================
+def golden_dragon(v=None):
+    v = v or {}
+    eld = v.get("eld", 0)        # wokens lågor 0..3
+    karp = v.get("karp", 0)      # karpens läge 0..11
+    katt = v.get("katt", 0)      # vinkande katt 0..1
+    rnd = random.Random(1952)
+    d = Duk(13)
+
+    # Röda lackväggar med guldlister
+    d.vgrad(0, 0, W, 70, [6, 13, 13])
+    for x in range(0, W, 24):
+        d.rekt(x, 8, x + 1, 70, 10)
+    d.rekt(0, 6, W, 8, 10)
+    d.rekt(0, 70, W, 72, 10)
+    # Golv i schackmönster
+    d.rekt(0, 72, W, H, 6)
+    for y in range(72, H):
+        for x in range(W):
+            if ((x // 8) + (y // 6)) % 2:
+                d.a[y, x] = 7
+    d.vgrad(0, 72, W, 80, [0, 6])
+
+    # Papperslyktor i taket
+    for lx in (30, 160):
+        d.rekt(lx, 0, lx + 1, 3, 0)
+        d.a[d.mask_ellips(lx - 7, 3, lx + 8, 15)] = 14
+        d.a[d.mask_ellips(lx - 5, 4, lx + 6, 14)] = 11
+        for yy in (6, 9, 12):
+            d.rekt(lx - 5, yy, lx + 6, yy + 1, 10)
+        d.radial(lx, 10, 26, 0.5, mask=(YY < 70))
+
+    # Köksluckan med Benny och wokpannan
+    d.rekt(66, 20, 128, 58, 10)
+    d.rekt(68, 22, 126, 56, 11)
+    d.vgrad(68, 22, 126, 56, [11, 10, 9])
+    d.rekt(66, 56, 128, 60, 8)
+    d.rekt(66, 56, 128, 57, 9)
+    # Kastruller på väggen därinne
+    for kx in (110, 118):
+        d.a[d.mask_ellips(kx - 3, 26, kx + 3, 32)] = 4
+    # Benny
+    d.rekt(96, 22, 104, 30, 15)            # kockmössa
+    d.a[d.mask_ellips(94, 20, 106, 28)] = 15
+    d.rekt(96, 30, 104, 37, 10)            # ansikte
+    d.px(98, 33, 0)
+    d.px(102, 33, 0)
+    d.rekt(98, 35, 102, 36, 8)
+    d.rekt(92, 37, 108, 56, 15)            # kockrock
+    d.rekt(99, 38, 100, 56, 5)
+    d.rekt(88, 42, 94, 45, 15)             # armen mot woken
+    # Woken och lågorna
+    d.a[d.mask_ellips(72, 46, 92, 54)] = 0
+    d.rekt(72, 46, 92, 50, 11)
+    d.a[d.mask_ellips(72, 46, 92, 54)] = 0
+    d.rekt(70, 49, 94, 50, 0)
+    d.linje(92, 49, 98, 46, 0)
+    lagor = [[(76, 40), (80, 34), (84, 39), (88, 36)], [(75, 42), (79, 37), (83, 33), (88, 38)],
+             [(77, 38), (81, 36), (85, 34), (88, 40)], [(76, 41), (80, 38), (83, 35), (87, 33)]][eld]
+    for (fx, fy) in lagor:
+        d.poly([(fx - 3, 47), (fx + 3, 47), (fx, fy)], 13)
+        d.poly([(fx - 2, 47), (fx + 2, 47), (fx, fy + 3)], 10)
+        d.poly([(fx - 1, 47), (fx + 1, 47), (fx, fy + 6)], 11)
+    d.radial(82, 42, 16, 0.5, mask=(YY < 56))
+
+    # Bås till vänster
+    for bx in (0, 34):
+        d.rekt(bx, 52, bx + 8, 100, 13)
+        d.rekt(bx, 52, bx + 8, 54, 14)
+        d.rekt(bx + 1, 54, bx + 2, 100, 14)
+        d.rekt(bx + 8, 78, bx + 26, 86, 13)
+        d.rekt(bx + 8, 78, bx + 26, 79, 14)
+    d.rekt(56, 52, 64, 100, 13)
+    d.rekt(56, 52, 64, 54, 14)
+    for (tx0, tx1) in [(8, 34), (42, 56)]:
+        d.rekt(tx0, 74, tx1, 77, 6)
+        d.rekt(tx0, 74, tx1, 75, 8)
+        d.rekt((tx0 + tx1) // 2, 77, (tx0 + tx1) // 2 + 2, 100, 0)
+    d.a[d.mask_ellips(14, 66, 24, 75)] = 15       # tekanna
+    d.rekt(22, 68, 26, 69, 15)
+    d.rekt(17, 64, 21, 66, 15)
+    d.a[d.mask_ellips(44, 70, 52, 75)] = 15       # skål
+    d.rekt(48, 66, 49, 72, 9)                      # ätpinnar
+    d.rekt(50, 66, 51, 72, 9)
+
+    # Akvariet med den uttråkade karpen
+    ax0, ay0, ax1, ay1 = 138, 30, 186, 64
+    d.rekt(ax0 - 2, ay0 - 2, ax1 + 2, ay1 + 2, 0)
+    d.vgrad(ax0, ay0, ax1, ay1, [4, 3, 3, 2])
+    d.rekt(ax0, ay0, ax1, ay0 + 2, 5)
+    d.rekt(ax0, ay1 - 4, ax1, ay1, 9)
+    for gx in range(ax0, ax1, 3):
+        d.px(gx, ay1 - 4, 8)
+    for (px_, h) in [(144, 16), (148, 12), (178, 18), (182, 11)]:
+        for y in range(ay1 - 4 - h, ay1 - 4):
+            d.px(px_ + ((y // 3) % 2), y, 12)
+    kx = [146, 149, 152, 155, 158, 161, 164, 167, 168, 165, 160, 152][karp]
+    vanster = karp >= 9
+    ky = 44 + [0, 1, 1, 0, 0, -1, -1, 0, 0, 1, 0, 0][karp]
+    kropp = ["..ffff..", ".ffffdfk", "ffffffff", ".ffffff.", "..ff...."]
+    if vanster:
+        kropp = [r[::-1] for r in kropp]
+        kx -= 4
+    sprite(d, kx, ky, kropp)
+    stjart_x = kx - 2 if not vanster else kx + 8
+    d.px(stjart_x, ky + 1, 10)
+    d.px(stjart_x, ky + 3, 10)
+    d.px(stjart_x + (1 if not vanster else -1), ky + 2, 10)
+    for i in range(3):
+        bx = 150 + (karp * 5 + i * 13) % 30
+        by = ay1 - 6 - ((karp * 3 + i * 11) % 28)
+        d.px(bx, by, 5)
+    d.rekt(ax0 - 4, ay1 + 2, ax1 + 4, 74, 6)
+    d.rekt(ax0 - 4, ay1 + 2, ax1 + 4, 70, 7)
+
+    # Kassadisken med lyckokakor och en vinkande katt
+    d.rekt(118, 86, W, H, 7)
+    d.rekt(118, 86, W, 89, 9)
+    d.rekt(118, 89, W, 90, 6)
+    for x in range(124, W, 14):
+        d.rekt(x, 92, x + 10, 116, 6)
+    d.rekt(166, 72, 186, 86, 4)                   # kassaapparat
+    d.rekt(168, 70, 184, 74, 3)
+    d.rekt(170, 76, 182, 80, 1)
+    d.px(176, 77, 10)
+    d.a[d.mask_ellips(140, 80, 160, 88)] = 15      # skål
+    for (cx_, cy_) in [(144, 79), (149, 78), (154, 79), (147, 81), (152, 81)]:
+        d.poly([(cx_, cy_ + 2), (cx_ + 2, cy_), (cx_ + 4, cy_ + 2), (cx_ + 2, cy_ + 3)], 10)
+        d.px(cx_ + 2, cy_ + 1, 9)
+    # Lyckokatt
+    d.rekt(124, 76, 134, 86, 15)
+    d.a[d.mask_ellips(123, 68, 135, 78)] = 15
+    d.px(124, 68, 15)
+    d.px(133, 68, 15)
+    d.px(126, 72, 0)
+    d.px(131, 72, 0)
+    d.rekt(124, 77, 134, 78, 13)
+    d.px(129, 78, 10)
+    if katt:
+        d.rekt(134, 70, 136, 76, 15)
+    else:
+        d.rekt(134, 74, 137, 77, 15)
+        d.rekt(136, 72, 138, 75, 15)
+
+    d.vinjett(0.35)
+    return d
+
+
+# ======================================================================
+#  PIR 9
+# ======================================================================
+def pir9(v=None):
+    import math
+    v = v or {}
+    dimma = v.get("dimma", 0)    # dimmans fas 0..5
+    fyr = v.get("fyr", 0)        # fyrens ljuskägla 0..7
+    lage = v.get("lage", 0)      # 0 Bruno vaktar, 1 Bruno har gått, 2 dörren är öppen
+    vagor = v.get("vagor", 0)    # vattnets fas 0..3
+    d = Duk(2)
+
+    d.vgrad(0, 0, W, 64, [1, 2, 3, 3])
+    # Fyren långt borta och ljuskäglan
+    fx, fy = 172, 34
+    d.rekt(fx - 1, fy, fx + 2, 62, 15)
+    for y in range(fy + 3, 62, 6):
+        d.rekt(fx - 1, y, fx + 2, y + 3, 13)
+    d.rekt(fx - 2, fy - 3, fx + 3, fy, 1)
+    d.px(fx, fy - 2, 11)
+    d.px(fx + 1, fy - 2, 11)
+    vinkel = [-2.6, -2.9, 2.9, 2.6, None, None, None, None][fyr]
+    if vinkel is not None:
+        for r in range(4, 90):
+            for bredd in range(-r // 8, r // 8 + 1):
+                x = int(fx + r * math.cos(vinkel) - bredd * math.sin(vinkel) * 0.2)
+                y = int(fy - 2 + r * math.sin(vinkel) * 0.15 + bredd)
+                if 0 <= x < W and 0 <= y < 64 and (x + y) % 2 == 0:
+                    d.a[y, x] = LJUSARE[d.a[y, x]]
+    else:
+        d.px(fx, fy - 2, 10)
+    # Ett fartyg i dimman
+    d.poly([(118, 56), (162, 56), (158, 63), (122, 63)], 1)
+    d.rekt(130, 50, 146, 56, 1)
+    d.rekt(136, 44, 140, 50, 1)
+    for px_ in range(126, 158, 6):
+        d.px(px_, 59, 10)
+    # Vattnet
+    d.rekt(104, 62, W, 98, 1)
+    for y in range(64, 98, 3):
+        for x in range(104, W, 8):
+            xx = x + ((y // 3 + vagor) % 4) * 2
+            d.rekt(xx, y, xx + 3, y + 1, 3 if y < 80 else 2)
+
+    # Lagerlokalen i korrugerad plåt
+    d.rekt(0, 14, 108, 98, 3)
+    for x in range(0, 108, 4):
+        d.rekt(x, 14, x + 1, 98, 2)
+        d.rekt(x + 2, 14, x + 3, 98, 4)
+    d.poly([(0, 14), (108, 14), (100, 6), (0, 6)], 1)
+    d.rekt(0, 13, 108, 14, 0)
+    d.ljus(d.mask_poly([(0, 14), (108, 14), (108, 98), (0, 98)]), 0.3, MORKARE)
+    # Skylten LAGER 13 med en stor etta och en ännu större trea
+    text(d, 8, 22, "LAGER", 15)
+    text_stor(d, 30, 19, "1", 15, 2)
+    text_stor(d, 38, 17, "3", 15, 3)
+    # Dörren
+    dx0, dx1 = 54, 78
+    d.rekt(dx0 - 2, 52, dx1 + 2, 98, 1)
+    if lage == 2:
+        d.rekt(dx0, 54, dx1, 98, 0)
+        d.ljus(d.mask_poly([(dx0, 90), (dx1, 90), (dx1, 98), (dx0, 98)]), 0.4)
+        d.poly([(dx0, 54), (dx0 + 6, 58), (dx0 + 6, 94), (dx0, 98)], 4)
+        d.px(dx0 + 4, 76, 10)
+        d.rekt(dx1 - 4, 74, dx1 - 2, 79, 10)
+    else:
+        d.rekt(dx0, 54, dx1, 98, 4)
+        for y in range(58, 98, 8):
+            d.rekt(dx0, y, dx1, y + 1, 3)
+        d.rekt(dx1 - 6, 72, dx1 - 2, 76, 10)
+        d.rekt(dx1 - 5, 69, dx1 - 3, 72, 9)
+    # Lampa ovanför dörren
+    d.rekt(62, 46, 70, 48, 0)
+    d.rekt(63, 48, 69, 50, 11)
+    d.radial(66, 60, 30, 0.5, mask=(XX < 108))
+
+    # Lådor och en pollare
+    for (bx, by, bw, bh) in [(84, 84, 14, 14), (86, 72, 12, 12), (20, 86, 16, 12)]:
+        d.rekt(bx, by, bx + bw, by + bh, 8)
+        d.rekt(bx, by, bx + bw, by + 1, 9)
+        d.linje(bx, by, bx + bw - 1, by + bh - 1, 7)
+        d.linje(bx + bw - 1, by, bx, by + bh - 1, 7)
+        d.rekt(bx, by, bx + 1, by + bh, 7)
+    d.rekt(122, 92, 130, 102, 0)
+    d.rekt(120, 90, 132, 93, 0)
+    d.linje(130, 95, 150, 103, 9)
+    d.linje(130, 96, 150, 104, 8)
+
+    # Bruno
+    if lage == 0:
+        bx = 72
+        d.rekt(bx, 60, bx + 28, 98, 0)             # rock, axlar som kylskåp
+        d.a[d.mask_ellips(bx - 2, 58, bx + 10, 70)] = 0
+        d.a[d.mask_ellips(bx + 18, 58, bx + 30, 70)] = 0
+        d.rekt(bx + 9, 50, bx + 19, 61, 9)         # huvud
+        d.rekt(bx + 8, 48, bx + 20, 52, 1)         # keps
+        d.rekt(bx + 6, 51, bx + 20, 52, 1)
+        d.px(bx + 11, 55, 0)
+        d.px(bx + 16, 55, 0)
+        d.rekt(bx + 12, 58, bx + 17, 59, 7)        # bister mun
+        d.rekt(bx + 4, 74, bx + 24, 80, 1)         # armar i kors
+        d.rekt(bx + 3, 74, bx + 7, 79, 9)
+        d.rekt(bx + 21, 75, bx + 25, 80, 9)
+        d.rekt(bx + 10, 61, bx + 18, 64, 15)       # skjortkrage
+        d.rekt(bx + 7, 98, bx + 12, 99, 0)
+
+    # Bryggans plankor
+    d.rekt(0, 98, W, H, 7)
+    for y in range(98, H, 4):
+        d.rekt(0, y, W, y + 1, 6)
+        for x in range((y * 7) % 23, W, 23):
+            d.rekt(x, y + 1, x + 1, y + 4, 6)
+    d.vgrad(0, 98, W, 104, [6, 7])
+
+    # Dimma som driver över vattnet och himlen
+    s = 0.22 + 0.16 * np.sin(2 * np.pi * (XX + dimma * 16) / 96 + YY / 9.0)
+    omr = (YY > 30) & (YY < 96) & ((XX > 100) | (YY < 50))
+    d.ljus(omr, s)
+    d.vinjett(0.4)
+    return d
+
+
+# ======================================================================
+#  LAGER 13 (inuti)
+# ======================================================================
+def lager13(v=None):
+    v = v or {}
+    damm = v.get("damm", 0)    # dammkorn i ljuset 0..7
+    mops = v.get("mops", 0)    # 0, 1 morrar i buren, 2 ute och glad, 3 borta
+    rnd = random.Random(1953)
+    d = Duk(6)
+
+    # Plankväggar
+    d.rekt(0, 0, W, 88, 6)
+    for x in range(0, W, 7):
+        d.rekt(x, 0, x + 6, 88, 7)
+        d.rekt(x + 6, 0, x + 7, 88, 0)
+        if rnd.random() < 0.4:
+            d.px(x + 3, rnd.randint(4, 80), 6)
+    d.rekt(0, 0, W, 6, 0)
+    for x in range(10, W, 46):
+        d.rekt(x, 6, x + 4, 88, 6)
+    # Högt fönster med galler
+    d.rekt(140, 10, 164, 24, 4)
+    d.vgrad(140, 10, 164, 24, [5, 4])
+    for x in range(144, 164, 5):
+        d.rekt(x, 10, x + 1, 24, 0)
+    d.rekt(138, 8, 166, 10, 0)
+    d.rekt(138, 24, 166, 26, 0)
+    # Betonggolv
+    d.rekt(0, 88, W, H, 3)
+    d.vgrad(0, 88, W, H, [2, 3, 3])
+    for _ in range(14):
+        sx, sy = rnd.randint(0, W - 10), rnd.randint(92, H - 3)
+        d.ljus(d.mask_ellips(sx, sy, sx + rnd.randint(4, 12), sy + 3), 0.6, MORKARE)
+
+    # Ljusstrimma från fönstret
+    strale = d.mask_poly([(140, 24), (164, 24), (130, 112), (84, 112)])
+    d.ljus(strale, 0.45)
+
+    # Fruktlådor till vänster
+    for (bx, by) in [(2, 70), (24, 70), (46, 70), (8, 52), (30, 52), (16, 34)]:
+        d.rekt(bx, by, bx + 20, by + 18, 8)
+        d.rekt(bx, by, bx + 20, by + 1, 9)
+        d.rekt(bx, by + 17, bx + 20, by + 18, 7)
+        d.rekt(bx, by, bx + 1, by + 18, 7)
+        d.rekt(bx + 19, by, bx + 20, by + 18, 7)
+        text(d, bx + 1, by + 7, "FRUKT", 6)
+
+    # Hämtmatskartonger från Golden Dragon
+    for (kx, ky, valt) in [(150, 96, 0), (162, 100, 1), (174, 94, 0), (140, 106, 1), (156, 110, 0), (176, 108, 0),
+                           (66, 102, 1), (52, 108, 0), (186, 100, 1), (130, 98, 0), (78, 110, 0), (168, 86, 0)]:
+        if valt:
+            d.poly([(kx, ky + 5), (kx + 7, ky + 2), (kx + 9, ky + 6), (kx + 2, ky + 9)], 15)
+            d.px(kx + 4, ky + 5, 13)
+        else:
+            d.poly([(kx, ky), (kx + 8, ky), (kx + 7, ky + 7), (kx + 1, ky + 7)], 15)
+            d.rekt(kx + 1, ky + 2, kx + 7, ky + 3, 13)
+            d.linje(kx + 2, ky, kx + 4, ky - 3, 4)
+            d.linje(kx + 6, ky, kx + 4, ky - 3, 4)
+
+    # Glödlampa över buren
+    d.rekt(104, 0, 105, 30, 0)
+    d.rekt(102, 30, 107, 32, 4)
+    d.a[d.mask_ellips(102, 32, 107, 37)] = 11
+    d.radial(104, 50, 34, 0.45, mask=(YY > 36))
+
+    # Hundburen
+    cx0, cy0, cx1, cy1 = 86, 64, 122, 96
+    d.rekt(cx0, cy1 - 2, cx1, cy1 + 1, 4)          # botten
+    if mops in (0, 1):
+        sprite(d, 98, 82, (MOPS_ARG if mops == 0 else MOPS_ARG2)[:11])
+        d.px(99, 81, 0)
+        d.px(107, 81, 0)
+    oppen = mops >= 2
+    dorr0, dorr1 = cx0 + 9, cx1 - 8           # burdörrens bredd
+    for x in range(cx0, cx1 + 1, 3):
+        if oppen and dorr0 < x < dorr1:
+            continue
+        d.rekt(x, cy0, x + 1, cy1, 4)
+    d.rekt(cx0, cy0, cx1 + 1, cy0 + 1, 5)
+    mitt = (cy0 + cy1) // 2
+    d.rekt(cx0, mitt, cx1 + 1, mitt + 1, 4)
+    if oppen:
+        # Dörren uppslagen åt höger: kortare galler i perspektiv
+        d.rekt(dorr0, mitt, dorr1, mitt + 1, 0)
+        d.ljus(d.mask_poly([(dorr0, cy0 + 1), (dorr1, cy0 + 1), (dorr1, cy1 - 2), (dorr0, cy1 - 2)]), 0.4, MORKARE)
+        for k in range(5):
+            x = cx1 + 2 + k * 2
+            d.rekt(x, cy0 + 2 + k, x + 1, cy1 - 1 - k // 2, 4)
+        d.linje(cx1 + 2, cy0 + 2, cx1 + 10, cy0 + 6, 5)
+        d.linje(cx1 + 2, mitt, cx1 + 10, mitt + 2, 4)
+    if mops == 2:
+        sprite(d, 128, 92, MOPS_GLAD)
+        d.px(139, 98, 9)
+        d.px(140, 97, 9)
+
+    # Dammkorn som svävar i ljuset
+    drnd = random.Random(5)
+    for _ in range(16):
+        bx, by = drnd.randint(100, 160), drnd.randint(28, 100)
+        by = 28 + (by - 28 - damm * 3) % 72
+        bx += [0, 1, 1, 0, -1, -1, 0, 0][(by // 4 + damm) % 8]
+        if strale[min(by, H - 1), min(bx, W - 1)]:
+            d.px(bx, by, 15 if drnd.random() < 0.5 else 11)
+
+    d.vinjett(0.45)
+    return d
+
+
 # Animationer per bild: (namn, nyckel i v, [(värde, millisekunder), ...]).
 # Spelet kan låsa en animation på en viss ruta, t.ex. släckt lampa.
+# Ett fjärde värde anger att bara de första rutorna loopar; övriga rutor väljs av spelet (animStyr).
 HOTEL_UPP = [(tuple(1 if j < n else 0 for j in range(5)), 260) for n in range(6)]
 SCENER = {
     "kontor": (kontor, [
@@ -776,6 +1526,33 @@ SCENER = {
         ("duva", "duva", [(0, 1400), (1, 120), (2, 220), (1, 120), (0, 500), (1, 120), (2, 220), (1, 120), (0, 2200)]),
         ("fonster", "fonster", [(1, 5200), (0, 3800)]),
     ]),
+    "vaning": (takvaning, [
+        ("fru", "fru", [(0, 900), (1, 700), (2, 0)], 2),
+        ("mops", "mops", [(0, 1000), (1, 1000)], 1),
+        ("kristall", "kristall", [(i, 300) for i in range(4)]),
+        ("moln", "moln", [(i, 130) for i in range(6)]),
+    ]),
+    "china": (chinatown, [
+        ("regn", "regn", [(i, 100) for i in range(10)]),
+        ("sving", "sving", [(i, 450) for i in range(4)]),
+        ("neon", "neon", [(0, 600)] + [(n, 180) for n in range(1, 12)] + [(12, 3000), (0, 150), (12, 1500)]),
+        ("anga", "anga", [(i, 200) for i in range(4)]),
+    ]),
+    "restaurang": (golden_dragon, [
+        ("eld", "eld", [(i, 110) for i in range(4)]),
+        ("karp", "karp", [(i, 450) for i in range(12)]),
+        ("katt", "katt", [(0, 500), (1, 500)]),
+    ]),
+    "pir": (pir9, [
+        ("dimma", "dimma", [(i, 400) for i in range(6)]),
+        ("fyr", "fyr", [(i, 260) for i in range(8)]),
+        ("vagor", "vagor", [(i, 350) for i in range(4)]),
+        ("lage", "lage", [(0, 1000), (1, 1000), (2, 1000)], 1),
+    ]),
+    "lager": (lager13, [
+        ("damm", "damm", [(i, 300) for i in range(8)]),
+        ("mops", "mops", [(0, 700), (1, 500), (2, 1000), (3, 1000)], 2),
+    ]),
 }
 
 
@@ -785,17 +1562,23 @@ def exportera(namn):
     bas = scen()
     bas.spara(namn)
     ut = []
-    for anim_namn, nyckel, ramar in animationer:
+    for anim_namn, nyckel, ramar, *rest in animationer:
+        slinga = rest[0] if rest else None   # bara de första rutorna loopar, resten väljer spelet
         diffar, tider = [], []
         for varde, ms in ramar:
             a = scen({nyckel: varde}).a
             ys, xs = np.nonzero(a != bas.a)
-            platt = []
+            # Varje pixel packas i tre byte: position (y * bredd + x, två byte) och färg (en byte).
+            buf = bytearray()
             for y, x in zip(ys.tolist(), xs.tolist()):
-                platt += [x, y, int(a[y, x])]
-            diffar.append(platt)
+                pos = y * W + x
+                buf += bytes((pos >> 8, pos & 255, int(a[y, x])))
+            diffar.append(base64.b64encode(bytes(buf)).decode("ascii"))
             tider.append(ms)
-        ut.append({"namn": anim_namn, "ms": tider, "ramar": diffar})
+        post = {"namn": anim_namn, "ms": tider, "ramar": diffar}
+        if slinga:
+            post["slinga"] = slinga
+        ut.append(post)
     return ut
 
 

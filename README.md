@@ -37,11 +37,16 @@ Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaur
 
 Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.
 
-Hittills finns tre bilder:
+Alla platser utom tunnelbaneperrongerna har en bild:
 
 - **Ditt kontor**: neonskylten HOTEL tänds bokstav för bokstav, regnet rinner, cigarettröken stiger och telefonsvararens lampa blinkar.
 - **Main Street**: regn över gatan, ånga från Sals korvkastrull och en dinerskylt med ett glappande N.
 - **Park Avenue**: Pettigrew Towers med snurrande karuselldörr, portiern Reginald, en pickande duva med fluga, ett fönster som tänds och släcks samt duggregn.
+- **Pettigrews takvåning**: kristallkronan glittrar, fru Pettigrew snyftar i sin spetsnäsduk och ett litet moln regnar inomhus på en palm. När Lord Waffles är tillbaka sitter han i korgen och frun är lycklig.
+- **Chinatown**: lyktor som gungar i vinden, GOLDEN DRAGON-skylten som tänds bokstav för bokstav, ånga från ett matstånd och regn.
+- **Golden Dragon**: lågor från Bennys wokpanna, karpen som simmar uttråkad fram och tillbaka och en vinkande lyckokatt.
+- **Pir 9**: dimma som driver, fyrens ljuskägla, vågor och fartyget i hamnen. Bruno försvinner när han fått sin korv, och dörren står öppen när den är dyrkad.
+- **Lager 13**: dammkorn i ljusstrimman och Lord Waffles som morrar i buren. Han kommer ut när han fått kex och är borta när du tagit honom.
 
 Texter i bilderna skrivs med ett litet pixeltypsnitt (`TYPSNITT` och `text()` i ritskriptet).
 
@@ -56,7 +61,9 @@ För att koppla en bild till en plats lägger du till `bild: "namn"` på rummet 
 
 En bild kan ha enkla animationer, till exempel en neonskylt som tänds bokstav för bokstav eller regn som rinner på en ruta. Ritfunktionen tar emot ett läge (`v`), och i `SCENER` anger man vilka lägen som ska visas och hur länge. Skriptet ritar bilden en gång per läge och sparar bara de pixlar som skiljer sig från grundbilden. Datan skrivs in i `spel.html` mellan markörerna `BILDDATA-START` och `BILDDATA-SLUT`. Spelet ritar sedan grundbilden på en canvas och lägger på de ändrade pixlarna i takt.
 
-Med `animStyr` på ett rum kan spelet låsa en animation på en viss ruta. Telefonsvararens lampa slutar till exempel blinka när man har lyssnat på meddelandet.
+Med `animStyr` på ett rum kan spelet låsa en animation på en viss ruta. Telefonsvararens lampa slutar till exempel blinka när man har lyssnat på meddelandet. Om en animation i `SCENER` har ett fjärde värde (`slinga`) loopar bara de första rutorna, och de övriga visas bara när spelet väljer dem. Så visas till exempel Bruno, Lord Waffles och lagerdörren i rätt läge beroende på hur långt man kommit.
+
+Animationsrutorna packas som base64 med tre byte per ändrad pixel, så att spelfilen hålls liten.
 
 Den som har valt minskad rörelse i operativsystemet ser bara stillbilderna.
 
