@@ -30,6 +30,7 @@
   color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body { margin: 0; }
 body {
@@ -322,6 +323,14 @@ function out(text, cls) {
   return p;
 }
 function scrollDown() { requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; }); }
+// Visar texten från början: lägger elementet el överst i textytan (eller toppen om el saknas).
+function scrollTill(el) {
+  requestAnimationFrame(() => {
+    if (!el || !el.isConnected) { scroller.scrollTop = 0; return; }
+    scroller.scrollTop += el.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
+  });
+}
+let nyScen = false;  // sätts när en platsbeskrivning skrivs ut
 const BILD_KEY = "mopsen-som-forsvann-bilder";
 let visaBilder = true;
 try { visaBilder = localStorage.getItem(BILD_KEY) !== "av"; } catch (e) {}
@@ -473,6 +482,7 @@ function joinList(a) {
 //  RUM OCH FÖRFLYTTNING
 // ================================================================
 function look() {
+  nyScen = true;
   const r = ROOMS[S.room];
   out(r.name, "room");
   out(r.desc(S));
@@ -1010,11 +1020,13 @@ const history = []; let hIdx = 0;
 function submit(text) {
   const t = text.trim();
   if (!t) return;
-  out(t, "cmd");
+  const rad = out(t, "cmd");
   history.push(t); hIdx = history.length;
+  nyScen = false;
   exec(t);
   updateStatus();
-  scrollDown();
+  // Vid en ny scen visas texten från början av svaret, annars från slutet.
+  if (nyScen) scrollTill(rad); else scrollDown();
 }
 document.getElementById("f").addEventListener("submit", e => {
   e.preventDefault();
@@ -1040,7 +1052,7 @@ function start(data) {
     intro();
   }
   updateStatus();
-  scrollDown();
+  scrollTill(null);
   window.claude?.hot?.snapshot?.(() => ({ state: S }));
   input.focus();
 }
