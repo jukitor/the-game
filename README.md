@@ -36,7 +36,7 @@ Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaur
 
 ## Startskärm
 
-Spelet börjar med en startskärm: en målerisk noir-illustration av en detektiv sedd bakifrån under en gatlykta i regnet, med loggan **Mopsen som försvann** och texten *Ett deckaräventyr · Fall nr 1*. Ovanpå bilden faller animerat regn. Bilden ligger kvar tills man klickar eller trycker på den. Klicket startar spelet och jazzen.
+Spelet börjar med en startskärm: en målerisk noir-illustration av en detektiv sedd bakifrån under en gatlykta i regnet, med loggan **Mopsen som försvann**. Ovanpå bilden faller animerat regn. Bilden ligger kvar tills man klickar eller trycker på den. Klicket startar spelet och jazzen.
 
 Bilden ritas av `verktyg/rita_splash.py` (Python med Pillow och NumPy) i 3200 × 1800 pixlar, i lager med ljus, dimma, regn, spegelbilder i våt asfalt, filmkorn och vinjettering. Den sparas som `bilder/splash.jpg` (liggande) och `bilder/splash_staende.jpg` (stående, för mobil).
 
