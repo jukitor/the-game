@@ -267,6 +267,9 @@ MELODI2 = [(t, s + (0.5 if s < 3.5 and l >= 1 else 0), n + 12, max(0.5, l - (0.5
 AVSLUT = [(0, 1, 63, 1), (0, 2, 62, 1), (0, 3, 60, 1), (1, 0, 59, 3), (2, 0, 60, 3.5)]
 
 
+SOLISTER = False
+
+
 def swing(slag, grad=0.08):
     hel = int(slag)
     return hel + 0.5 + grad if abs(slag - hel - 0.5) < 1e-6 else slag
@@ -280,7 +283,7 @@ def komponera_jazz(varv=2):
     lat.program(SAX, 66)
     lat.program(TRUMPET, 59)
     lat.program(TRUMMOR, 40)  # kanal 10 är trumkanalen; program 40 = Brush Kit
-    for k, (vol, pan, klang) in {PIANO: (96, 52, 70), BAS: (84, 60, 40), SAX: (124, 70, 85),
+    for k, (vol, pan, klang) in {PIANO: (104, 52, 70), BAS: (84, 60, 40), SAX: (124, 70, 85),
                                  TRUMPET: (122, 44, 90), TRUMMOR: (78, 64, 55)}.items():
         lat.cc(k, 7, vol); lat.cc(k, 10, pan); lat.cc(k, 91, klang); lat.cc(k, 93, 0)
     takter_per_varv = len(FORM)
@@ -296,7 +299,7 @@ def komponera_jazz(varv=2):
                 # Piano: mjukt ackord på ettan, ibland en föregripande upprepning
                 lat.cc(PIANO, 64, 0, s - 0.02); lat.cc(PIANO, 64, 100, s + 0.03)
                 for j, ton in enumerate(rost):
-                    lat.not_(PIANO, ton, s + j * 0.03, langd, 50 if del_ != "intro" else 58)
+                    lat.not_(PIANO, ton, s + j * 0.03, langd, 56 if del_ != "intro" else 58)
                 if langd == 4 and random.random() < 0.45:
                     for ton in rost[1:]:
                         lat.not_(PIANO, ton + 12, swing(s + 2.5), 1.4, 32)
@@ -324,7 +327,9 @@ def komponera_jazz(varv=2):
                     lat.not_(TRUMMOR, 51, t0 + b, 0.5, 30 if b % 2 == 0 else 26, jitter=0.004)
                     if b in (1, 3):
                         lat.not_(TRUMMOR, 51, swing(t0 + b + 0.5, 0.12), 0.3, 20, jitter=0.004)
-        # Melodier
+        # Melodier (avstängda: musiken är bara komp, sätt SOLISTER = True för sax och trumpet)
+        if not SOLISTER:
+            continue
         a1, a2, ut = start + 4 * 4, start + 20 * 4, start + 36 * 4
         for (t, s, n, l) in MELODI:
             slag = a1 + t * 4 + swing(s)
