@@ -37,7 +37,12 @@ Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaur
 
 Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.
 
-Hittills finns en bild: detektivens kontor, med blinkande neonskylt, regn, cigarettrök och telefonsvararens lampa.
+Hittills finns två bilder:
+
+- **Ditt kontor**: neonskylten HOTEL tänds bokstav för bokstav, regnet rinner, cigarettröken stiger och telefonsvararens lampa blinkar.
+- **Main Street**: regn över gatan, ånga från Sals korvkastrull och en dinerskylt med ett glappande N.
+
+Texter i bilderna skrivs med ett litet pixeltypsnitt (`TYPSNITT` och `text()` i ritskriptet).
 
 ```
 python3 verktyg/rita_bilder.py   # ritar om bilderna och animationerna
