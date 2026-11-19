@@ -34,6 +34,12 @@ Pil upp i inmatningsfältet hämtar förra kommandot.
 
 Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaurangen Golden Dragon, Pir 9 och Lager 13. Tunnelbanan har fyra stationer: Main Street, Park Avenue, Chinatown och Pir 9.
 
+## Startskärm
+
+Spelet börjar med en startskärm: en målerisk noir-illustration av en detektiv sedd bakifrån under en gatlykta i regnet, med loggan **Mopsen som försvann** och texten *Ett deckaräventyr · Fall nr 1*. Ovanpå bilden faller animerat regn. Knappen **Öppna fallet**, eller valfri tangent eller ett tryck, startar spelet och ljudet.
+
+Bilden ritas av `verktyg/rita_splash.py` (Python med Pillow och NumPy) i 3200 × 1800 pixlar, i lager med ljus, dimma, regn, spegelbilder i våt asfalt, filmkorn och vinjettering. Den sparas som `bilder/splash.jpg` (liggande) och `bilder/splash_staende.jpg` (stående, för mobil).
+
 ## Bilder
 
 Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.

@@ -75,6 +75,40 @@ main {
 #log .replik.pratar::after { content: "\258C"; font-style: normal; animation: markor 1s steps(1) infinite; margin-left: 2px; }
 @keyframes markor { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #log .replik.pratar::after { animation: none; } }
+/* Startskärmen: en filmaffisch med bilden i fullskärm, loggan överst och en knapp längst ner. */
+.splash {
+  position: fixed; inset: 0; z-index: 100; background: #05070b; color: #efe6d0;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center;
+  padding: max(28px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  transition: opacity 0.9s ease; cursor: pointer; overflow: hidden;
+}
+.splash.borta { opacity: 0; pointer-events: none; }
+.splash picture, .splash img, .splash canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.splash img { object-fit: cover; object-position: 50% 45%; animation: splashin 2.4s ease-out both; }
+@keyframes splashin { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+.splash::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(3,4,8,0.75) 0%, rgba(3,4,8,0) 32%, rgba(3,4,8,0) 62%, rgba(3,4,8,0.85) 100%); }
+.splash > .logo, .splash > .splash-nere { position: relative; z-index: 1; }
+.logo { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; animation: logoin 2.2s 0.5s ease-out both; }
+@keyframes logoin { from { opacity: 0; transform: translateY(-8px); letter-spacing: 0.3em; } to { opacity: 1; transform: none; } }
+.logo .ort { font-family: var(--font-head); text-transform: uppercase; letter-spacing: 0.32em; font-size: clamp(0.7rem, 2.4vw, 0.9rem); color: #c9b48d; }
+.logo .titel { font-family: var(--font-head); font-weight: 600; text-transform: uppercase; line-height: 0.9;
+  font-size: clamp(3rem, min(15vw, 11vh), 7.5rem); letter-spacing: 0.06em; color: #f1e7cf;
+  text-shadow: 0 0 28px rgba(255, 168, 80, 0.35), 0 2px 0 rgba(0,0,0,0.6); }
+.logo .under { display: flex; align-items: center; gap: 12px; font-family: var(--font-type); font-style: italic;
+  font-size: clamp(1.1rem, min(4.6vw, 3.4vh), 2rem); color: #f1e7cf; }
+.logo .under::before, .logo .under::after { content: ""; width: clamp(24px, 8vw, 64px); height: 1px; background: #c4382e; }
+.logo .serie { margin-top: 6px; font-family: var(--font-head); text-transform: uppercase; letter-spacing: 0.24em;
+  font-size: clamp(0.65rem, 2.2vw, 0.8rem); color: #e8584a; border: 1px solid rgba(232,88,74,0.6); padding: 3px 10px; }
+.splash-nere { display: flex; flex-direction: column; align-items: center; gap: 10px; animation: logoin 1.6s 1.4s ease-out both; }
+.splash button {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: 0.18em; font-size: 1rem;
+  color: #f1e7cf; background: rgba(10, 8, 6, 0.55); border: 1px solid rgba(241, 231, 207, 0.55);
+  padding: 12px 28px; cursor: pointer; backdrop-filter: blur(2px);
+}
+.splash button:hover, .splash button:focus-visible { border-color: #ffb45a; color: #fff3da; outline: none; box-shadow: 0 0 24px rgba(255,170,80,0.35); }
+.splash .tips { font-family: var(--font-type); font-size: 0.8rem; color: #a99d86; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .splash img, .logo, .splash-nere { animation: none; } .splash { transition: none; } }
 /* Bildrutan: pixelbilden skalas upp skarpt, utan utsmetning. */
 .scen { margin: 0; background: #0b0d1a; border-bottom: 2px solid var(--ink); display: flex; justify-content: center; }
 .scen canvas {
@@ -103,6 +137,23 @@ form label { font-weight: 700; color: var(--stamp); }
 .quick button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 1px; }
 </style>
 
+<div class="splash" id="splash" role="dialog" aria-modal="true" aria-labelledby="splashtitel">
+  <picture>
+    <source media="(orientation: portrait)" srcset="bilder/splash_staende.jpg">
+    <img src="bilder/splash.jpg" alt="En detektiv i trenchcoat och hatt står med ryggen mot oss under en gatlykta i regnet. Längre bort lyser en röd neonskylt.">
+  </picture>
+  <canvas id="splashregn" aria-hidden="true"></canvas>
+  <h1 class="logo" id="splashtitel">
+    <span class="ort">Grand Harbor · 1947</span>
+    <span class="titel">Mopsen</span>
+    <span class="under">som försvann</span>
+    <span class="serie">Ett deckaräventyr · Fall nr 1</span>
+  </h1>
+  <div class="splash-nere">
+    <button type="button" id="startknapp">Öppna fallet</button>
+    <p class="tips">Med musik och ljud</p>
+  </div>
+</div>
 <header class="status">
   <div class="wrap">
     <span class="title">Mopsen som försvann</span>
@@ -1348,8 +1399,57 @@ function visaLjudknapp() {
   b.textContent = Ljud.pa ? "Ljud på" : "Ljud av";
   b.setAttribute("aria-pressed", String(Ljud.pa));
 }
+// ================================================================
+//  STARTSKÄRMEN
+// ================================================================
+function visaStartskarm() {
+  const sp = document.getElementById("splash");
+  const knapp = document.getElementById("startknapp");
+  let stangd = false;
+  // Lätt regn som faller över bilden
+  const cv = document.getElementById("splashregn");
+  const rorelse = !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  let raf = 0;
+  if (rorelse && cv.getContext) {
+    const ctx = cv.getContext("2d");
+    const droppar = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), v: 0.6 + Math.random() * 0.8, l: 0.02 + Math.random() * 0.03 }));
+    let senast = performance.now();
+    const rita = nu => {
+      const dt = Math.min(0.05, (nu - senast) / 1000); senast = nu;
+      const w = cv.width = cv.clientWidth * (window.devicePixelRatio || 1), h = cv.height = cv.clientHeight * (window.devicePixelRatio || 1);
+      ctx.clearRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(210, 205, 195, 0.22)"; ctx.lineWidth = Math.max(1, (window.devicePixelRatio || 1) * 0.8);
+      ctx.beginPath();
+      for (const d of droppar) {
+        d.y += d.v * dt * 1.6; d.x -= d.v * dt * 0.25;
+        if (d.y > 1.05) { d.y = -0.05; d.x = Math.random() * 1.1; }
+        ctx.moveTo(d.x * w, d.y * h); ctx.lineTo((d.x - d.l * 0.2) * w, (d.y + d.l) * h);
+      }
+      ctx.stroke();
+      raf = requestAnimationFrame(rita);
+    };
+    raf = requestAnimationFrame(rita);
+  }
+  const stang = () => {
+    if (stangd) return;
+    stangd = true;
+    Ljud.vakna();
+    sp.classList.add("borta");
+    setTimeout(() => { sp.hidden = true; cancelAnimationFrame(raf); }, 950);
+    if (!pekskarm) input.focus();
+  };
+  sp.addEventListener("click", stang);
+  document.addEventListener("keydown", function tangent(e) {
+    if (stangd) { document.removeEventListener("keydown", tangent); return; }
+    e.preventDefault(); stang();
+  });
+  knapp.focus({ preventScroll: true });
+}
+
 function start(data) {
   visaLjudknapp();
+  if (data && data.state) document.getElementById("splash").hidden = true;
+  else visaStartskarm();
   if (data && data.state) {
     S = data.state;
     out("Du är tillbaka i fallet.", "sys");
