@@ -1010,6 +1010,8 @@ function restart() {
 }
 
 const input = document.getElementById("cmd");
+// På pekskärmar (mobil) döljs tangentbordet efter varje kommando. Det visas igen först när man trycker i fältet.
+const pekskarm = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 const history = []; let hIdx = 0;
 function submit(text) {
   const t = text.trim();
@@ -1026,6 +1028,7 @@ document.getElementById("f").addEventListener("submit", e => {
   e.preventDefault();
   submit(input.value);
   input.value = "";
+  if (pekskarm) input.blur();
 });
 input.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" && hIdx > 0) { hIdx--; input.value = history[hIdx]; e.preventDefault(); }
@@ -1033,7 +1036,7 @@ input.addEventListener("keydown", e => {
 });
 document.getElementById("quick").addEventListener("click", e => {
   const b = e.target.closest("button");
-  if (b) { submit(b.dataset.c); input.focus(); }
+  if (b) { submit(b.dataset.c); if (pekskarm) b.blur(); else input.focus(); }
 });
 
 function start(data) {
@@ -1048,7 +1051,7 @@ function start(data) {
   updateStatus();
   scrollTill(null);
   window.claude?.hot?.snapshot?.(() => ({ state: S }));
-  input.focus();
+  if (!pekskarm) input.focus();
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 
