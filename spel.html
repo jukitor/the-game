@@ -380,7 +380,14 @@ function startaAnim() {
 function stoppaAnim() { cancelAnimationFrame(scen.raf); scen.raf = 0; }
 
 // Skala bilden med ett helt tal så att alla pixlar blir lika stora.
+// På mobil (smal skärm i stående läge) fyller bilden i stället hela bredden.
 function fitScene() {
+  const vw = document.documentElement.clientWidth || window.innerWidth;
+  if (vw < 700 && window.innerHeight > window.innerWidth) {
+    cv.style.width = vw + "px";
+    cv.style.height = Math.round(vw * 120 / 192) + "px";
+    return;
+  }
   const maxW = Math.min(window.innerWidth, 1200);
   const maxH = window.innerHeight * 0.36;
   let k = Math.floor(Math.min(maxW / 192, maxH / 120));
