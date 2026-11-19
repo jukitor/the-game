@@ -25,6 +25,7 @@ Grand Harbor, 1947. Du är en luggsliten privatdetektiv utan pengar och utan kaf
 | `prata med portiern` | Pratar med någon |
 | `ledtråd` | Ger en ledtråd om du kör fast |
 | `bild` | Stänger av eller slår på bilderna |
+| `ljud`, `musik` | Stänger av eller slår på allt ljud, eller bara musiken |
 | `poäng`, `spara`, `ladda`, `omstart` | Övrigt |
 
 Pil upp i inmatningsfältet hämtar förra kommandot.
@@ -70,6 +71,16 @@ Med `animStyr` på ett rum kan spelet låsa en animation på en viss ruta. Telef
 Animationsrutorna packas som base64 med tre byte per ändrad pixel, så att spelfilen hålls liten.
 
 Den som har valt minskad rörelse i operativsystemet ser bara stillbilderna.
+
+## Ljud och musik
+
+Allt ljud skapas med kod i webbläsaren (Web Audio), så spelet behöver inga ljudfiler. Ljudmotorn ligger i `spel.html` i avsnittet `LJUD` (objektet `Ljud`).
+
+- **Musik:** en långsam deckarjazz i c-moll med gående kontrabas, visp, ridecymbal, pianoackord och en dämpad trumpet. Varannan gång spelas en annan melodi.
+- **Miljöljud per plats:** regn mot fönstret på kontoret, regn och bilar som tutar på Main Street, duvor på Park Avenue, en klocka som tickar i takvåningen, sorl och cykelklockor i Chinatown, fräsande wok och klirr på Golden Dragon, vågor, måsar och mistlurar vid Pir 9, knarr och en morrande mops i lagret och tunnelbanebrus på perrongerna. På Park Avenues perrong spelar fiolspelaren brutna ackord i Bachs anda, och då tonas jazzen ner.
+- **Effekter:** telefonsvararen (klick, bandspolning, pip och en mumlande röst), spärren, tunnelbaneresan, lådan, kassaapparaten, Brunos mage, mopsen som morrar och skäller, låset som dyrkas upp, lyckokakan, hissen, poängljud och en slutfanfar.
+
+Ljudet startar första gången man skriver eller trycker, eftersom webbläsare inte tillåter ljud innan dess. Kommandot `ljud` (eller knappen **Ljud**) stänger av och slår på allt ljud, och `musik` stänger av och slår på musiken. Valen sparas i webbläsaren. Ljudet pausas när fliken inte syns.
 
 ## Filer
 
