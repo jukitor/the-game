@@ -75,6 +75,15 @@ main {
   font-size: clamp(1.8rem, 6vw, 2.6rem); line-height: 1.05; font-weight: 600; text-wrap: balance;
 }
 #log .score { color: var(--stamp); font-weight: 700; }
+/* Bildrutan: pixelbilden skalas upp skarpt, utan utsmetning. */
+.scen { margin: 0; background: #0b0d1a; border-bottom: 2px solid var(--ink); display: flex; justify-content: center; }
+.scen img {
+  display: block; width: 384px; height: 240px; max-width: 100%; object-fit: contain;
+  image-rendering: pixelated; image-rendering: crisp-edges;
+}
+.scen img.ritar { animation: rita 0.9s steps(24, end) both; }
+@keyframes rita { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) { .scen img.ritar { animation: none; } }
 footer.input { border-top: 2px solid var(--ink); background: var(--paper); padding-bottom: env(safe-area-inset-bottom, 0px); }
 footer.input .wrap { padding-block: 10px; display: flex; flex-direction: column; gap: 8px; }
 form { display: flex; gap: 8px; align-items: center; }
@@ -103,6 +112,7 @@ form label { font-weight: 700; color: var(--stamp); }
     <span class="nums" id="nums">Poäng 0/100 · Drag 0</span>
   </div>
 </header>
+<figure class="scen" id="scen" hidden><img id="scenbild" src="data:," alt=""></figure>
 <main id="scroller">
   <div class="wrap"><div id="log" aria-live="polite"></div></div>
 </main>
@@ -120,6 +130,7 @@ form label { font-weight: 700; color: var(--stamp); }
       <button type="button" data-c="in">In</button>
       <button type="button" data-c="ut">Ut</button>
       <button type="button" data-c="ledtråd">Ledtråd</button>
+      <button type="button" data-c="bild">Bild</button>
       <button type="button" data-c="hjälp">Hjälp</button>
     </div>
   </div>
@@ -142,6 +153,7 @@ const STATIONS = {
 const ROOMS = {
   kontor: {
     name: "Ditt kontor",
+    bild: "bilder/kontor.png",
     desc: s => "Ditt kontor på femte våningen i Hendersonhuset. Ett skrivbord, två stolar (en för dig och en för kunder som aldrig kommer), en klädhängare och ett fönster mot regnet. På dörrens frostade glas står det TYKETEDTAVIRP, vilket är rätt stavat från andra sidan. Trappan leder ner till gatan." +
       (s.f.svarare ? "" : "\n\nPå skrivbordet blinkar telefonsvararen ilsket rött."),
     exits: { ner: "mainst", ut: "mainst" },
@@ -305,7 +317,45 @@ function out(text, cls) {
   return p;
 }
 function scrollDown() { requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; }); }
+const BILD_KEY = "mopsen-som-forsvann-bilder";
+let visaBilder = true;
+try { visaBilder = localStorage.getItem(BILD_KEY) !== "av"; } catch (e) {}
+function updateScene() {
+  const fig = document.getElementById("scen");
+  const img = document.getElementById("scenbild");
+  const src = ROOMS[S.room].bild;
+  if (!src || !visaBilder) { fig.hidden = true; return; }
+  fig.hidden = false;
+  fitScene();
+  if (img.getAttribute("src") !== src) {
+    img.setAttribute("src", src);
+    img.alt = "Bild: " + ROOMS[S.room].name;
+    img.classList.remove("ritar");
+    void img.offsetWidth;
+    img.classList.add("ritar");
+  }
+}
+// Skala bilden med ett helt tal så att alla pixlar blir lika stora.
+function fitScene() {
+  const img = document.getElementById("scenbild");
+  const maxW = Math.min(window.innerWidth, 1200);
+  const maxH = window.innerHeight * 0.36;
+  let k = Math.floor(Math.min(maxW / 192, maxH / 120));
+  if (k < 1) k = 1;
+  if (k < 2 && maxW >= 384) k = 2;
+  img.style.width = 192 * k + "px";
+  img.style.height = 120 * k + "px";
+}
+window.addEventListener("resize", fitScene);
+function toggleBilder() {
+  visaBilder = !visaBilder;
+  try { localStorage.setItem(BILD_KEY, visaBilder ? "pa" : "av"); } catch (e) {}
+  out(visaBilder ? "Bilderna är påslagna." : "Bilderna är avstängda. Skriv BILD för att slå på dem igen.", "sys");
+  if (visaBilder) document.getElementById("scenbild").setAttribute("src", "data:,");
+  updateScene();
+}
 function updateStatus() {
+  updateScene();
   document.getElementById("where").textContent = ROOMS[S.room].name;
   document.getElementById("nums").textContent = `Poäng ${S.score}/${MAX_SCORE} · Drag ${S.moves}`;
 }
@@ -718,7 +768,7 @@ function win() {
 function help() {
   out("Du styr spelet genom att skriva korta kommandon på svenska, till exempel:");
   out("  TITTA (eller L)            UNDERSÖK RÖCKEN (eller X ROCK)\n  TA KORTET / TA ALLT         SLÄPP DYRKEN\n  ÖPPNA LÅDAN                 LÄS BREVET\n  GE KORVEN TILL BRUNO        VISA FOTOT FÖR BENNY\n  PRATA MED PORTIERN          ÅK TILL CHINATOWN\n  UPP, NER, IN, UT            INVENTARIE (eller I)");
-  out("Övrigt: POÄNG, LEDTRÅD, SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.", "sys");
+  out("Övrigt: POÄNG, LEDTRÅD, BILD (bilder av/på), SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.", "sys");
 }
 
 function hint() {
@@ -794,6 +844,7 @@ function exec(raw) {
   if (["poäng", "score", "status"].includes(v)) return scoreReport();
   if (v === "spara" || v === "save") return save();
   if (v === "ladda" || v === "load" || v === "återställ") return load();
+  if (v === "bild" || v === "bilder") return toggleBilder();
   if (v === "omstart" || v === "restart" || s === "börja om") return restart();
 
   if (S.over) { out("Fallet är redan löst. Skriv OMSTART för att spela igen, eller POÄNG för att se hur det gick.", "sys"); return; }

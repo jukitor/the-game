@@ -24,6 +24,7 @@ Grand Harbor, 1947. Du är en luggsliten privatdetektiv utan pengar och utan kaf
 | `visa fotot för benny` | Visar något för någon |
 | `prata med portiern` | Pratar med någon |
 | `ledtråd` | Ger en ledtråd om du kör fast |
+| `bild` | Stänger av eller slår på bilderna |
 | `poäng`, `spara`, `ladda`, `omstart` | Övrigt |
 
 Pil upp i inmatningsfältet hämtar förra kommandot.
@@ -32,9 +33,23 @@ Pil upp i inmatningsfältet hämtar förra kommandot.
 
 Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaurangen Golden Dragon, Pir 9 och Lager 13. Tunnelbanan har fyra stationer: Main Street, Park Avenue, Chinatown och Pir 9.
 
+## Bilder
+
+Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.
+
+Hittills finns en bild: detektivens kontor.
+
+```
+python3 verktyg/rita_bilder.py   # ritar om bilderna till bilder/
+```
+
+För att koppla en bild till en plats lägger du till `bild: "bilder/namn.png"` på rummet i `ROOMS`.
+
 ## Filer
 
-- `index.html`: hela spelet i en fil (HTML, CSS och JavaScript).
-- `spel.html`: samma spel utan `<head>`, för publicering som Claude-artefakt.
+- `spel.html`: källan till spelet (HTML, CSS och JavaScript), utan `<head>` så att den också kan publiceras som Claude-artefakt.
+- `index.html`: den fristående sidan som GitHub Pages visar. Den byggs från `spel.html` med `python3 verktyg/bygg.py`. Redigera inte den direkt.
+- `bilder/`: pixelbilderna.
+- `verktyg/`: skripten som ritar bilderna och bygger `index.html`.
 
 Spelvärlden (rum, föremål och poäng) ligger överst i skriptet i objekten `ROOMS`, `OBJ` och `SCORES`, så det är lätt att bygga ut med fler platser och pussel.
