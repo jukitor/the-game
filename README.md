@@ -37,7 +37,7 @@ Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaur
 
 Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.
 
-Alla platser utom tunnelbaneperrongerna har en bild:
+Alla platser har en egen bild:
 
 - **Ditt kontor**: neonskylten HOTEL tänds bokstav för bokstav, regnet rinner, cigarettröken stiger och telefonsvararens lampa blinkar.
 - **Main Street**: regn över gatan, ånga från Sals korvkastrull och en dinerskylt med ett glappande N.
@@ -47,6 +47,10 @@ Alla platser utom tunnelbaneperrongerna har en bild:
 - **Golden Dragon**: lågor från Bennys wokpanna, karpen som simmar uttråkad fram och tillbaka och en vinkande lyckokatt.
 - **Pir 9**: dimma som driver, fyrens ljuskägla, vågor och fartyget i hamnen. Bruno försvinner när han fått sin korv, och dörren står öppen när den är dyrkad.
 - **Lager 13**: dammkorn i ljusstrimman och Lord Waffles som morrar i buren. Han kommer ut när han fått kex och är borta när du tagit honom.
+- **Perrongen vid Main Street**: smutsvitt kakel med mosaikskylt, jordnötsskal på golvet, en man som sover under en tidning och snarkar, och en glödlampa som glappar.
+- **Perrongen vid Park Avenue**: marmor och mässing, blankt golv, en ormbunke och fiolspelaren som spelar Bach med noter som svävar uppåt.
+- **Perrongen vid Chinatown**: rött kakel och papperslyktor, ett tåg med öppen dörr och folk med matkassar fulla av purjolök och ingefära.
+- **Perrongen vid Pir 9**: slutstationen med trasigt kakel, en stoppbock vid tunneln, ett lysrör som blinkar SOS på morse, vatten som droppar i en pöl och en råtta som springer längs kanten.
 
 Texter i bilderna skrivs med ett litet pixeltypsnitt (`TYPSNITT` och `text()` i ritskriptet).
 

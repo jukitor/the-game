@@ -350,6 +350,9 @@ TYPSNITT = {
     "Y": ["101", "101", "010", "010", "010"], "1": ["010", "110", "010", "010", "111"],
     "L": ["100", "100", "100", "100", "111"], "F": ["111", "100", "110", "100", "100"],
     "K": ["101", "110", "100", "110", "101"], "3": ["111", "001", "011", "001", "111"],
+    "M": ["10001", "11011", "10101", "10001", "10001"], "V": ["101", "101", "101", "101", "010"],
+    "C": ["011", "100", "100", "100", "011"], "Z": ["111", "001", "010", "100", "111"],
+    "9": ["111", "101", "111", "001", "111"],
     " ": ["000"] * 5,
 }
 
@@ -1502,6 +1505,395 @@ def lager13(v=None):
     return d
 
 
+# ======================================================================
+#  TUNNELBANEPERRONGER (gemensamma delar)
+# ======================================================================
+def textbredd(s):
+    return sum(len(TYPSNITT[ch][0]) + 1 for ch in s) - 1
+
+
+def skylt(d, cx, y, s, bg, fg, ram, pad=3):
+    """Centrerad skylt med ram. Returnerar skyltens kanter."""
+    b = textbredd(s)
+    x0, x1 = cx - b // 2 - pad, cx + (b + 1) // 2 + pad
+    d.rekt(x0 - 1, y - 1, x1 + 1, y + 5 + pad * 2 - 1, ram)
+    d.rekt(x0, y, x1, y + 5 + pad * 2 - 2, bg)
+    text(d, x0 + pad, y + pad - 1, s, fg)
+    return x0, x1
+
+
+def linjekarta(d, x, y, aktiv):
+    """Liten linjekarta med fyra stationer. aktiv = 0..3 markerar var man är."""
+    d.rekt(x - 1, y - 1, x + 33, y + 13, 0)
+    d.rekt(x, y, x + 32, y + 12, 15)
+    d.rekt(x + 3, y + 6, x + 29, y + 7, 13)
+    for i in range(4):
+        sx = x + 4 + i * 8
+        d.rekt(sx - 1, y + 5, sx + 2, y + 8, 0)
+        d.px(sx, y + 6, 11 if i == aktiv else 15)
+        d.px(sx + 1, y + 6, 11 if i == aktiv else 15)
+    for i in range(4):
+        d.rekt(x + 3 + i * 8, y + 2, x + 7 + i * 8, y + 3, 4)
+        d.rekt(x + 3 + i * 8, y + 9, x + 6 + i * 8, y + 10, 4)
+
+
+def spar(d, rnd, y0=96, slipers=6, rals=4):
+    """Spårgropen längst ner."""
+    d.rekt(0, y0, W, H, 0)
+    for x in range(rnd.randint(0, 5), W, 9):
+        d.rekt(x, y0 + 6, x + 5, H, slipers)
+        d.rekt(x, y0 + 6, x + 5, y0 + 7, 7)
+    for ry in (y0 + 9, y0 + 18):
+        d.rekt(0, ry, W, ry + 2, rals)
+        d.rekt(0, ry, W, ry + 1, 5)
+
+
+def plattformskant(d, y=92):
+    d.rekt(0, y, W, y + 3, 10)
+    for x in range(0, W, 4):
+        d.px(x, y + 1, 9)
+    d.rekt(0, y + 3, W, y + 4, 0)
+
+
+# ======================================================================
+#  PERRONGEN VID MAIN STREET
+# ======================================================================
+def perrong_main(v=None):
+    v = v or {}
+    zzz = v.get("zzz", 0)        # snarkningar 0..3
+    lampa = v.get("lampa", 1)    # glappande glödlampa
+    rnd = random.Random(2001)
+    d = Duk(15)
+
+    # Smutsvitt kakel
+    d.rekt(0, 0, W, 76, 15)
+    for y in range(8, 76, 4):
+        d.rekt(0, y, W, y + 1, 4)
+        for x in range(((y // 4) % 2) * 4, W, 8):
+            d.rekt(x, y, x + 1, y + 4, 4)
+    d.ljus(d.mask_poly([(0, 0), (W, 0), (W, 76), (0, 76)]), 0.35, MORKARE)
+    for _ in range(18):
+        sx, sy = rnd.randint(0, W - 8), rnd.randint(30, 70)
+        d.ljus(d.mask_ellips(sx, sy, sx + rnd.randint(4, 10), sy + rnd.randint(6, 16)), 0.6, MORKARE)
+    # Grönt kakelband och mosaikskylt
+    d.rekt(0, 54, W, 60, 12)
+    for x in range(0, W, 4):
+        d.px(x, 56, 6)
+    d.rekt(0, 0, W, 8, 1)
+    skylt(d, 96, 18, "MAIN ST", 15, 0, 13, pad=4)
+    for x in range(80, 114, 2):
+        d.px(x, 17, 12)
+        d.px(x + 1, 32, 12)
+    # Stålbalkar med nitar
+    for bx in (54, 140):
+        d.rekt(bx, 0, bx + 6, 92, 2)
+        d.rekt(bx + 1, 0, bx + 2, 92, 3)
+        for ny in range(6, 92, 8):
+            d.px(bx + 4, ny, 4)
+    # Linjekarta
+    linjekarta(d, 12, 30, 0)
+    # Glödlampor i taket
+    for i, lx in enumerate((28, 98, 168)):
+        d.rekt(lx, 8, lx + 1, 12, 0)
+        tand = lampa if i == 2 else 1
+        d.rekt(lx - 1, 12, lx + 2, 15, 11 if tand else 4)
+        if tand:
+            d.radial(lx, 30, 30, 0.35, mask=(YY > 14) & (YY < 92))
+    # Golv
+    d.rekt(0, 76, W, 92, 3)
+    d.vgrad(0, 76, W, 92, [2, 3, 4])
+    for y in range(78, 92, 4):
+        d.rekt(0, y, W, y + 1, 2)
+    # Jordnötsskal och en tidning på golvet
+    for _ in range(26):
+        d.px(rnd.randint(4, W - 4), rnd.randint(80, 90), rnd.choice([9, 8, 10]))
+    d.poly([(20, 86), (30, 84), (32, 88), (22, 90)], 15)
+    plattformskant(d)
+    spar(d, rnd)
+
+    # Bänk med en sovande man under en tidning
+    d.rekt(112, 72, 172, 76, 8)
+    d.rekt(112, 72, 172, 73, 9)
+    d.rekt(112, 64, 172, 66, 8)
+    for lx in (116, 166):
+        d.rekt(lx, 66, lx + 2, 90, 0)
+    d.rekt(122, 65, 158, 72, 4)              # rocken
+    d.rekt(122, 70, 158, 72, 3)
+    d.rekt(124, 65, 156, 66, 5)
+    d.rekt(140, 66, 141, 72, 3)
+    d.rekt(158, 67, 166, 71, 0)              # skor
+    d.rekt(114, 64, 124, 72, 15)             # tidningen över ansiktet
+    d.linje(115, 66, 122, 66, 4)
+    d.linje(115, 68, 121, 68, 4)
+    d.rekt(110, 66, 114, 70, 10)             # hand som hänger ner
+    d.rekt(108, 70, 111, 74, 10)
+    # Zzz som stiger
+    for i in range(3):
+        steg = (zzz + i) % 4
+        if steg == 3:
+            continue
+        zx, zy = 118 + steg * 4 + i, 58 - steg * 7
+        text(d, zx, zy, "Z", 4 if steg == 2 else 5)
+
+    d.vinjett(0.4)
+    return d
+
+
+# ======================================================================
+#  PERRONGEN VID PARK AVENUE
+# ======================================================================
+NOT = ["..c", "..c", "ccc", "cc."]
+
+
+def perrong_park(v=None):
+    v = v or {}
+    strake = v.get("strake", 0)   # fiolstråken 0..3
+    noter = v.get("noter", 0)     # noter som svävar 0..5
+    d = Duk(15)
+
+    # Marmorväggar med ådring och mässingslister
+    d.rekt(0, 0, W, 76, 15)
+    rnd = random.Random(2002)
+    for _ in range(26):
+        x, y = rnd.randint(0, W), rnd.randint(10, 70)
+        for k in range(rnd.randint(6, 16)):
+            x += rnd.choice([-1, 0, 1])
+            y += 1
+            d.px(x, y, 5)
+    d.rekt(0, 0, W, 8, 2)
+    d.rekt(0, 8, W, 10, 10)
+    d.rekt(0, 52, W, 54, 10)
+    d.rekt(0, 54, W, 76, 5)
+    for x in range(0, W, 16):
+        d.rekt(x, 54, x + 1, 76, 4)
+    # Väggarmaturer
+    for lx in (20, 172):
+        d.rekt(lx - 2, 30, lx + 3, 38, 10)
+        d.a[d.mask_ellips(lx - 3, 22, lx + 4, 31)] = 11
+        d.radial(lx, 30, 20, 0.5, mask=(d.a == 15) | (d.a == 5))
+    # Emaljskylt i mässingsram
+    skylt(d, 96, 16, "PARK AVE", 2, 15, 10, pad=4)
+    linjekarta(d, 150, 60, 1)
+    # Blankt golv med spegelbilder
+    d.rekt(0, 76, W, 92, 5)
+    d.vgrad(0, 76, W, 92, [4, 5, 5])
+    for y in range(76, 92, 5):
+        d.rekt(0, y, W, y + 1, 4)
+    plattformskant(d)
+    spar(d, rnd, slipers=6, rals=5)
+
+    # Två torkade bänkar
+    for bx in (26, 126):
+        d.rekt(bx, 70, bx + 30, 74, 9)
+        d.rekt(bx, 70, bx + 30, 71, 10)
+        d.rekt(bx, 60, bx + 30, 63, 9)
+        d.rekt(bx, 60, bx + 30, 61, 10)
+        for lx in (bx + 2, bx + 26):
+            d.rekt(lx, 63, lx + 2, 90, 10)
+        d.ljus(d.mask_poly([(bx, 76), (bx + 30, 76), (bx + 30, 82), (bx, 82)]), 0.4)
+    # Ormbunke i mässingskruka
+    d.rekt(66, 78, 76, 90, 10)
+    d.rekt(66, 78, 76, 79, 11)
+    for (ex, ey) in [(58, 70), (84, 70), (62, 64), (80, 64), (71, 60)]:
+        d.linje(71, 78, ex, ey, 12)
+
+    # Fiolspelaren
+    mx = 100
+    d.rekt(mx, 50, mx + 10, 76, 0)           # frack
+    d.rekt(mx + 4, 50, mx + 6, 60, 15)       # skjortbröst
+    d.px(mx + 5, 51, 13)                     # fluga
+    d.rekt(mx + 2, 76, mx + 4, 90, 0)
+    d.rekt(mx + 6, 76, mx + 8, 90, 0)
+    d.rekt(mx + 2, 40, mx + 9, 50, 10)       # huvud
+    d.rekt(mx + 1, 38, mx + 10, 42, 7)       # hår
+    d.px(mx + 4, 45, 0)
+    d.px(mx + 4, 44, 0)                      # slutna ögon, njuter
+    d.px(mx + 3, 45, 0)
+    # Fiolen under hakan
+    d.poly([(mx - 4, 50), (mx + 3, 48), (mx + 4, 52), (mx - 3, 55)], 8)
+    d.linje(mx - 4, 51, mx - 12, 54, 6)
+    d.px(mx - 1, 51, 9)
+    # Stråken
+    stx, sty = [(mx - 8, 44), (mx - 5, 45), (mx - 2, 46), (mx - 5, 45)][strake]
+    d.linje(stx, sty, stx + 14, sty + 14, 15)
+    d.rekt(stx + 13, sty + 13, stx + 16, sty + 16, 10)
+    # Fiollådan med mynt
+    d.poly([(110, 86), (134, 86), (136, 91), (108, 91)], 7)
+    d.rekt(112, 87, 132, 90, 13)
+    for cx in (116, 121, 127):
+        d.px(cx, 88, 10)
+    # Noter som svävar uppåt
+    nrnd = random.Random(4)
+    for i in range(4):
+        nx0 = 86 + nrnd.randint(-10, 20)
+        fas = (noter + i * 2) % 6
+        if fas == 5:
+            continue
+        sprite(d, nx0 + fas * 2 - i, 42 - fas * 6, NOT)
+
+    d.vinjett(0.35)
+    return d
+
+
+# ======================================================================
+#  PERRONGEN VID CHINATOWN
+# ======================================================================
+def perrong_china(v=None):
+    v = v or {}
+    folk = v.get("folk", 0)     # folkmassan som rör sig 0..3
+    sving = v.get("sving", 0)   # lyktor 0..3
+    rnd = random.Random(2003)
+    d = Duk(13)
+
+    # Rött kakel med grönt band
+    d.rekt(0, 0, W, 76, 13)
+    for y in range(8, 76, 4):
+        d.rekt(0, y, W, y + 1, 6)
+        for x in range(((y // 4) % 2) * 4, W, 8):
+            d.rekt(x, y, x + 1, y + 4, 6)
+    d.ljus(d.mask_poly([(0, 0), (W, 0), (W, 76), (0, 76)]), 0.3, MORKARE)
+    d.rekt(0, 0, W, 8, 1)
+    d.rekt(0, 40, W, 46, 12)
+    for x in range(0, W, 6):
+        d.rekt(x, 42, x + 3, 44, 10)
+    skylt(d, 52, 16, "CHINATOWN", 12, 15, 10, pad=3)
+    linjekarta(d, 6, 50, 2)
+    # Golv och kant
+    d.rekt(0, 76, W, 92, 3)
+    d.vgrad(0, 76, W, 92, [2, 3])
+    plattformskant(d)
+    spar(d, rnd)
+
+    # Ett tåg står inne till höger
+    d.rekt(104, 18, W, 98, 4)
+    d.rekt(104, 18, W, 22, 5)
+    d.rekt(104, 86, W, 98, 3)
+    d.rekt(104, 60, W, 62, 13)
+    for wx in (110, 140, 170):
+        d.rekt(wx, 28, wx + 18, 48, 10)
+        d.vgrad(wx, 28, wx + 18, 48, [11, 10])
+        for px_ in range(wx + 2, wx + 16, 5):          # passagerare
+            d.rekt(px_, 36, px_ + 3, 48, 7)
+            d.rekt(px_, 33, px_ + 3, 36, 8)
+        d.rekt(wx, 39, wx + 18, 40, 9)                  # handtag
+    d.rekt(130, 26, 138, 86, 0)                         # öppen dörr
+    d.rekt(131, 27, 137, 86, 9)
+    d.rekt(160, 26, 162, 86, 3)
+    d.rekt(104, 18, 106, 98, 3)
+
+    # Lyktor i taket
+    for lx in (16, 60, 96):
+        d.rekt(lx, 8, lx + 1, 11, 0)
+        lykta(d, lx, 11, [0, 1, 0, -1][(sving + lx // 20) % 4])
+        d.radial(lx, 16, 14, 0.4, mask=(YY < 40) & (d.a != 10))
+
+    # Folk med matkassar
+    gestalter = [(10, 1, 15), (24, 0, 9), (38, 1, 15), (52, 0, 15), (66, 1, 9), (80, 0, 15), (92, 1, 9), (120, 0, 15)]
+    for i, (fx, c, kasse) in enumerate(gestalter):
+        hopp = 1 if (i + folk) % 4 == 0 else 0
+        h = 18 + (i * 5) % 6
+        topp = 92 - h - hopp
+        d.rekt(fx, topp + 5, fx + 8, 92, c)
+        d.a[d.mask_ellips(fx + 1, topp, fx + 7, topp + 6)] = c
+        kx = fx + 8 if i % 2 else fx - 4
+        d.rekt(kx, topp + 12, kx + 5, topp + 19, kasse)
+        d.rekt(kx + 1, topp + 10, kx + 2, topp + 12, kasse)
+        if kasse == 15:
+            d.linje(kx + 2, topp + 12, kx + 4, topp + 3, 12)   # purjolök
+            d.px(kx + 4, topp + 2, 12)
+            d.px(kx + 5, topp + 3, 12)
+        else:
+            d.px(kx + 2, topp + 11, 10)                        # ingefära
+            d.px(kx + 3, topp + 11, 9)
+    d.vinjett(0.4)
+    return d
+
+
+# ======================================================================
+#  PERRONGEN VID PIR 9 (slutstationen)
+# ======================================================================
+def perrong_pir(v=None):
+    v = v or {}
+    ror = v.get("ror", 1)        # lysröret som morsar: 1 tänt, 0 släckt
+    dropp = v.get("dropp", 0)    # vattendroppen 0..5
+    ratta = v.get("ratta", 0)    # råttans läge 0..7
+    rnd = random.Random(2004)
+    d = Duk(3)
+
+    # Smutsigt kakel med hål och fuktfläckar
+    d.rekt(0, 0, W, 76, 3)
+    for y in range(8, 76, 4):
+        d.rekt(0, y, W, y + 1, 2)
+        for x in range(((y // 4) % 2) * 4, W, 8):
+            d.rekt(x, y, x + 1, y + 4, 2)
+    for _ in range(30):
+        tx = rnd.randrange(0, W, 8) + ((rnd.randint(0, 17) // 4) % 2) * 4
+        ty = rnd.randrange(8, 72, 4)
+        d.rekt(tx + 1, ty + 1, tx + 8, ty + 4, 1)
+    for _ in range(10):
+        sx, sy = rnd.randint(0, W - 10), rnd.randint(8, 30)
+        d.ljus(d.mask_poly([(sx, sy), (sx + 8, sy), (sx + 5, sy + rnd.randint(12, 26)), (sx + 2, sy + rnd.randint(8, 18))]), 0.6, MORKARE)
+    d.rekt(0, 0, W, 8, 0)
+    # Skylt med en lös skruv
+    x0, x1 = skylt(d, 70, 18, "PIR 9", 1, 15, 6, pad=4)
+    d.px(x0 + 1, 19, 9)
+    linjekarta(d, 140, 40, 3)
+    d.linje(141, 41, 150, 52, 0)                       # någon har ritat på kartan
+
+    # Lysrör i taket
+    for i, rx in enumerate((14, 84, 150)):
+        tand = ror if i == 1 else (1 if i == 0 else 0)
+        d.rekt(rx, 8, rx + 26, 10, 0)
+        d.rekt(rx + 1, 10, rx + 25, 12, 15 if tand else 2)
+        if tand:
+            d.radial(rx + 13, 24, 34, 0.45, mask=(YY > 12) & (YY < 92))
+
+    # Golv med pöl
+    d.rekt(0, 76, W, 92, 2)
+    d.vgrad(0, 76, W, 92, [1, 2, 3])
+    d.a[d.mask_ellips(96, 82, 124, 90)] = 1
+    d.ljus(d.mask_ellips(100, 83, 118, 88), 0.4)
+    plattformskant(d)
+    d.ljus(d.mask_poly([(0, 92), (W, 92), (W, 95), (0, 95)]), 0.5, MORKARE)
+    spar(d, rnd)
+    # Tunnelmynningen och stoppbocken där linjen tar slut
+    d.a[d.mask_ellips(150, 70, 192, 130)] = 0
+    d.rekt(156, 100, 186, 104, 13)
+    for x in range(156, 186, 6):
+        d.rekt(x, 100, x + 3, 104, 15)
+    d.rekt(158, 104, 160, 112, 13)
+    d.rekt(182, 104, 184, 112, 13)
+
+    # Vattendropp från en spricka i taket
+    d.linje(108, 8, 112, 14, 0)
+    if dropp < 5:
+        dy = [16, 30, 48, 66, 80][dropp]
+        d.px(110, dy, 5)
+        d.px(110, dy + 1, 4)
+    else:
+        d.rekt(104, 85, 117, 86, 5)
+        d.px(102, 84, 4)
+        d.px(118, 84, 4)
+
+    # Råttan längs kanten
+    rx = [10, 24, 38, 52, 66, 80, 200, 200][ratta]
+    if rx < W:
+        sprite(d, rx, 88, ["..gg..", "gggggk", ".g.g.."], {"g": 4, "k": 0})
+        d.linje(rx - 6, 90, rx, 89, 4)
+
+    d.vinjett(0.45)
+    return d
+
+
+# Morsekod för SOS: kort = 150 ms, lång = 450 ms
+MORSE_SOS = []
+for tecken in ("...", "---", "..."):
+    for t in tecken:
+        MORSE_SOS += [(1, 150 if t == "." else 450), (0, 150)]
+    MORSE_SOS[-1] = (0, 450)
+MORSE_SOS[-1] = (0, 1600)
+
+
 # Animationer per bild: (namn, nyckel i v, [(värde, millisekunder), ...]).
 # Spelet kan låsa en animation på en viss ruta, t.ex. släckt lampa.
 # Ett fjärde värde anger att bara de första rutorna loopar; övriga rutor väljs av spelet (animStyr).
@@ -1552,6 +1944,23 @@ SCENER = {
     "lager": (lager13, [
         ("damm", "damm", [(i, 300) for i in range(8)]),
         ("mops", "mops", [(0, 700), (1, 500), (2, 1000), (3, 1000)], 2),
+    ]),
+    "p_main": (perrong_main, [
+        ("zzz", "zzz", [(i, 600) for i in range(4)]),
+        ("lampa", "lampa", [(1, 2400), (0, 80), (1, 60), (0, 300), (1, 1500), (0, 120)]),
+    ]),
+    "p_park": (perrong_park, [
+        ("strake", "strake", [(i, 180) for i in range(4)]),
+        ("noter", "noter", [(i, 350) for i in range(6)]),
+    ]),
+    "p_china": (perrong_china, [
+        ("folk", "folk", [(i, 260) for i in range(4)]),
+        ("sving", "sving", [(i, 450) for i in range(4)]),
+    ]),
+    "p_pir": (perrong_pir, [
+        ("ror", "ror", MORSE_SOS),
+        ("dropp", "dropp", [(i, 160 if i < 5 else 400) for i in range(6)]),
+        ("ratta", "ratta", [(i, 120) for i in range(6)] + [(6, 4000)]),
     ]),
 }
 
