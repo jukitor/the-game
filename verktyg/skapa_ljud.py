@@ -693,14 +693,32 @@ def sorl(L):
 # ======================================================================
 #  EFFEKTER
 # ======================================================================
+MEDDELANDE = [
+    ("Det här är Cornelia Pettigrew i Pettigrew Towers på Park Avenue.", 0.45),
+    ("Min älskade Lord Waffles har blivit kidnappad!", 0.4),
+    ("Polisen säger att de inte letar efter hundar.", 0.45),
+    ("Jag har hört att ni är billig.", 0.35),
+    ("Jag menar, diskret.", 0.5),
+    ("Kom genast!", 0.3),
+    ("Jag betalar vad som helst!", 0.0),
+]
+
+
 def telefonrost():
-    text = ("Det här är Cornelia Pettigrew i Pettigrew Towers på Park Avenue. "
-            "Min älskade Lord Waffles har blivit kidnappad! Polisen säger att de inte letar efter hundar. "
-            "Jag har hört att ni är billig. Jag menar, diskret. Kom genast! Jag betalar vad som helst!")
-    wav = CACHE / "rost.wav"
-    kor("espeak-ng", "-v", "sv+anika", "-s", 158, "-p", 72, "-g", 2, "-w", wav, text)
-    sr, x = wavfile.read(wav)
-    x = signal.resample_poly(x.astype(np.float32) / 32768, SR, sr).astype(np.float32)
+    """Läser in meddelandet mening för mening. Returnerar ljudet och när varje mening
+    börjar och slutar (sekunder), så att spelet kan skriva ut orden i takt med rösten."""
+    delar, tider, t = [], [], 0.0
+    for i, (mening, paus) in enumerate(MEDDELANDE):
+        wav = CACHE / f"rost_{i}.wav"
+        kor("espeak-ng", "-v", "sv+anika", "-s", 158, "-p", 72, "-g", 2, "-w", wav, mening)
+        sr, y = wavfile.read(wav)
+        y = signal.resample_poly(y.astype(np.float32) / 32768, SR, sr).astype(np.float32)
+        aktiv = np.nonzero(np.abs(y) > 0.01)[0]
+        y = y[max(0, aktiv[0] - 200):aktiv[-1] + 200]
+        tider.append([round(t, 3), round(t + len(y) / SR, 3), mening])
+        delar += [y, tyst(paus)]
+        t += len(y) / SR + paus
+    x = np.concatenate(delar)
     # Bandets svaj (wow och flutter): läs signalen med en långsamt varierande hastighet
     n = len(x)
     t = np.arange(n) / SR
@@ -711,7 +729,7 @@ def telefonrost():
     x = filt(x, "band", (380, 3000), ordning=3)
     x = np.tanh(x * 3.5) / np.tanh(3.5)
     x += filt(brus(n), "band", (1500, 7000)) * 0.03
-    return x
+    return x, tider
 
 
 def effekter():
@@ -723,7 +741,7 @@ def effekter():
     motor = filt(motor, "band", (300, 5000)) + filt(brus(len(spola)), "band", (2000, 8000)) * 0.08 * hylsa(len(spola), 0.05, 1)
     pip = sinus(1000, 0.35) * hylsa(int(0.35 * SR), 0.005, 2) * 0.35
     pip = np.tanh(pip * 2) * 0.4
-    rost = telefonrost()
+    rost, rosttider = telefonrost()
     seq = tyst(1.9 + len(rost) / SR + 1.2)
     lagg(seq, klick, 0.0)
     lagg(seq, motor, 0.12)
@@ -734,6 +752,7 @@ def effekter():
     lagg(seq, klick, slut)
     lagg(seq, pip, slut + 0.2)
     gor_effekt("svarare", seq, rum=20, efterklang=20, normal=-2)
+    texttider = {"svarare": [[t0 + 2.0, t1 + 2.0, m] for t0, t1, m in rosttider]}
 
     # --- Spärren: polletten faller, vändkorset vrids med en spärrhake ---
     x = tyst(1.2)
@@ -947,24 +966,32 @@ def effekter():
         f = frekvenskurva([(0, 4200), (0.03, 5200), (l, 3900)], l)
         lagg(x, oscillator(f, "saw", 3) * hylsa(int(l * SR), 0.005, 0.02) * 0.5, t)
     gor_effekt("rattpip", x, rum=80, efterklang=60, normal=-8)
+    return {"texttider": texttider}
 
 
 # ======================================================================
 #  Ljudlista till spelet
 # ======================================================================
-def skriv_ljudlista(nya_langder):
-    """Sparar slingornas exakta längd (i samplingar) och skriver in listan i spel.html.
-    Spelet behöver längden för att loopa mp3-filerna utan glapp."""
+def skriv_ljudlista(nya):
+    """Sparar slingornas exakta längd (i samplingar) och texttider för repliker,
+    och skriver in dem i spel.html. Spelet behöver längderna för att loopa
+    mp3-filerna utan glapp, och texttiderna för att visa orden i takt med rösten."""
     import json
-    lista_p = UT / "slingor.json"
+    nya = dict(nya)
+    texttider_nya = nya.pop("texttider", {})
+    lista_p, text_p = UT / "slingor.json", UT / "texttider.json"
     langder = json.loads(lista_p.read_text()) if lista_p.exists() else {}
-    langder.update(nya_langder)
+    texttider = json.loads(text_p.read_text()) if text_p.exists() else {}
+    langder.update(nya)
+    texttider.update(texttider_nya)
     lista_p.write_text(json.dumps(langder, indent=1, sort_keys=True) + "\n")
+    text_p.write_text(json.dumps(texttider, indent=1, ensure_ascii=False) + "\n")
     spel = ROT / "spel.html"
     s = spel.read_text(encoding="utf-8")
     start, slut = "/* LJUDDATA-START */", "/* LJUDDATA-SLUT */"
     i, j = s.index(start) + len(start), s.index(slut)
-    kod = "\nconst SLINGOR = " + json.dumps(langder, separators=(",", ":")) + ";\n"
+    kod = ("\nconst SLINGOR = " + json.dumps(langder, separators=(",", ":")) + ";\n"
+           "const TEXTTIDER = " + json.dumps(texttider, separators=(",", ":"), ensure_ascii=False) + ";\n")
     spel.write_text(s[:i] + kod + s[j:], encoding="utf-8")
 
 
