@@ -108,7 +108,7 @@ form label { font-weight: 700; color: var(--stamp); }
 </header>
 <figure class="scen" id="scen" hidden><canvas id="scenbild" width="192" height="120" role="img" aria-label="Bild"></canvas></figure>
 <main id="scroller">
-  <div class="wrap"><div id="log" aria-live="polite"></div></div>
+  <div class="wrap"><div id="log" aria-live="polite"></div><div id="fyll" aria-hidden="true"></div></div>
 </main>
 <footer class="input">
   <div class="wrap">
@@ -331,9 +331,13 @@ function out(text, cls) {
 }
 function scrollDown() { requestAnimationFrame(() => { scroller.scrollTop = scroller.scrollHeight; }); }
 // Visar texten från början: lägger elementet el överst i textytan (eller toppen om el saknas).
+const fyll = document.getElementById("fyll");
 function scrollTill(el) {
   requestAnimationFrame(() => {
-    if (!el || !el.isConnected) { scroller.scrollTop = 0; return; }
+    if (!el || !el.isConnected) { fyll.style.height = "0px"; scroller.scrollTop = 0; return; }
+    // Tomt utrymme under ett kort svar, så att kommandot ändå kan hamna överst.
+    const kvar = logEl.getBoundingClientRect().bottom - el.getBoundingClientRect().top;
+    fyll.style.height = Math.max(0, scroller.clientHeight - kvar - 12) + "px";
     scroller.scrollTop += el.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
   });
 }
@@ -1040,17 +1044,34 @@ function restart() {
 const input = document.getElementById("cmd");
 // På pekskärmar (mobil) döljs tangentbordet efter varje kommando. Det visas igen först när man trycker i fältet.
 const pekskarm = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+// När tangentbordet stängs ändras textytans storlek. Lägg då om skrollningen så att kommandot står kvar överst.
+let haller = null;
+function hallKvar() {
+  if (haller && performance.now() < haller.tills) scrollTill(haller.el);
+}
+window.addEventListener("resize", hallKvar);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", hallKvar);
+// Slutar hålla fast så fort spelaren själv skrollar.
+["touchstart", "wheel"].forEach(ev => scroller.addEventListener(ev, () => { haller = null; }, { passive: true }));
 const history = []; let hIdx = 0;
 function submit(text) {
   const t = text.trim();
   if (!t) return;
+  fyll.style.height = "0px";
   const rad = out(t, "cmd");
   history.push(t); hIdx = history.length;
   nyScen = false;
   exec(t);
   updateStatus();
   // Vid en ny scen visas texten från början av svaret, annars från slutet.
-  if (nyScen) scrollTill(rad); else scrollDown();
+  // På mobil hamnar kommandot alltid överst, så att man läser svaret uppifrån och skrollar själv.
+  // Vid en ny scen gäller samma sak på dator; annars visas slutet av texten.
+  if (pekskarm || nyScen) {
+    scrollTill(rad);
+    haller = { el: rad, tills: performance.now() + 1200 };
+  } else {
+    scrollDown();
+  }
 }
 document.getElementById("f").addEventListener("submit", e => {
   e.preventDefault();
