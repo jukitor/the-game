@@ -151,7 +151,7 @@ form label { font-weight: 700; color: var(--stamp); }
   </h1>
   <div class="splash-nere">
     <button type="button" id="startknapp">Öppna fallet</button>
-    <p class="tips">Med musik och ljud</p>
+    <p class="tips">Klicka på bilden för att börja. Med musik och ljud.</p>
   </div>
 </div>
 <header class="status">
@@ -1325,7 +1325,9 @@ const Ljud = (() => {
   };
 })();
 // Webbläsare tillåter ljud först efter en användarhandling. Lyssna på alla sorters tryck.
-["pointerdown", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => Ljud.vakna(), { passive: true }));
+// Så länge startskärmen visas är det bara klicket på den som startar ljudet.
+let startskarmVisas = false;
+["pointerdown", "touchend", "click", "keydown"].forEach(ev => document.addEventListener(ev, () => { if (!startskarmVisas) Ljud.vakna(); }, { passive: true }));
 document.addEventListener("visibilitychange", () => Ljud.pausa(document.hidden));
 
 // ================================================================
@@ -1404,7 +1406,7 @@ function visaLjudknapp() {
 // ================================================================
 function visaStartskarm() {
   const sp = document.getElementById("splash");
-  const knapp = document.getElementById("startknapp");
+  startskarmVisas = true;
   let stangd = false;
   // Lätt regn som faller över bilden
   const cv = document.getElementById("splashregn");
@@ -1433,23 +1435,21 @@ function visaStartskarm() {
   const stang = () => {
     if (stangd) return;
     stangd = true;
+    startskarmVisas = false;
     Ljud.vakna();
     sp.classList.add("borta");
     setTimeout(() => { sp.hidden = true; cancelAnimationFrame(raf); }, 950);
     if (!pekskarm) input.focus();
   };
+  // Bilden ligger kvar tills man klickar eller trycker på den. Klicket startar också jazzen.
   sp.addEventListener("click", stang);
-  document.addEventListener("keydown", function tangent(e) {
-    if (stangd) { document.removeEventListener("keydown", tangent); return; }
-    e.preventDefault(); stang();
-  });
-  knapp.focus({ preventScroll: true });
 }
 
 function start(data) {
   visaLjudknapp();
-  if (data && data.state) document.getElementById("splash").hidden = true;
-  else visaStartskarm();
+  const medStartskarm = !(data && data.state);
+  if (medStartskarm) visaStartskarm();
+  else document.getElementById("splash").hidden = true;
   if (data && data.state) {
     S = data.state;
     out("Du är tillbaka i fallet.", "sys");
@@ -1461,7 +1461,7 @@ function start(data) {
   updateStatus();
   scrollTill(null);
   window.claude?.hot?.snapshot?.(() => ({ state: S }));
-  if (!pekskarm) input.focus();
+  if (!pekskarm && !medStartskarm) input.focus();
 }
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 
