@@ -74,19 +74,40 @@ Den som har valt minskad rörelse i operativsystemet ser bara stillbilderna.
 
 ## Ljud och musik
 
-Allt ljud skapas med kod i webbläsaren (Web Audio), så spelet behöver inga ljudfiler. Ljudmotorn ligger i `spel.html` i avsnittet `LJUD` (objektet `Ljud`).
+Musiken och ljuden ligger som mp3-filer i `ljud/` och skapas av `verktyg/skapa_ljud.py`.
 
-- **Musik:** en långsam deckarjazz i c-moll med gående kontrabas, visp, ridecymbal, pianoackord och en dämpad trumpet. Varannan gång spelas en annan melodi.
-- **Miljöljud per plats:** regn mot fönstret på kontoret, regn och bilar som tutar på Main Street, duvor på Park Avenue, en klocka som tickar i takvåningen, sorl och cykelklockor i Chinatown, fräsande wok och klirr på Golden Dragon, vågor, måsar och mistlurar vid Pir 9, knarr och en morrande mops i lagret och tunnelbanebrus på perrongerna. På Park Avenues perrong spelar fiolspelaren brutna ackord i Bachs anda, och då tonas jazzen ner.
-- **Effekter:** telefonsvararen (klick, bandspolning, pip och en mumlande röst), spärren, tunnelbaneresan, lådan, kassaapparaten, Brunos mage, mopsen som morrar och skäller, låset som dyrkas upp, lyckokakan, hissen, poängljud och en slutfanfar.
+- **Musik:** en lugn deckarballad i c-moll, 56 slag per minut, med tenorsax, dämpad trumpet, kontrabas, flygel och visp. Den är komponerad i skriptet och renderad med samplade instrument från ljudbanken [GeneralUser GS](https://www.schristiancollins.com/generaluser) i FluidSynth, med rumsklang. Stycket är knappt tre minuter långt och loopar sömlöst.
+- **Fiolspelaren** på Park Avenues perrong spelar Bachs Preludium i C-dur (BWV 846) som brutna ackord på samplad fiol. Då tonas jazzen ner.
+- **Miljöljud per plats:** regn mot kontorsfönstret, regn och bilhorn på Main Street, duggregn och duvor på Park Avenue, golvklocka i takvåningen, regn, sorl och cykelklockor i Chinatown, fräsande wok, sorl och porslin på Golden Dragon, vågor, måsar och mistlur vid Pir 9, knarr och en morrande mops i lagret, och tunnelbanebrus med passerande tåg, droppar och råttor på perrongerna.
+- **Effekter:** telefonsvararen (klick, bandspolning, pip och fru Pettigrews meddelande genom en gammal högtalare), spärren, tunnelbaneresan, lådan, kassaapparaten, Brunos mage och klunk, mopsen som morrar och skäller, låset som dyrkas upp, lyckokakan, kexpåsen, hissen, poängljud (vibrafon) och en slutfanfar.
 
-Ljudet startar första gången man skriver eller trycker, eftersom webbläsare inte tillåter ljud innan dess. Kommandot `ljud` (eller knappen **Ljud**) stänger av och slår på allt ljud, och `musik` stänger av och slår på musiken. Valen sparas i webbläsaren. Ljudet pausas när fliken inte syns.
+Miljöljuden och effekterna byggs med signalbehandling (NumPy och SciPy) och får rumsklang i SoX. Fru Pettigrews röst och sorlet läses in med espeak-ng och filtreras. Slingornas exakta längd sparas i `ljud/slingor.json` och skrivs in i `spel.html`, så att spelet kan loopa dem utan glapp.
+
+Så här skapar du ljuden på nytt (Ubuntu/Debian):
+
+```
+sudo apt install fluidsynth sox espeak-ng ffmpeg
+pip install mido numpy scipy
+python3 verktyg/skapa_ljud.py          # allt, eller t.ex. bara: musik, fiol, poang, miljo, effekter
+python3 verktyg/bygg.py
+```
+
+Skriptet hämtar ljudbanken GeneralUser GS (cirka 30 MB) till `.ljudcache/` första gången.
+
+Ljudet startar första gången man skriver eller trycker, eftersom webbläsare inte tillåter ljud innan dess. Kommandot `ljud` (eller knappen **Ljud**) stänger av och slår på allt ljud, och `musik` stänger av och slår på musiken. Valen sparas i webbläsaren. Ljudet pausas när fliken inte syns. Ljudfilerna hämtas från webbservern, så om du öppnar `index.html` direkt från disken blir det tyst. Starta i så fall en lokal server, till exempel `python3 -m http.server`, och öppna `http://localhost:8000`.
+
+### Licenser för ljud
+
+- GeneralUser GS av S. Christian Collins får användas fritt i musikproduktion, även kommersiellt.
+- Bachs Preludium i C-dur är fri från upphovsrätt.
+- Övriga ljud är skapade från grunden i `verktyg/skapa_ljud.py`.
 
 ## Filer
 
 - `spel.html`: källan till spelet (HTML, CSS och JavaScript), utan `<head>` så att den också kan publiceras som Claude-artefakt.
 - `index.html`: den fristående sidan som GitHub Pages visar. Den byggs från `spel.html` med `python3 verktyg/bygg.py`. Redigera inte den direkt.
 - `bilder/`: pixelbilderna.
-- `verktyg/`: skripten som ritar bilderna och bygger `index.html`.
+- `ljud/`: musik, miljöljud och effekter som mp3.
+- `verktyg/`: skripten som ritar bilderna, skapar ljuden och bygger `index.html`.
 
 Spelvärlden (rum, föremål och poäng) ligger överst i skriptet i objekten `ROOMS`, `OBJ` och `SCORES`, så det är lätt att bygga ut med fler platser och pussel.
