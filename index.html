@@ -1082,11 +1082,11 @@ function exec(raw) {
   }
 
   switch (v) {
-    case "titta": case "t": case "l": case "se": case "beskriv": case "kolla":
+    case "titta": case "t": case "se": case "beskriv": case "kolla":
       if (w[1] === "på" || w[1] === "i" || w[1] === "under") return w[1] === "på" ? examine(clean(w.slice(2))) : search(clean(w.slice(2)));
       if (restClean) return examine(restClean);
       return look();
-    case "undersök": case "u": case "x": case "granska": case "studera": case "inspektera": case "betrakta":
+    case "undersök": case "u": case "granska": case "studera": case "inspektera": case "betrakta":
       return examine(restClean);
     case "sök": case "leta": case "rota": case "känn":
       return search(clean(w.slice(1).filter(x => !["i", "igenom", "genom", "efter", "på"].includes(x))));
