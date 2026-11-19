@@ -5,7 +5,7 @@
    och genererad data (window.AVENTYRSDATA). Se README för formatet.
    ========================================================================== */
 "use strict";
-(() => {
+function startaSpelmotorn() {
 const A = window.AVENTYR;
 const D = window.AVENTYRSDATA || {};
 if (!A) { document.body.textContent = "Inget äventyr hittades (window.AVENTYR saknas)."; return; }
@@ -1074,4 +1074,7 @@ window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude
 // För tester och felsökning
 window.Spelmotor = { utfor: t => { utfor(t); uppdateraStatus(); }, get tillstand() { return S; }, Ljud };
 window.Ljud = Ljud;
-})();
+}
+// Starta när sidan är redo (skripten kan ligga i <head> eller sist i <body>)
+if (document.body) startaSpelmotorn();
+else document.addEventListener("DOMContentLoaded", startaSpelmotorn);

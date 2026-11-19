@@ -65,7 +65,7 @@ def bygg(mapp):
     css = (MOTOR / "motor.css").read_text(encoding="utf-8")
     motor = (MOTOR / "motor.js").read_text(encoding="utf-8")
     aventyr = (mapp / "aventyr.js").read_text(encoding="utf-8")
-    spel = (f"<title>{t}</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n{TYPSNITT}"
+    spel = (f"<meta charset=\"utf-8\">\n<title>{t}</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n{TYPSNITT}"
             f"<style>\n{css}</style>\n<script>\n{datajs}</script>\n<script>\n{aventyr}</script>\n<script>\n{motor}</script>\n")
     (mapp / "spel.html").write_text(spel, encoding="utf-8")
     print(f"Byggde {mapp.relative_to(ROT)}: data.js, index.html, spel.html ({len(spel) // 1024} kB)")
