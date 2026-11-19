@@ -343,7 +343,7 @@ TYPSNITT = {
     "D": ["110", "101", "101", "101", "110"], "E": ["111", "100", "110", "100", "111"],
     "G": ["011", "100", "101", "101", "011"], "H": ["101", "101", "111", "101", "101"],
     "I": ["111", "010", "010", "010", "111"], "N": ["1001", "1101", "1011", "1001", "1001"],
-    "O": ["010", "101", "101", "101", "010"], "R": ["110", "101", "110", "101", "101"],
+    "O": ["010", "101", "101", "101", "010"], "P": ["110", "101", "110", "100", "100"], "R": ["110", "101", "110", "101", "101"],
     "S": ["011", "100", "010", "001", "110"], "T": ["111", "010", "010", "010", "010"],
     "U": ["101", "101", "101", "101", "111"], "W": ["10001", "10001", "10101", "10101", "01010"],
     "Y": ["101", "101", "010", "010", "010"], "1": ["010", "110", "010", "010", "111"],
@@ -570,6 +570,189 @@ def main_street(v=None):
     return d
 
 
+# ======================================================================
+#  PARK AVENUE
+# ======================================================================
+def park_avenue(v=None):
+    import math
+    v = v or {}
+    regn = v.get("regn", 0)        # duggregnets fas 0..9
+    dorr = v.get("dorr", 0)        # karuselldörrens vinkel 0..5
+    duva = v.get("duva", 0)        # duvans huvud: 0 uppe, 1 halvvägs, 2 pickar
+    fonster = v.get("fonster", 1)  # ett fönster högt upp: 1 tänt, 0 släckt
+    rnd = random.Random(1949)
+    d = Duk(1)
+
+    # --- Himmel ---
+    d.vgrad(0, 0, W, 40, [0, 1, 1, 2])
+
+    # --- Grannhusen i mörk sten ---
+    for (x0, x1) in [(0, 48), (144, W)]:
+        d.rekt(x0, 4, x1, 96, 2)
+        for fy in range(8, 64, 11):
+            for fx in range(x0 + 4, x1 - 6, 9):
+                d.rekt(fx, fy, fx + 5, fy + 7, 10 if rnd.random() < 0.3 else 1)
+                d.rekt(fx, fy + 7, fx + 5, fy + 8, 3)
+        d.ljus(d.mask_poly([(x0, 4), (x1, 4), (x1, 96), (x0, 96)]), 0.35, MORKARE)
+
+    # --- Pettigrew Towers: vit marmor och mässing ---
+    tx0, tx1 = 48, 144
+    d.rekt(tx0, 0, tx1, 96, 15)
+    d.vgrad(tx0, 0, tx1, 60, [4, 5, 15])
+    for px_ in range(tx0, tx1, 16):
+        d.rekt(px_, 0, px_ + 2, 96, 5)
+        d.rekt(px_ + 2, 0, px_ + 3, 96, 4)
+    d.rekt(tx0, 0, tx0 + 2, 96, 4)
+    d.rekt(tx1 - 2, 0, tx1, 96, 4)
+    # Fönster med mässingsramar
+    for rad, fy in enumerate([4, 18, 32]):
+        for kol, fx in enumerate(range(tx0 + 6, tx1 - 8, 16)):
+            d.rekt(fx - 1, fy - 1, fx + 9, fy + 11, 9)
+            tant = rnd.random() < 0.45
+            if rad == 0 and kol == 3:
+                tant = bool(fonster)
+            d.rekt(fx, fy, fx + 8, fy + 10, 10 if tant else 1)
+            if tant:
+                d.rekt(fx, fy, fx + 8, fy + 2, 11)
+                d.rekt(fx + 1, fy + 3, fx + 2, fy + 10, 9)
+                d.rekt(fx + 6, fy + 3, fx + 7, fy + 10, 9)
+            else:
+                d.px(fx + 1, fy + 1, 3)
+            d.rekt(fx - 2, fy + 11, fx + 10, fy + 12, 15)
+    # Gesims med mässingsband
+    d.rekt(tx0, 46, tx1, 49, 15)
+    d.rekt(tx0, 49, tx1, 50, 10)
+    d.rekt(tx0, 50, tx1, 51, 9)
+    # Lobbyfönster med kristallkronor
+    for (lx0, lx1) in [(tx0 + 4, 76), (116, tx1 - 4)]:
+        d.rekt(lx0 - 1, 57, lx1 + 1, 91, 9)
+        d.rekt(lx0, 58, lx1, 90, 10)
+        d.vgrad(lx0, 58, lx1, 90, [11, 10, 9])
+        cx = (lx0 + lx1) // 2
+        d.rekt(cx, 58, cx + 1, 62, 9)
+        d.poly([(cx - 4, 62), (cx + 5, 62), (cx + 2, 66), (cx - 1, 66)], 11)
+        for kx in range(cx - 4, cx + 6, 2):
+            d.px(kx, 67, 10)
+        d.rekt(lx0, 74, lx1, 75, 9)
+
+    # --- Entrén ---
+    d.rekt(80, 56, 112, 96, 9)
+    d.rekt(82, 66, 110, 94, 9)
+    d.vgrad(83, 69, 109, 94, [10, 9, 9])
+    # Karuselldörr: fyra vingar som roterar
+    cx, r = 96, 12
+    d.rekt(cx - r - 1, 67, cx + r + 2, 69, 9)
+    vinkel = dorr * (math.pi / 2) / 6
+    for k in range(4):
+        a = vinkel + k * math.pi / 2
+        xx = int(round(cx + r * math.sin(a)))
+        fram = math.cos(a) > 0
+        if fram:
+            d.rekt(xx, 69, xx + 2, 94, 6)
+            d.rekt(xx, 69, xx + 1, 94, 11)
+        else:
+            d.rekt(xx, 69, xx + 1, 94, 8)
+    d.rekt(cx, 69, cx + 1, 94, 6)
+    d.rekt(82, 94, 110, 96, 9)
+    # Baldakin med namnet
+    d.poly([(74, 54), (118, 54), (122, 64), (70, 64)], 12)
+    d.rekt(70, 64, 122, 65, 6)
+    d.rekt(74, 54, 118, 55, 10)
+    text(d, 78, 58, "PETTIGREW", 10)
+    for sx in (72, 120):
+        d.rekt(sx, 65, sx + 1, 98, 10)
+        d.px(sx, 98, 9)
+    # Mässingslyktor
+    for lx in (77, 113):
+        d.rekt(lx, 70, lx + 3, 76, 11)
+        d.rekt(lx, 69, lx + 3, 70, 9)
+        d.rekt(lx, 76, lx + 3, 77, 9)
+        d.radial(lx + 1, 73, 8, 0.6, mask=(d.a == 15) | (d.a == 5) | (d.a == 4))
+
+    # --- Trottoar, röd matta och gata ---
+    d.rekt(0, 96, W, 104, 4)
+    d.vgrad(0, 96, W, 104, [3, 4])
+    for xx in range(0, W, 12):
+        d.rekt(xx, 96, xx + 1, 104, 3)
+    d.poly([(84, 96), (108, 96), (112, 105), (80, 105)], 13)
+    d.rekt(84, 96, 108, 97, 14)
+    d.rekt(0, 104, W, 106, 15)
+    d.rekt(0, 106, W, H, 1)
+    d.vgrad(0, 106, W, H, [0, 1])
+    # Spegelbilder av lobbyn och lyktorna
+    for (x0, x1, f) in [(52, 76, 0.5), (116, 140, 0.5), (84, 108, 0.7)]:
+        for y in range(107, H):
+            s = f * (1 - (y - 107) / (H - 107))
+            m = (XX >= x0) & (XX < x1) & (YY == y) & ((XX + y) % 2 == 0)
+            d.ljus(m, s * 2)
+
+    # --- Portiern Reginald ---
+    px0 = 62
+    d.rekt(px0, 74, px0 + 8, 76, 12)         # mössa
+    d.rekt(px0 + 1, 72, px0 + 7, 74, 12)
+    d.rekt(px0 + 1, 75, px0 + 7, 76, 10)     # mässingsband
+    d.rekt(px0 + 2, 76, px0 + 7, 80, 10)     # ansikte
+    d.px(px0 + 6, 77, 0)                     # öga
+    d.px(px0 + 7, 78, 9)                     # näsan i vädret
+    d.rekt(px0, 80, px0 + 9, 93, 12)         # rock
+    d.rekt(px0 + 4, 80, px0 + 5, 93, 6)
+    for by in (82, 85, 88):
+        d.px(px0 + 3, by, 10)
+        d.px(px0 + 6, by, 10)
+    d.rekt(px0, 80, px0 + 9, 81, 10)         # epåletter
+    d.rekt(px0 - 1, 86, px0 + 1, 88, 15)     # vita handskar
+    d.rekt(px0 + 8, 86, px0 + 10, 88, 15)
+    d.rekt(px0 + 1, 93, px0 + 4, 97, 0)      # ben
+    d.rekt(px0 + 5, 93, px0 + 8, 97, 0)
+
+    # --- Tunnelbanan till vänster ---
+    d.rekt(8, 90, 40, 104, 0)
+    for y in range(92, 104, 3):
+        d.rekt(10, y, 38, y + 1, 1)
+    d.rekt(6, 86, 42, 88, 12)
+    for xx in range(8, 41, 4):
+        d.rekt(xx, 88, xx + 1, 90, 12)
+    for gx in (6, 40):
+        d.rekt(gx, 70, gx + 2, 104, 12)
+        d.rekt(gx - 1, 65, gx + 3, 70, 10)
+        d.rekt(gx, 64, gx + 2, 65, 11)
+    d.rekt(9, 74, 39, 82, 3)
+    d.rekt(9, 74, 39, 75, 5)
+    text(d, 12, 76, "SUBWAY", 15)
+
+    # --- Träd i krukor ---
+    for (kx, ky) in [(152, 96), (180, 96)]:
+        d.rekt(kx - 5, ky - 6, kx + 6, ky, 15)
+        d.rekt(kx - 5, ky - 6, kx + 6, ky - 5, 5)
+        d.rekt(kx, ky - 20, kx + 1, ky - 6, 6)
+        d.a[d.mask_ellips(kx - 8, ky - 34, kx + 9, ky - 16)] = 12
+        d.ljus(d.mask_ellips(kx - 6, ky - 33, kx + 4, ky - 22), 0.4, MORKARE)
+        d.ljus(d.mask_ellips(kx - 2, ky - 30, kx + 8, ky - 18), 0.3)
+
+    # --- Duvan med fluga ---
+    dx, dy = 132, 99
+    d.rekt(dx, dy, dx + 6, dy + 4, 4)          # kropp
+    d.rekt(dx + 1, dy, dx + 5, dy + 1, 5)
+    d.rekt(dx - 2, dy + 1, dx, dy + 3, 3)      # stjärt
+    d.px(dx + 2, dy + 4, 13)
+    d.px(dx + 4, dy + 4, 13)                   # fötter
+    hy = [dy - 3, dy - 1, dy + 1][duva]        # huvudets höjd
+    hx = dx + 6 + (duva > 0)
+    d.rekt(hx, hy, hx + 3, hy + 3, 4)
+    d.px(hx + 2, hy, 0)                        # öga
+    d.px(hx + 3, hy + 1, 9)                    # näbb
+    d.px(hx + 4, hy + 1 + (duva == 2), 9)
+    d.px(dx + 6, dy, 0)                        # flugan
+    d.px(dx + 6, dy + 1, 0)
+    d.px(dx + 7, dy, 13)
+    d.px(dx + 5, dy, 13)
+
+    # --- Duggregn och stämning ---
+    regn_over(d, random.Random(9), 45, regn)
+    d.vinjett(0.4)
+    return d
+
+
 # Animationer per bild: (namn, nyckel i v, [(värde, millisekunder), ...]).
 # Spelet kan låsa en animation på en viss ruta, t.ex. släckt lampa.
 HOTEL_UPP = [(tuple(1 if j < n else 0 for j in range(5)), 260) for n in range(6)]
@@ -586,6 +769,12 @@ SCENER = {
         ("anga", "anga", [(i, 200) for i in range(6)]),
         ("neon", "neon", [((1, 1, 1, 1, 1), 2600), ((1, 1, 0, 1, 1), 90), ((1, 1, 1, 1, 1), 70), ((1, 1, 0, 1, 1), 400),
                           ((1, 1, 1, 1, 1), 1800), ((1, 1, 0, 1, 1), 120), ((1, 1, 1, 1, 1), 900)]),
+    ]),
+    "parkave": (park_avenue, [
+        ("regn", "regn", [(i, 110) for i in range(10)]),
+        ("dorr", "dorr", [(i, 140) for i in range(6)]),
+        ("duva", "duva", [(0, 1400), (1, 120), (2, 220), (1, 120), (0, 500), (1, 120), (2, 220), (1, 120), (0, 2200)]),
+        ("fonster", "fonster", [(1, 5200), (0, 3800)]),
     ]),
 }
 
