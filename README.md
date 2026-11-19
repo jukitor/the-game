@@ -37,13 +37,22 @@ Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaur
 
 Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.
 
-Hittills finns en bild: detektivens kontor.
+Hittills finns en bild: detektivens kontor, med blinkande neonskylt, regn, cigarettrök och telefonsvararens lampa.
 
 ```
-python3 verktyg/rita_bilder.py   # ritar om bilderna till bilder/
+python3 verktyg/rita_bilder.py   # ritar om bilderna och animationerna
+python3 verktyg/bygg.py          # bygger index.html
 ```
 
-För att koppla en bild till en plats lägger du till `bild: "bilder/namn.png"` på rummet i `ROOMS`.
+För att koppla en bild till en plats lägger du till `bild: "namn"` på rummet i `ROOMS`.
+
+### Animationer
+
+En bild kan ha enkla animationer, till exempel en neonskylt som tänds bokstav för bokstav eller regn som rinner på en ruta. Ritfunktionen tar emot ett läge (`v`), och i `SCENER` anger man vilka lägen som ska visas och hur länge. Skriptet ritar bilden en gång per läge och sparar bara de pixlar som skiljer sig från grundbilden. Datan skrivs in i `spel.html` mellan markörerna `BILDDATA-START` och `BILDDATA-SLUT`. Spelet ritar sedan grundbilden på en canvas och lägger på de ändrade pixlarna i takt.
+
+Med `animStyr` på ett rum kan spelet låsa en animation på en viss ruta. Telefonsvararens lampa slutar till exempel blinka när man har lyssnat på meddelandet.
+
+Den som har valt minskad rörelse i operativsystemet ser bara stillbilderna.
 
 ## Filer
 

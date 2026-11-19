@@ -111,7 +111,13 @@ class Duk:
 # ======================================================================
 #  DETEKTIVENS KONTOR
 # ======================================================================
-def kontor():
+def kontor(v=None):
+    """v anger animationernas läge. Utan v ritas grundbilden."""
+    v = v or {}
+    neon = v.get("neon", (1, 1, 1, 1, 1))   # vilka bokstäver i HOTEL som lyser
+    regn = v.get("regn", 0)                 # regnets fas 0..9
+    rok = v.get("rok", 0)                   # rökens fas 0..5
+    lampa = v.get("lampa", True)            # telefonsvararens lampa
     rnd = random.Random(1947)
     d = Duk(2)
 
@@ -162,6 +168,7 @@ def kontor():
     # Regn på rutan
     for _ in range(70):
         rx, ry = rnd.randint(fx0, fx1 - 1), rnd.randint(fy0, fy1 - 4)
+        ry = fy0 + (ry - fy0 + regn * 5) % (fy1 - 4 - fy0)
         n = rnd.randint(2, 4)
         for k in range(n):
             d.px(rx - k // 2, ry + k, 4 if k < n - 1 else 5)
@@ -176,8 +183,9 @@ def kontor():
         for ry, rad in enumerate(bokstaver[ch]):
             for rx, bit in enumerate(rad):
                 if bit == "1":
-                    d.px(nx + rx, 41 + i * 4 + ry, 14)
-    d.radial(nx + 1, 50, 12, 0.5, mask=d.a < 4)
+                    d.px(nx + rx, 41 + i * 4 + ry, 14 if neon[i] else 2)
+    if sum(neon):
+        d.radial(nx + 1, 50, 12, 0.5 * sum(neon) / 5, mask=d.a < 4)
     # Persienner upptill
     for y in range(fy0, fy0 + 13, 2):
         d.rekt(fx0, y, fx1, y + 1, 8)
@@ -272,17 +280,21 @@ def kontor():
     d.px(137, 65, 13)
     sx = 137
     for y in range(64, 40, -1):
-        sx += [0, 1, 1, 0, -1, -1][(y // 2) % 6]
-        if y % 3:
+        sx += [0, 1, 1, 0, -1, -1][((y + 2 * rok) // 2) % 6]
+        if (y + 2 * rok) % 3:
             d.px(sx, y, 4 if y > 52 else 3)
 
     # --- Telefonsvarare med röd lampa ---
     d.rekt(140, 61, 156, 66, 0)
     d.rekt(141, 62, 149, 65, 1)
     d.rekt(142, 63, 148, 64, 3)
-    d.px(153, 63, 13)
-    d.px(154, 63, 14)
-    d.radial(154, 63, 4, 0.6, mask=d.a < 4)
+    if lampa:
+        d.px(153, 63, 13)
+        d.px(154, 63, 14)
+        d.radial(154, 63, 4, 0.6, mask=d.a < 4)
+    else:
+        d.px(153, 63, 6)
+        d.px(154, 63, 6)
 
     # --- Telefon ---
     d.poly([(157, 66), (159, 61), (167, 61), (169, 66)], 0)
@@ -320,9 +332,58 @@ def kontor():
 
     # --- Stämning ---
     d.vinjett(0.4)
-    return d.spara("kontor")
+    return d
+
+
+# Animationer per bild: (namn, nyckel i v, [(värde, millisekunder), ...]).
+# Spelet kan låsa en animation på en viss ruta, t.ex. släckt lampa.
+HOTEL_UPP = [(tuple(1 if j < n else 0 for j in range(5)), 260) for n in range(6)]
+SCENER = {
+    "kontor": (kontor, [
+        ("neon", "neon", [((0, 0, 0, 0, 0), 700)] + HOTEL_UPP[1:-1] + [((1, 1, 1, 1, 1), 3000),
+                          ((0, 0, 0, 0, 0), 120), ((1, 1, 1, 1, 1), 160), ((0, 0, 0, 0, 0), 90), ((1, 1, 1, 1, 1), 2200)]),
+        ("regn", "regn", [(i, 90) for i in range(10)]),
+        ("rok", "rok", [(i, 220) for i in range(6)]),
+        ("lampa", "lampa", [(True, 650), (False, 650)]),
+    ]),
+}
+
+
+def exportera(namn):
+    """Sparar grundbilden som PNG och returnerar animationerna som pixeldiffar."""
+    scen, animationer = SCENER[namn]
+    bas = scen()
+    bas.spara(namn)
+    ut = []
+    for anim_namn, nyckel, ramar in animationer:
+        diffar, tider = [], []
+        for varde, ms in ramar:
+            a = scen({nyckel: varde}).a
+            ys, xs = np.nonzero(a != bas.a)
+            platt = []
+            for y, x in zip(ys.tolist(), xs.tolist()):
+                platt += [x, y, int(a[y, x])]
+            diffar.append(platt)
+            tider.append(ms)
+        ut.append({"namn": anim_namn, "ms": tider, "ramar": diffar})
+    return ut
+
+
+def skriv_in_i_spelet(data):
+    """Lägger in animationsdatan i spel.html mellan markörerna."""
+    import json
+    spel = UT.parent / "spel.html"
+    s = spel.read_text(encoding="utf-8")
+    start, slut = "/* BILDDATA-START */", "/* BILDDATA-SLUT */"
+    i, j = s.index(start) + len(start), s.index(slut)
+    kod = "\nconst BILDDATA = " + json.dumps(data, separators=(",", ":")) + ";\n"
+    spel.write_text(s[:i] + kod + s[j:], encoding="utf-8")
 
 
 if __name__ == "__main__":
-    for funktion in (kontor,):
-        print("Ritade", funktion())
+    data = {"palett": PALETT, "bilder": {}}
+    for namn in SCENER:
+        data["bilder"][namn] = exportera(namn)
+        print("Ritade", UT / f"{namn}.png", "med", len(data["bilder"][namn]), "animationer")
+    skriv_in_i_spelet(data)
+    print("Uppdaterade spel.html. Kör verktyg/bygg.py för att bygga index.html.")
