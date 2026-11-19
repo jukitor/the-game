@@ -6,7 +6,7 @@ ljus, dimma, regn, spegelbilder i våt asfalt, filmkorn och vinjettering.
 Scenen ritas i 3200 x 1800 och sparas som en liggande (1920 x 1080) och en
 stående bild (1012 x 1800) för mobil.
 
-Kör:  python3 verktyg/rita_splash.py
+Kör:  python3 aventyr/mopsen/verktyg/rita_splash.py
 """
 from pathlib import Path
 

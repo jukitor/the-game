@@ -1,119 +1,163 @@
-# Mopsen som försvann
+# Spelmotor för textäventyr
 
-Ett humoristiskt textäventyr på svenska i samma anda som 80-talets Magnetic Scrolls-spel (The Pawn, Guild of Thieves, Corruption).
+En spelmotor för textäventyr på svenska i samma anda som 80-talets Magnetic Scrolls-spel (The Pawn, Guild of Thieves, Corruption): en ordtolkare som förstår korta svenska meningar, pixelbilder med animationer, musik, miljöljud och effekter, repliker som skrivs ut i takt med rösten och en startskärm.
 
-Grand Harbor, 1947. Du är en luggsliten privatdetektiv utan pengar och utan kaffe. Rikedomsänkan Cornelia Pettigrews prisbelönta mops Lord Waffles har blivit kidnappad strax före den stora hundutställningen. Leta ledtrådar, åk tunnelbana genom staden och få hem hunden.
+Motorn är generisk. Varje äventyr är en konfiguration med egna bilder och ljud, och alla äventyr använder samma motor. En förbättring av motorn kommer alltså alla äventyr till del.
 
-## Spela
+## Äventyr
 
-Öppna `index.html` i en webbläsare. Spelet behöver ingen server och ingen installation.
+| Äventyr | Mapp | Spela |
+|---|---|---|
+| Mopsen som försvann | [`aventyr/mopsen/`](aventyr/mopsen/) | [jukitor.github.io/the-game](https://jukitor.github.io/the-game/) |
 
-## Kommandon
+Rotens `index.html` skickar vidare till Mopsen som försvann.
 
-| Exempel | Vad det gör |
+## Struktur
+
+```
+motor/                     spelmotorn, gemensam för alla äventyr
+  motor.js                 ordtolkare, regler, bilder, animationer, ljud, repliker, startskärm
+  motor.css                utseendet
+  verktyg/
+    bygg.py                bygger ett äventyr: data.js, index.html och spel.html
+    pixelbild.py           bibliotek för pixelbilder (rityta, palett, dithering, typsnitt, export av animationer)
+    ljudverktyg.py         bibliotek för ljud (MIDI och FluidSynth, signalbehandling, rumsklang, mp3, slingor)
+aventyr/<namn>/            ett äventyr
+  aventyr.js               konfigurationen (window.AVENTYR)
+  bilder/  ljud/           bilder och ljud, med bilddata.json, slingor.json och texttider.json
+  verktyg/                 äventyrets egna skript som ritar bilder och skapar ljud
+  data.js, index.html, spel.html   byggs av motor/verktyg/bygg.py
+```
+
+## Bygga och spela
+
+```
+python3 motor/verktyg/bygg.py           # bygger alla äventyr
+python3 motor/verktyg/bygg.py mopsen    # bygger ett äventyr
+python3 -m http.server                  # öppna sedan http://localhost:8000/aventyr/mopsen/
+```
+
+`index.html` i äventyrets mapp laddar motorn direkt från `motor/`, så en ändring i `motor.js` eller `motor.css` syns i alla äventyr utan att något byggs om. `bygg.py` behövs när äventyrets genererade data har ändrats (nya bilder, animationer eller ljud) och för att skapa `spel.html`, där motor, äventyr och data är inbakade i en enda fil för publicering som Claude-artefakt. Kör därför `bygg.py` innan du publicerar en ny version av motorn.
+
+Ljudfilerna hämtas från webbservern. Öppnar du `index.html` direkt från disken fungerar spelet, men utan ljud.
+
+## Ett nytt äventyr
+
+1. Skapa `aventyr/<namn>/aventyr.js` (utgå gärna från `aventyr/mopsen/aventyr.js`).
+2. Rita bilder med `motor/verktyg/pixelbild.py` och skapa ljud med `motor/verktyg/ljudverktyg.py` från äventyrets egna skript i `aventyr/<namn>/verktyg/`. Bilder och ljud är valfria: en plats utan `bild` visar ingen bildruta, och utan `ljud` blir det tyst.
+3. Kör `python3 motor/verktyg/bygg.py <namn>`.
+
+## Konfigurationen
+
+`aventyr.js` definierar `window.AVENTYR`. Ett minimalt äventyr:
+
+```js
+window.AVENTYR = {
+  id: "fyren", titel: "Fyren", start: "strand",
+  intro: [{ text: "Fyren", klass: "banner" }, "Du vaknar på en strand."],
+  rum: {
+    strand: { namn: "Stranden", beskrivning: "Sand, tång och en fyr i norr.", utgangar: { n: "fyr" } },
+    fyr: { namn: "Fyren", beskrivning: "En låst dörr.", utgangar: { s: "strand" },
+      passage: [{ om: { inteBar: "nyckel" }, stopp: true, gor: ["Dörren är låst."] }],
+      vidIntrade: [{ gor: [{ poang: "fyr" }, { stampel: "Slut" }, { slutsummering: true }, { spelSlut: true }] }] },
+  },
+  objekt: {
+    nyckel: { namn: ["nyckel", "nyckeln"], kort: "en rostig nyckel", plats: "strand", beskrivning: "Rostig men hel." },
+  },
+  regler: [],
+  poang: { fyr: [10, "kommit in i fyren"] },
+  ledtradar: [{ om: { inteBar: "nyckel" }, text: "Titta efter något på stranden." }, { text: "Gå norrut." }],
+};
+```
+
+### Översikt
+
+| Nyckel | Innehåll |
 |---|---|
-| `titta` eller `t` | Beskriver platsen du är på |
-| `undersök rocken` eller `u rock` | Tittar närmare på något |
-| `ta kortet`, `ta allt` | Plockar upp saker |
-| `släpp dyrken` | Lägger ner något |
-| `i` eller `inventarie` | Visar vad du bär på |
-| `upp`, `ner`, `in`, `ut` | Går åt ett håll |
-| `åk till chinatown` | Åker tunnelbana (på en perrong) |
-| `öppna lådan`, `läs brevet` | Öppnar och läser |
-| `ge korven till bruno` | Ger något till någon |
-| `visa fotot för benny` | Visar något för någon |
-| `prata med portiern` | Pratar med någon |
-| `ledtråd` | Ger en ledtråd om du kör fast |
-| `bild` | Stänger av eller slår på bilderna |
-| `ljud`, `musik` | Stänger av eller slår på allt ljud, eller bara musiken |
-| `poäng`, `spara`, `ladda`, `omstart` | Övrigt |
+| `id` | Används för sparade spel och inställningar i webbläsaren |
+| `titel`, `start` | Spelets namn och startplats |
+| `intro` | Texter när spelet börjar: strängar eller `{ text, klass }` där klass kan vara `banner` eller `sys` |
+| `startskarm` | `{ bild, bildStaende, alt, ort, titel, under, regn }`. Utan den startar spelet direkt |
+| `rum` | Platserna, se nedan |
+| `objekt` | Föremål och personer, se nedan |
+| `regler` | Pussel och särskilda svar, se nedan |
+| `handlingar` | Namngivna listor med handlingar som flera regler kan köra med `{ kor: "namn" }` |
+| `passager` | Namngivna passageregler som flera rum kan dela (`passage: "namn"`) |
+| `verb` | Egna verb: `{ köp: ["köp", "beställ"], dyrka: ["dyrka", "lås upp"] }`. Verb på två ord fungerar |
+| `alias` | Kommandon som skrivs om: `{ betala: "köp korv" }` |
+| `resor` | Resor mellan stationer, t.ex. tunnelbana: `{ verb, ljud, stationer: { rum: { namn, ord } }, resetexter, texter }` |
+| `poang`, `maxPoang` | `{ nyckel: [poäng, "beskrivning i supinum"] }`. Max räknas ut om det saknas |
+| `rangar` | `[[minsta poäng, "Rang"], ...]` från högst till lägst |
+| `ledtradar` | `[{ om, text }]`. Den första vars villkor stämmer visas |
+| `texter` | Byter ut motorns standardtexter, t.ex. `ingenUtgang`, `lyssna`, `vanta`, `hjalp`, `spelSlut` (se `TEXTER` i `motor.js`) |
+| `snabbknappar` | `[["Titta", "titta"], ...]` under inmatningsfältet |
+| `ljud` | `{ musik, effektvolym, forladda, miljo: { rum: { slingor: [[fil, volym]], handelser: [[fil, sekunder emellan, volym, villkor]], dampaMusik } } }` |
 
-Pil upp i inmatningsfältet hämtar förra kommandot.
+### Rum
 
-## Platser
-
-Ditt kontor, Main Street, Park Avenue, Pettigrews takvåning, Chinatown, restaurangen Golden Dragon, Pir 9 och Lager 13. Tunnelbanan har fyra stationer: Main Street, Park Avenue, Chinatown och Pir 9.
-
-## Startskärm
-
-Spelet börjar med en startskärm: en målerisk noir-illustration av en detektiv sedd bakifrån under en gatlykta i regnet, med loggan **Mopsen som försvann**. Ovanpå bilden faller animerat regn. Bilden ligger kvar tills man klickar eller trycker på den. Klicket startar spelet och jazzen.
-
-Bilden ritas av `verktyg/rita_splash.py` (Python med Pillow och NumPy) i 3200 × 1800 pixlar, i lager med ljus, dimma, regn, spegelbilder i våt asfalt, filmkorn och vinjettering. Den sparas som `bilder/splash.jpg` (liggande) och `bilder/splash_staende.jpg` (stående, för mobil).
-
-## Bilder
-
-Miljöerna illustreras med pixelbilder i retrostil: 192 × 120 pixlar, 16 färger och ordnad dithering. Bilderna ritas med kod i `verktyg/rita_bilder.py` (Python med Pillow och NumPy), en funktion per miljö. Alla bilder delar samma palett.
-
-Alla platser har en egen bild:
-
-- **Ditt kontor**: neonskylten HOTEL tänds bokstav för bokstav, regnet rinner, cigarettröken stiger och telefonsvararens lampa blinkar.
-- **Main Street**: regn över gatan, ånga från Sals korvkastrull och en dinerskylt med ett glappande N.
-- **Park Avenue**: Pettigrew Towers med snurrande karuselldörr, portiern Reginald, en pickande duva med fluga, ett fönster som tänds och släcks samt duggregn.
-- **Pettigrews takvåning**: kristallkronan glittrar, fru Pettigrew snyftar i sin spetsnäsduk och ett litet moln regnar inomhus på en palm. När Lord Waffles är tillbaka sitter han i korgen och frun är lycklig.
-- **Chinatown**: lyktor som gungar i vinden, GOLDEN DRAGON-skylten som tänds bokstav för bokstav, ånga från ett matstånd och regn.
-- **Golden Dragon**: lågor från Bennys wokpanna, karpen som simmar uttråkad fram och tillbaka och en vinkande lyckokatt.
-- **Pir 9**: dimma som driver, fyrens ljuskägla, vågor och fartyget i hamnen. Bruno försvinner när han fått sin korv, och dörren står öppen när den är dyrkad.
-- **Lager 13**: dammkorn i ljusstrimman och Lord Waffles som morrar i buren. Han kommer ut när han fått kex och är borta när du tagit honom.
-- **Perrongen vid Main Street**: smutsvitt kakel med mosaikskylt, jordnötsskal på golvet, en man som sover under en tidning och snarkar, och en glödlampa som glappar.
-- **Perrongen vid Park Avenue**: marmor och mässing, blankt golv, en ormbunke och fiolspelaren som spelar Bach med noter som svävar uppåt.
-- **Perrongen vid Chinatown**: rött kakel och papperslyktor, ett tåg med öppen dörr och folk med matkassar fulla av purjolök och ingefära.
-- **Perrongen vid Pir 9**: slutstationen med trasigt kakel, en stoppbock vid tunneln, ett lysrör som blinkar SOS på morse, vatten som droppar i en pöl och en råtta som springer längs kanten.
-
-Texter i bilderna skrivs med ett litet pixeltypsnitt (`TYPSNITT` och `text()` i ritskriptet).
-
-```
-python3 verktyg/rita_bilder.py   # ritar om bilderna och animationerna
-python3 verktyg/bygg.py          # bygger index.html
+```js
+kontor: {
+  namn: "Ditt kontor",
+  beskrivning: ["Grundtext.", { om: { inteFlagga: "svarare" }, text: " Telefonsvararen blinkar." }],
+  utgangar: { ner: "gata", ut: "gata" },      // n, s, ö, v, upp, ner, in, ut
+  ord: ["kontor", "kontoret"],                 // för "gå till kontoret"
+  grupp: "station",                            // valfri grupp, t.ex. för föremål som finns överallt i gruppen
+  bild: "kontor",                              // bilder/kontor.png och dess animationer
+  animationer: { lampa: [{ om: { flagga: "svarare" }, ram: 1 }] },   // lås en animation på en ruta
+  lukt: "Kaffe och damm.",
+  passage: [{ om, stopp, gor }],               // körs när spelaren försöker gå in hit; stopp: true hindrar
+  vidIntrade: [{ om, gor }],                   // körs efter att spelaren kommit in (den första som passar)
+}
 ```
 
-För att koppla en bild till en plats lägger du till `bild: "namn"` på rummet i `ROOMS`.
+### Föremål och personer
 
-### Animationer
+```js
+lada: {
+  namn: ["låda", "lådan"], kort: "en låda",    // orden spelaren kan använda, och hur föremålet nämns
+  plats: "kontor",                             // rum, "spelare", ett annat föremål eller null (finns inte än)
+  beskrivning: "...",                          // sträng eller lista med villkorade delar
+  fast: true, person: true,                    // går inte att ta / är en person (ge, visa, prata)
+  behallare: true, oppningsbar: true, oppen: false,
+  oppnaText, oppnaLjud, redanOppenText, stangText, stangdText,
+  lasbar: true, lasText: "...",                // läs visar beskrivningen eller lasText
+  grupp: "station", plats: "överallt",          // finns i alla rum i gruppen
+  vidTa: [{ poang: "kort" }],                  // handlingar när föremålet tas
+}
+```
 
-En bild kan ha enkla animationer, till exempel en neonskylt som tänds bokstav för bokstav eller regn som rinner på en ruta. Ritfunktionen tar emot ett läge (`v`), och i `SCENER` anger man vilka lägen som ska visas och hur länge. Skriptet ritar bilden en gång per läge och sparar bara de pixlar som skiljer sig från grundbilden. Datan skrivs in i `spel.html` mellan markörerna `BILDDATA-START` och `BILDDATA-SLUT`. Spelet ritar sedan grundbilden på en canvas och lägger på de ändrade pixlarna i takt.
+### Regler
 
-Med `animStyr` på ett rum kan spelet låsa en animation på en viss ruta. Telefonsvararens lampa slutar till exempel blinka när man har lyssnat på meddelandet. Om en animation i `SCENER` har ett fjärde värde (`slinga`) loopar bara de första rutorna, och de övriga visas bara när spelet väljer dem. Så visas till exempel Bruno, Lord Waffles och lagerdörren i rätt läge beroende på hur långt man kommit.
+En regel ersätter motorns standardsvar när verb, föremål och villkor stämmer. Reglerna prövas i ordning och den första som passar används. `nar: "efter"` körs i stället efter standardsvaret.
 
-Animationsrutorna packas som base64 med tre byte per ändrad pixel, så att spelfilen hålls liten.
+```js
+{ verb: "ge", objekt: "korv", mottagare: "bruno", om: { inteFlagga: "bruno" }, gor: [
+  { flytta: ["korv", "bruno"] }, { satt: "bruno", ljud: "gulp" },
+  "Bruno sväljer korven hel.", { poang: "bruno" },
+] }
+```
 
-Den som har valt minskad rörelse i operativsystemet ser bara stillbilderna.
+Motorns verb: `titta`, `undersök`, `sök`, `ta`, `ta på`, `släpp`, `inventarie`, `öppna`, `stäng`, `läs`, `lyssna`, `ge`, `mata`, `visa`, `prata`, `ät`, `klappa`, `vänta`, `lukta`, `gå` och (med `resor`) `åk`. Äventyrets egna verb från `verb` har inget standardsvar utöver "Det går inte.", så de styrs helt av regler.
 
-## Ljud och musik
+**Villkor** (`om`, alla måste stämma): `flagga`, `inteFlagga`, `bar`, `inteBar`, `har` (finns här), `inteHar`, `inom` (här, buret eller i en öppen behållare), `inteInom`, `plats`, `intePlats`, `objektPa: [föremål, plats]`, `inteObjektPa`, `oppen`, `stangd`, `inventarieTom`, `objekt`, `mottagare`, `fras` (true om spelaren skrev något efter verbet), `ord` (ett av orden finns i frasen; `korv*` matchar delord), `inteOrd`, `franGrupp`, `inteFranGrupp`, `fran` (i passager), `poangMinst`, samt `alla`, `nagon` och `inte` för att kombinera.
 
-Musiken och ljuden ligger som mp3-filer i `ljud/` och skapas av `verktyg/skapa_ljud.py`.
+**Handlingar** (`gor`): en sträng skrivs ut. Ett objekt kan ha `om` och någon av: `text` (kan vara villkorad), `texter` (en lista att växla mellan), `sys`, `stampel`, `flytta` + `till`, `satt`, `nollstall`, `oppna`, `stang`, `lista` (visa innehåll), `poang`, `ljud` + `fordrojning`, `ljudFordrojning` (väntar med poängljudet), `ledtrad`, `beskriv`, `flyttaSpelare`, `ga` (flytta och visa platsen), `utfor` (kör ett annat kommando, räknas inte som drag), `kor` (en namngiven handlingslista), `replik` + `sedan` (orden skrivs ut i takt med en inspelad röst, se nedan), `ejDrag`, `slutsummering` och `spelSlut`.
 
-- **Musik:** en lugn deckarballad i c-moll, 56 slag per minut, där bara kompet spelar: flygel, kontrabas och visp. I andra varvet går basen i fjärdedelar. Melodier för tenorsax och dämpad trumpet finns kvar i skriptet och kan slås på med `SOLISTER = True`. Den är komponerad i skriptet och renderad med samplade instrument från ljudbanken [GeneralUser GS](https://www.schristiancollins.com/generaluser) i FluidSynth, med rumsklang. Stycket är knappt tre minuter långt och loopar sömlöst.
-- **Fiolspelaren** på Park Avenues perrong spelar Bachs Preludium i C-dur (BWV 846) som brutna ackord på samplad fiol. Då tonas jazzen ner.
-- **Miljöljud per plats:** regn mot kontorsfönstret, regn och bilhorn på Main Street, duggregn och duvor på Park Avenue, golvklocka i takvåningen, regn, sorl och cykelklockor i Chinatown, fräsande wok, sorl och porslin på Golden Dragon, vågor, måsar och mistlur vid Pir 9, knarr och en morrande mops i lagret, och tunnelbanebrus med passerande tåg, droppar och råttor på perrongerna.
-- **Effekter:** telefonsvararen (klick, bandspolning, pip och fru Pettigrews meddelande genom en gammal högtalare; orden skrivs ut i takt med rösten, med tider från `ljud/texttider.json`), spärren, tunnelbaneresan, lådan, kassaapparaten, Brunos mage och klunk, mopsen som morrar och skäller, låset som dyrkas upp, lyckokakan, kexpåsen, hissen, poängljud (vibrafon) och en slutfanfar.
+I texter ersätts `{objekt}`, `{Objekt}`, `{mottagare}`, `{poang}`, `{max}` och `{drag}`.
 
-Miljöljuden och effekterna byggs med signalbehandling (NumPy och SciPy) och får rumsklang i SoX. Fru Pettigrews röst och sorlet läses in med espeak-ng och filtreras. Slingornas exakta längd sparas i `ljud/slingor.json` och skrivs in i `spel.html`, så att spelet kan loopa dem utan glapp.
+### Bilder, animationer och ljud
 
-Så här skapar du ljuden på nytt (Ubuntu/Debian):
+Bilderna är 192 × 120 pixlar med 16 färger och ritas av äventyrets skript med `motor/verktyg/pixelbild.py`. Scenernas animationer sparas som pixeldiffar i `bilder/bilddata.json`. En animation kan ha en `slinga`, och då loopar bara de första rutorna medan resten väljs av rummets `animationer`.
+
+Ljuden skapas med `motor/verktyg/ljudverktyg.py` och ligger som mp3 i `ljud/`. Slingornas exakta längd (`ljud/slingor.json`) gör att motorn kan loopa dem utan glapp. En replik behöver ljudfilen och tider per mening i `ljud/texttider.json` (`{ "svarare": [[start, slut, "mening"], ...] }`). Handlingen `{ replik: "svarare", sedan: [...] }` spelar ljudet och skriver ut orden i takt med det.
+
+Ljudet startar när spelaren klickar på startskärmen eller gör något första gången, eftersom webbläsare inte tillåter ljud innan dess. Kommandona `ljud` och `musik` stänger av och slår på, och valet sparas.
+
+## Verktyg som behövs för bilder och ljud
 
 ```
 sudo apt install fluidsynth sox espeak-ng ffmpeg
-pip install mido numpy scipy
-python3 verktyg/skapa_ljud.py          # allt, eller t.ex. bara: musik, fiol, poang, miljo, effekter
-python3 verktyg/bygg.py
+pip install pillow numpy scipy mido
 ```
 
-Skriptet hämtar ljudbanken GeneralUser GS (cirka 30 MB) till `.ljudcache/` första gången.
-
-Ljudet startar första gången man skriver eller trycker, eftersom webbläsare inte tillåter ljud innan dess. Kommandot `ljud` (eller knappen **Ljud**) stänger av och slår på allt ljud, och `musik` stänger av och slår på musiken. Valen sparas i webbläsaren. Ljudet pausas när fliken inte syns. Ljudfilerna hämtas från webbservern, så om du öppnar `index.html` direkt från disken blir det tyst. Starta i så fall en lokal server, till exempel `python3 -m http.server`, och öppna `http://localhost:8000`.
-
-### Licenser för ljud
-
-- GeneralUser GS av S. Christian Collins får användas fritt i musikproduktion, även kommersiellt.
-- Bachs Preludium i C-dur är fri från upphovsrätt.
-- Övriga ljud är skapade från grunden i `verktyg/skapa_ljud.py`.
-
-## Filer
-
-- `spel.html`: källan till spelet (HTML, CSS och JavaScript), utan `<head>` så att den också kan publiceras som Claude-artefakt.
-- `index.html`: den fristående sidan som GitHub Pages visar. Den byggs från `spel.html` med `python3 verktyg/bygg.py`. Redigera inte den direkt.
-- `bilder/`: pixelbilderna.
-- `ljud/`: musik, miljöljud och effekter som mp3.
-- `verktyg/`: skripten som ritar bilderna, skapar ljuden och bygger `index.html`.
-
-Spelvärlden (rum, föremål och poäng) ligger överst i skriptet i objekten `ROOMS`, `OBJ` och `SCORES`, så det är lätt att bygga ut med fler platser och pussel.
+Ljudbanken GeneralUser GS hämtas automatiskt till `.ljudcache/` första gången. Den får användas fritt i musikproduktion, även kommersiellt.
