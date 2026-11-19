@@ -569,7 +569,7 @@ function look() {
 
 const DIRS = {
   n: "n", norr: "n", nord: "n", s: "s", söder: "s", syd: "s", ö: "ö", öster: "ö", öst: "ö", o: "ö",
-  v: "v", väster: "v", väst: "v", upp: "upp", uppåt: "upp", u: "upp", ner: "ner", nedåt: "ner", ned: "ner",
+  v: "v", väster: "v", väst: "v", upp: "upp", uppåt: "upp", ner: "ner", nedåt: "ner", ned: "ner",
   in: "in", innanför: "in", ut: "ut", utåt: "ut", ute: "ut",
 };
 
@@ -967,8 +967,9 @@ function win() {
 //  META
 // ================================================================
 function help() {
-  out("Du styr spelet genom att skriva korta kommandon på svenska, till exempel:");
-  out("  TITTA (eller L)            UNDERSÖK RÖCKEN (eller X ROCK)\n  TA KORTET / TA ALLT         SLÄPP DYRKEN\n  ÖPPNA LÅDAN                 LÄS BREVET\n  GE KORVEN TILL BRUNO        VISA FOTOT FÖR BENNY\n  PRATA MED PORTIERN          ÅK TILL CHINATOWN\n  UPP, NER, IN, UT            INVENTARIE (eller I)");
+  out("Du styr detektiven genom att skriva vad du vill göra, med korta meningar på svenska. Oftast räcker ett verb, ibland följt av vad eller vem det gäller.");
+  out("TITTA (eller T): se dig omkring\nUNDERSÖK något (eller U): titta närmare på något\nTA, SLÄPP, ÖPPNA, LÄS: hantera saker\nPRATA MED, GE, VISA: ta kontakt med folk\nUPP, NER, IN, UT: gå åt ett håll\nÅK TILL: res med tunnelbanan från en perrong\nINVENTARIE (eller I): se vad du bär på");
+  out("Undersök det du ser och prata med dem du möter. Kör du fast kan du skriva LEDTRÅD.");
   out("Övrigt: POÄNG, LEDTRÅD, BILD (bilder av/på), LJUD (allt ljud av/på), MUSIK (musiken av/på), SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.", "sys");
 }
 
@@ -1074,7 +1075,7 @@ function exec(raw) {
   }
 
   switch (v) {
-    case "titta": case "l": case "se": case "beskriv": case "kolla":
+    case "titta": case "t": case "l": case "se": case "beskriv": case "kolla":
       if (w[1] === "på" || w[1] === "i" || w[1] === "under") return w[1] === "på" ? examine(clean(w.slice(2))) : search(clean(w.slice(2)));
       if (restClean) return examine(restClean);
       return look();

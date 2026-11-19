@@ -12,8 +12,8 @@ Grand Harbor, 1947. Du är en luggsliten privatdetektiv utan pengar och utan kaf
 
 | Exempel | Vad det gör |
 |---|---|
-| `titta` eller `l` | Beskriver platsen du är på |
-| `undersök rocken` eller `x rock` | Tittar närmare på något |
+| `titta` eller `t` | Beskriver platsen du är på |
+| `undersök rocken` eller `u rock` | Tittar närmare på något |
 | `ta kortet`, `ta allt` | Plockar upp saker |
 | `släpp dyrken` | Lägger ner något |
 | `i` eller `inventarie` | Visar vad du bär på |
