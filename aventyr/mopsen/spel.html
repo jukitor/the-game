@@ -289,6 +289,13 @@ window.AVENTYR = {
   rum: {
     kontor: {
       namn: "Ditt kontor", bild: "kontor", ord: ["kontor", "kontoret"],
+      kortBeskrivning: [
+        { om: { inteFlagga: "svarare" }, text: "Ditt kontor. Telefonsvararen blinkar fortfarande, som om någon där ute faktiskt behöver dig." },
+        { om: { bar: "mops" }, text: "Ditt kontor. Lord Waffles nosar på kundstolen och ser inte imponerad ut. Han har sett finare kontor. Han har sett finare hundkojor." },
+        "Ditt kontor. Det ser ut precis som när du gick, och det är just det som är problemet.",
+        "Tillbaka på kontoret. Räkningarna har inte betalat sig själva medan du var borta. Du kollade.",
+        "Ditt kontor. Dammet har lagt sig i exakt samma mönster som förra gången. Du väljer att se det som stabilitet.",
+      ],
       beskrivning: ["Ditt kontor på femte våningen i Hendersonhuset. Ett skrivbord, två stolar (en för dig och en för kunder som aldrig kommer), en klädhängare och ett fönster mot regnet. På dörrens frostade glas står det VITKETEDTAVIRP, vilket är rätt stavat från andra sidan. Trappan leder ner till gatan.",
         { om: { inteFlagga: "svarare" }, text: "\n\nPå skrivbordet blinkar telefonsvararen ilsket rött." }],
       utgangar: { ner: "mainst", ut: "mainst" },
@@ -296,40 +303,80 @@ window.AVENTYR = {
     },
     mainst: {
       namn: "Main Street", bild: "mainst", ord: ["gata", "gatan", "main street"],
+      kortBeskrivning: [
+        { om: { bar: "dollar", inteFlagga: "korv" }, text: "Main Street. Korvkiosken ångar, och dollarsedeln i fickan känns plötsligt mycket viktig." },
+        { om: { bar: "mops" }, text: "Main Street. Sal får syn på mopsen i dina armar. \"Ingen hund i kön\", säger han av gammal vana. Det finns ingen kö." },
+        "Main Street. Regnet, bilarna och Sal vid korvkiosken. Allt är som vanligt, och det är sällan ett gott tecken.",
+        "Main Street igen. Sal vinkar med korvtången. Du vinkar tillbaka utan korvtång.",
+        "Main Street. En taxi kör förbi och stänker ner dina byxor. Det känns nästan som att komma hem.",
+      ],
       beskrivning: "Main Street, mitt i Grand Harbor. Regnet smattrar på markiserna och bilarna tutar på varandra som gamla grannar som aldrig blivit sams. Vid trottoarkanten står en korvkiosk med en ångande kastrull, och bredvid den ett tidningsställ. Ovanför dig ligger kontorshuset, och en trappa med en emaljerad skylt leder ner till tunnelbanan.",
       utgangar: { upp: "kontor", in: "kontor", ner: "p_main" },
     },
     p_main: {
       namn: "Perrongen vid Main Street", bild: "p_main", grupp: "station", ord: ["tunnelbana", "tunnelbanan", "perrong", "perrongen", "trappa", "trappan"],
+      kortBeskrivning: [
+        "Perrongen under Main Street. Mannen på bänken sover fortfarande. Han har kommit längre i livet än du, och han har inte rört sig.",
+        "Perrongen under Main Street. Det luktar järn och jordnötter, och tåget mot Park Avenue, Chinatown och Pir 9 kan komma när som helst. Eller inte.",
+        "Perrongen under Main Street. Någon har ätit fler jordnötter sedan sist. Du misstänker mannen på bänken. Du har inga bevis.",
+      ],
       beskrivning: "Tunnelbaneperrongen under Main Street. Det luktar järn, regnrockar och gårdagens jordnötter. En linjekarta på väggen visar fyra stationer: MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp till gatan.",
       utgangar: { upp: "mainst", ut: "mainst" },
       passage: "spärren",
     },
     p_park: {
       namn: "Perrongen vid Park Avenue", bild: "p_park", grupp: "station", ord: ["tunnelbana", "tunnelbanan", "perrong", "perrongen", "trappa", "trappan"],
+      kortBeskrivning: [
+        "Perrongen vid Park Avenue. Fiolspelaren har gått över till Vivaldi. Ingen märker skillnaden utom han själv.",
+        "Perrongen vid Park Avenue. Någon har torkat av bänkarna igen sedan du var här senast. Det var en kvart sedan.",
+        "Perrongen vid Park Avenue, där även råttorna verkar ha gått i internatskola.",
+      ],
       beskrivning: "Den finaste perrongen i hela systemet. Någon har till och med torkat av bänkarna, och en gatumusikant spelar Bach på en fiol som är värd mer än din bil. Linjekartan visar MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp.",
       utgangar: { upp: "parkave", ut: "parkave" },
       passage: "spärren",
     },
     p_china: {
       namn: "Perrongen vid Chinatown", bild: "p_china", grupp: "station", ord: ["tunnelbana", "tunnelbanan", "perrong", "perrongen", "trappa", "trappan"],
+      kortBeskrivning: [
+        "Perrongen vid Chinatown. Den gamle mannen med ankan är kvar. Ankan följer dig med blicken. Den kommer ihåg dig.",
+        "Perrongen vid Chinatown. Ingefära, matkassar och folk som har bråttom åt alla håll samtidigt.",
+        "Perrongen vid Chinatown. Någon tappar en fiskstjärt framför dig. Du väljer att inte tolka det som ett budskap.",
+      ],
       beskrivning: "Perrongen under Chinatown är fylld av folk med matkassar, och det doftar ingefära hela vägen ner hit. Linjekartan visar MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp.",
       utgangar: { upp: "china", ut: "china" },
       passage: "spärren",
     },
     p_pir: {
       namn: "Perrongen vid Pir 9", bild: "p_pir", grupp: "station", ord: ["tunnelbana", "tunnelbanan", "perrong", "perrongen", "trappa", "trappan"],
+      kortBeskrivning: [
+        "Perrongen vid Pir 9. Lysrören blinkar fortfarande. Budskapet har inte blivit muntrare.",
+        "Perrongen vid Pir 9, linjens sista station. Vattnet droppar ner i samma pöl som förut, med en ihärdighet du kunde lära dig något av.",
+        "Perrongen vid Pir 9. En råtta springer längs kanten. Den har bråttom härifrån, och det har den rätt i.",
+      ],
       beskrivning: "Den sista stationen på linjen. Lysrören blinkar som om de försöker säga något i morsekod, troligen \"åk härifrån\". Linjekartan visar MAIN STREET, PARK AVENUE, CHINATOWN och PIR 9. Trappan leder upp mot hamnen.",
       utgangar: { upp: "pir", ut: "pir" },
       passage: "spärren",
     },
     parkave: {
       namn: "Park Avenue", bild: "parkave", ord: ["gata", "gatan", "park avenue"],
+      kortBeskrivning: [
+        { om: { inteFlagga: "svarare" }, text: "Park Avenue. Portiern ser på dig som om du vore regn som har kommit in genom fel dörr." },
+        { om: { bar: "mops" }, text: "Park Avenue. Portiern får syn på Lord Waffles i dina armar och tappar fattningen för första gången i sitt liv. Ett ögonbryn rör sig. Nästan en millimeter." },
+        "Park Avenue. Duvan med fluga har bytt till en randig. Portiern har inte bytt min sedan 1932.",
+        "Park Avenue. Pettigrew Towers glänser i regnet, och portiern står kvar vid entrén som en mycket välklädd bom.",
+        "Park Avenue, där trottoarerna är så rena att du skäms över dina skor. Och dig själv.",
+      ],
       beskrivning: "Park Avenue, där även duvorna verkar ha butler. Framför dig reser sig Pettigrew Towers i vit marmor och mässing. En portier i grön uniform med guldknappar står vid entrén och betraktar dig som om du vore en fläck på hans matta. Tunnelbanetrappan leder ner.",
       utgangar: { ner: "p_park", in: "vaning" },
     },
     vaning: {
       namn: "Pettigrews takvåning", bild: "vaning", ord: ["takvåning", "takvåningen", "våning", "våningen", "hiss", "hissen"],
+      kortBeskrivning: [
+        { om: { flagga: "vunnit" }, text: "Takvåningen. Lord Waffles snarkar i sin purpurkorg, och fru Pettigrew nynnar för sig själv. Till och med det lilla molnet under taket ser gladare ut." },
+        { om: { bar: "mops" }, text: "Takvåningen. Fru Pettigrew sitter i den vita soffan och snyftar. Sedan får hon syn på vad du har i famnen." },
+        "Takvåningen. Fru Pettigrew snyftar i en ny spetsnäsduk. Den förra är på tvätt.",
+        "Takvåningen. Det lilla molnet under taket har flyttat sig till andra sidan rummet. Den tomma hundkorgen står kvar.",
+      ],
       beskrivning: ["En takvåning så stor att den har eget väder. Kristallkronor, persiska mattor och ett porträtt i olja av en mops i amiralsuniform. Under porträttet står en tom hundkorg sammetsklädd i purpur.",
         { om: { inteFlagga: "vunnit" }, text: " Fru Pettigrew sitter i en vit soffa och snyftar i en spetsnäsduk." },
         " Hissen tar dig ut igen."],
@@ -357,17 +404,33 @@ window.AVENTYR = {
     },
     china: {
       namn: "Chinatown", bild: "china", ord: ["gata", "gatan", "chinatown"],
+      kortBeskrivning: [
+        { om: { inteFlagga: "adress" }, text: "Chinatown. Neonskylten lyser GOLDEN DRAGON, NUDLAR & DUMPLINGS, och lösenbrevet i fickan luktar fortfarande sötsur sås." },
+        "Chinatown. Neonskylten för Golden Dragon surrar, och D:et blinkar som vanligt.",
+        "Chinatown. Gumman i ståndet hälsar på dig som på en gammal stamkund. Du har aldrig köpt något.",
+        "Chinatown. Röda lyktor, regn och en cykelklocka någonstans. Tunnelbanan ligger under dina fötter.",
+      ],
       beskrivning: "Chinatown. Röda lyktor gungar i regnet över smala gator fulla av folk, cyklar och stånd med torkad bläckfisk. Rakt fram lyser en neonskylt: GOLDEN DRAGON, NUDLAR & DUMPLINGS, ÖPPET TILL SENT. Tunnelbanan ligger under dina fötter.",
       utgangar: { ner: "p_china", in: "restaurang" },
     },
     restaurang: {
       namn: "Golden Dragon", bild: "restaurang", ord: ["restaurang", "restaurangen", "golden", "dragon"],
+      kortBeskrivning: [
+        { om: { inteFlagga: "adress" }, text: "Golden Dragon. Benny slår upp lågor i wokpannan och tittar på dig som om han väntar på att du ska visa honom något." },
+        "Golden Dragon. Karpen i akvariet har inte ändrat uppfattning om dig.",
+        "Golden Dragon. Benny vinkar med sleven, porslinskatten vinkar med tassen, och du står mittemellan och känner dig omvinkad.",
+      ],
       beskrivning: "En smal restaurang med röda bås, ett akvarium med en djupt uttråkad karp och ett kök som syns genom en lucka. Bakom luckan står kocken Benny och slår upp wokpannan i lågor som en trollkarl. Vid kassan står en skål med lyckokakor.",
       utgangar: { ut: "china" },
       lukt: "Ingefära, vitlök och lyckokakor.",
     },
     pir: {
       namn: "Pir 9", bild: "pir", ord: ["pir", "piren", "hamn", "hamnen"],
+      kortBeskrivning: [
+        { om: { inteFlagga: "bruno" }, text: "Pir 9. Bruno står kvar framför Lager 13. Hans mage kurrar som en mistlur med halsont." },
+        { om: { flagga: "bruno", inteFlagga: "dorr" }, text: "Pir 9. Bruno är borta och letar senap. Dörren till Lager 13 är fortfarande låst med ett hänglås." },
+        { om: { flagga: "dorr" }, text: "Pir 9. Dörren till Lager 13 står på glänt. Dimman smiter in före dig." },
+      ],
       beskrivning: ["Pir 9 i hamnen. Dimman ligger tjock över vattnet och mistlurarna låter som valar med halsont. Längs kajen står slitna lagerlokaler. På den närmaste står en stor etta bredvid en ännu större trea: LAGER 13.",
         { om: { inteFlagga: "bruno" }, text: " Framför dörren står en man byggd som ett kylskåp med två kylskåp på axlarna." },
         { om: { flagga: "dorr" }, text: " Dörren står på glänt." },
@@ -377,6 +440,11 @@ window.AVENTYR = {
     },
     lager: {
       namn: "Lager 13", bild: "lager", ord: ["lager", "lagret", "lagerlokal", "lagerlokalen"],
+      kortBeskrivning: [
+        { om: { objektPa: ["mops", "lager"], inteFlagga: "mopsVan" }, text: "Lager 13. Lord Waffles morrar i sin bur. Det luktar fortfarande friterade räkor." },
+        { om: { objektPa: ["mops", "lager"], flagga: "mopsVan" }, text: "Lager 13. Lord Waffles sitter och väntar på dig, och på fler kex. Mest på kexen." },
+        { om: { inteObjektPa: ["mops", "lager"] }, text: "Lager 13. Den tomma buren står kvar bland fruktlådorna. Tolv hämtmatskartonger och inte en enda mops." },
+      ],
       beskrivning: ["Ett dammigt lager fullt av trälådor märkta FRUKTKONSERVER, vilket inte förklarar varför det luktar friterade räkor. På golvet står tolv tomma hämtmatskartonger från Golden Dragon.",
         { om: { objektPa: ["mops", "lager"] }, text: " Mitt på golvet står en hundbur, och i den sitter en mops med en liten krona broderad på halsbandet. Han ser ut som en mycket upprörd potatis." },
         " Dörren leder ut till piren."],
@@ -823,7 +891,7 @@ let S;
 function nyttTillstand() {
   const loc = {}, oppen = {};
   for (const [id, o] of Object.entries(OBJ)) { loc[id] = o.plats === undefined ? null : o.plats; if (o.oppen) oppen[id] = true; }
-  return { room: A.start, moves: 0, score: 0, loc, f: {}, oppen, scored: {}, over: false };
+  return { room: A.start, moves: 0, score: 0, loc, f: {}, oppen, scored: {}, over: false, besokt: {}, kortNr: {} };
 }
 
 // ---------------------------------------------------------------------------
@@ -1042,7 +1110,7 @@ function gor(handlingar, ctx = {}) {
     if (h.ledtrad) ledtrad();
     if (h.beskriv) titta();
     if (h.flyttaSpelare) S.room = h.flyttaSpelare;
-    if (h.ga) { S.room = h.ga; titta(); vidIntrade(); }
+    if (h.ga) { S.room = h.ga; titta(true); vidIntrade(); }
     if (h.utfor) utfor(mall(h.utfor, ctx), true);
     if (h.kor) gor(A.handlingar[h.kor], ctx);
     if (h.replik) replik(h);
@@ -1078,11 +1146,28 @@ function provaRegler(ctx, nar = "fore") {
 // ---------------------------------------------------------------------------
 //  Rum och förflyttning
 // ---------------------------------------------------------------------------
-function titta() {
+// Kort beskrivning vid återbesök. rum.kortBeskrivning är en sträng eller en lista där varje
+// del är en sträng eller { om, text }. Delar med villkor som stämmer går före delar utan villkor,
+// och bland dem som passar växlar motorn i tur och ordning.
+function kortBeskrivning(r) {
+  const alla = somLista(r.kortBeskrivning).map(d => typeof d === "string" ? { text: d } : d);
+  const passar = alla.filter(d => d.om && uppfyllt(d.om));
+  const val = passar.length ? passar : alla.filter(d => !d.om);
+  if (!val.length) return null;
+  const nr = S.kortNr[S.room] || 0;
+  S.kortNr[S.room] = nr + 1;
+  return text(val[nr % val.length].text);
+}
+// vidAnkomst: spelaren har just kommit hit. Har platsen besökts förut och har en kort
+// beskrivning visas den. Annars, och när spelaren själv tittar, visas hela beskrivningen.
+function titta(vidAnkomst = false) {
   nyScen = true;
+  S.besokt = S.besokt || {}; S.kortNr = S.kortNr || {};
   const r = RUM[S.room];
   out(r.namn, "room");
-  out(text(r.beskrivning));
+  const kort = vidAnkomst && S.besokt[S.room] && r.kortBeskrivning ? kortBeskrivning(r) : null;
+  out(kort || text(r.beskrivning));
+  S.besokt[S.room] = true;
   const saker = Object.keys(OBJ).filter(id => har(id) && !OBJ[id].fast && !OBJ[id].person);
   if (saker.length) out(mall(TEXTER.harFinns, { lista: lista(saker.map(id => OBJ[id].kort)) }));
   uppdateraStatus();
@@ -1107,7 +1192,7 @@ function ga(dir) {
     if (regel.stopp) return;
   }
   S.room = till;
-  titta();
+  titta(true);
   vidIntrade();
 }
 // "gå till restaurangen": hitta en utgång som leder till ett rum med något av orden
@@ -1139,7 +1224,7 @@ function resa(fras) {
   if (R.ljud) Ljud.effekt(R.ljud);
   out(mall(T.avstigning, { station: R.stationer[mal].namn }), "sys");
   S.room = mal;
-  titta();
+  titta(true);
 }
 
 // ---------------------------------------------------------------------------

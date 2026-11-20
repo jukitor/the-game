@@ -147,7 +147,7 @@ let S;
 function nyttTillstand() {
   const loc = {}, oppen = {};
   for (const [id, o] of Object.entries(OBJ)) { loc[id] = o.plats === undefined ? null : o.plats; if (o.oppen) oppen[id] = true; }
-  return { room: A.start, moves: 0, score: 0, loc, f: {}, oppen, scored: {}, over: false };
+  return { room: A.start, moves: 0, score: 0, loc, f: {}, oppen, scored: {}, over: false, besokt: {}, kortNr: {} };
 }
 
 // ---------------------------------------------------------------------------
@@ -366,7 +366,7 @@ function gor(handlingar, ctx = {}) {
     if (h.ledtrad) ledtrad();
     if (h.beskriv) titta();
     if (h.flyttaSpelare) S.room = h.flyttaSpelare;
-    if (h.ga) { S.room = h.ga; titta(); vidIntrade(); }
+    if (h.ga) { S.room = h.ga; titta(true); vidIntrade(); }
     if (h.utfor) utfor(mall(h.utfor, ctx), true);
     if (h.kor) gor(A.handlingar[h.kor], ctx);
     if (h.replik) replik(h);
@@ -402,11 +402,28 @@ function provaRegler(ctx, nar = "fore") {
 // ---------------------------------------------------------------------------
 //  Rum och förflyttning
 // ---------------------------------------------------------------------------
-function titta() {
+// Kort beskrivning vid återbesök. rum.kortBeskrivning är en sträng eller en lista där varje
+// del är en sträng eller { om, text }. Delar med villkor som stämmer går före delar utan villkor,
+// och bland dem som passar växlar motorn i tur och ordning.
+function kortBeskrivning(r) {
+  const alla = somLista(r.kortBeskrivning).map(d => typeof d === "string" ? { text: d } : d);
+  const passar = alla.filter(d => d.om && uppfyllt(d.om));
+  const val = passar.length ? passar : alla.filter(d => !d.om);
+  if (!val.length) return null;
+  const nr = S.kortNr[S.room] || 0;
+  S.kortNr[S.room] = nr + 1;
+  return text(val[nr % val.length].text);
+}
+// vidAnkomst: spelaren har just kommit hit. Har platsen besökts förut och har en kort
+// beskrivning visas den. Annars, och när spelaren själv tittar, visas hela beskrivningen.
+function titta(vidAnkomst = false) {
   nyScen = true;
+  S.besokt = S.besokt || {}; S.kortNr = S.kortNr || {};
   const r = RUM[S.room];
   out(r.namn, "room");
-  out(text(r.beskrivning));
+  const kort = vidAnkomst && S.besokt[S.room] && r.kortBeskrivning ? kortBeskrivning(r) : null;
+  out(kort || text(r.beskrivning));
+  S.besokt[S.room] = true;
   const saker = Object.keys(OBJ).filter(id => har(id) && !OBJ[id].fast && !OBJ[id].person);
   if (saker.length) out(mall(TEXTER.harFinns, { lista: lista(saker.map(id => OBJ[id].kort)) }));
   uppdateraStatus();
@@ -431,7 +448,7 @@ function ga(dir) {
     if (regel.stopp) return;
   }
   S.room = till;
-  titta();
+  titta(true);
   vidIntrade();
 }
 // "gå till restaurangen": hitta en utgång som leder till ett rum med något av orden
@@ -463,7 +480,7 @@ function resa(fras) {
   if (R.ljud) Ljud.effekt(R.ljud);
   out(mall(T.avstigning, { station: R.stationer[mal].namn }), "sys");
   S.room = mal;
-  titta();
+  titta(true);
 }
 
 // ---------------------------------------------------------------------------

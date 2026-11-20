@@ -103,6 +103,11 @@ kontor: {
   namn: "Ditt kontor",
   beskrivning: ["Grundtext.", { om: { inteFlagga: "svarare" }, text: " Telefonsvararen blinkar." }],
   utgangar: { ner: "gata", ut: "gata" },      // n, s, ö, v, upp, ner, in, ut
+  kortBeskrivning: [                           // valfri: visas när man kommer tillbaka hit (TITTA visar alltid hela)
+    { om: { inteFlagga: "svarare" }, text: "Ditt kontor. Telefonsvararen blinkar fortfarande." },
+    "Ditt kontor. Allt är som förut.",          // delar utan villkor växlar i tur och ordning
+    "Tillbaka på kontoret. Räkningarna har inte betalat sig själva.",
+  ],
   ord: ["kontor", "kontoret"],                 // för "gå till kontoret"
   grupp: "station",                            // valfri grupp, t.ex. för föremål som finns överallt i gruppen
   bild: "kontor",                              // bilder/kontor.png och dess animationer
@@ -112,6 +117,8 @@ kontor: {
   vidIntrade: [{ om, gor }],                   // körs efter att spelaren kommit in (den första som passar)
 }
 ```
+
+Första gången spelaren kommer till en plats visas hela `beskrivning`. Vid senare besök visas `kortBeskrivning` om platsen har en. Delar med villkor som stämmer går före delar utan villkor, och bland dem som passar växlar motorn i tur och ordning, så att samma text inte kommer två gånger i rad. TITTA (och ett tryck på en tom del av bilden i klickläget) visar alltid hela beskrivningen.
 
 ### Föremål och personer
 
