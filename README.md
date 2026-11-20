@@ -9,6 +9,7 @@ Motorn är generisk. Varje äventyr är en konfiguration med egna bilder och lju
 | Äventyr | Mapp | Spela |
 |---|---|---|
 | Mopsen som försvann | [`aventyr/mopsen/`](aventyr/mopsen/) | [jukitor.github.io/the-game](https://jukitor.github.io/the-game/) |
+| Mopsen som försvann, klickversionen | [`aventyr/mopsen-klick/`](aventyr/mopsen-klick/) | [jukitor.github.io/the-game/aventyr/mopsen-klick](https://jukitor.github.io/the-game/aventyr/mopsen-klick/) |
 
 Rotens `index.html` skickar vidare till Mopsen som försvann.
 
@@ -76,6 +77,8 @@ window.AVENTYR = {
 |---|---|
 | `id` | Används för sparade spel och inställningar i webbläsaren |
 | `titel`, `start` | Spelets namn och startplats |
+| `lage` | `"text"` (standard: spelaren skriver kommandon) eller `"klick"` (peka och klicka, se nedan). Bestäms av den som gör spelet |
+| `ljudmapp` | Läs ljuden från en annan mapp, t.ex. `"../mopsen/ljud/"` för att låna ett annat äventyrs ljud |
 | `intro` | Texter när spelet börjar: strängar eller `{ text, klass }` där klass kan vara `banner` eller `sys` |
 | `startskarm` | `{ bild, bildStaende, alt, ort, titel, under, regn }`. Utan den startar spelet direkt |
 | `rum` | Platserna, se nedan |
@@ -152,6 +155,17 @@ Bilderna är 192 × 120 pixlar med 16 färger och ritas av äventyrets skript me
 Ljuden skapas med `motor/verktyg/ljudverktyg.py` och ligger som mp3 i `ljud/`. Slingornas exakta längd (`ljud/slingor.json`) gör att motorn kan loopa dem utan glapp. En replik behöver ljudfilen och tider per mening i `ljud/texttider.json` (`{ "svarare": [[start, slut, "mening"], ...] }`). Handlingen `{ replik: "svarare", sedan: [...] }` spelar ljudet och skriver ut orden i takt med det.
 
 Ljudet startar när spelaren klickar på startskärmen eller gör något första gången, eftersom webbläsare inte tillåter ljud innan dess. Kommandona `ljud` och `musik` stänger av och slår på, och valet sparas.
+
+### Klickläget
+
+Med `lage: "klick"` finns inget inmatningsfält. Spelaren trycker i bilden och väljer i en meny, och varje val blir ett vanligt kommando ("öppna lådan", "ge dollarn till sal") som går genom ordtolkaren och reglerna. Pusslen fungerar alltså likadant i båda lägena. Menyn erbjuder bara allmänna verb för sorten av sak (undersök, ta, öppna, läs, prata med, ge, visa, använd), aldrig lösningen.
+
+- Klickytorna ritas i bilderna: kod inuti `with d.yta("lada"):` blir klickytan för föremålet `lada`, och `d.markera("namn", x0, y0, x1, y1)` markerar en rektangel. `utgang:<riktning>` (t.ex. `utgang:ner`) gör en utgång klickbar. Ljus och skuggor räknas inte in.
+- Varje utgång bör synas i bilden. De som inte gör det visas som knappar under texten, så att spelaren aldrig fastnar.
+- Föremål kan ha `klicknamn` (namnet i menyn och i kommandot), `klickverb` (extra menyval, t.ex. `["lyssna på"]`) och `utgang` (föremålet är också en utgång, t.ex. en dörr med `utgang: "in"`, som ger menyvalet "Gå in").
+- Med `resor.karta: "karta"` ger ett tryck på linjekartan "Åk till …".
+- Verbet `använd` (`använd X på Y`) styrs helt av äventyrets regler, t.ex. `{ verb: "använd", objekt: "dyrk", mottagare: "dorr", gor: [{ utfor: "dyrka upp dörren" }] }`.
+- En text i `texter` med namnet `<namn>Klick` ersätter `<namn>` i klickläget, t.ex. `spelSlutKlick`.
 
 ## Verktyg som behövs för bilder och ljud
 

@@ -11,6 +11,7 @@ scener = { "namn": (scen, [(animation, nyckel_i_v, [(värde, millisekunder), ...
 "slinga" (valfri) betyder att bara de första rutorna loopar; övriga väljs av spelet.
 """
 import base64
+from contextlib import contextmanager
 import random
 from pathlib import Path
 
@@ -51,6 +52,30 @@ TROSKEL = BAYER[YY % 4, XX % 4]
 class Duk:
     def __init__(self, bas=0):
         self.a = np.full((H, W), bas, dtype=np.uint8)
+        # Klickytor: ytkarta[y, x] = 1 + index i ytnamn, 0 = ingenting
+        self.ytnamn = []
+        self.ytkarta = np.zeros((H, W), dtype=np.uint8)
+
+    # --- klickytor ---
+    def _ytindex(self, namn):
+        if namn not in self.ytnamn:
+            self.ytnamn.append(namn)
+        return self.ytnamn.index(namn) + 1
+
+    @contextmanager
+    def yta(self, namn):
+        """Allt som ritas inuti blocket blir klickytan namn (ett föremål i äventyret eller "utgang:<riktning>").
+        Senare ritat ligger överst, precis som i bilden. Ljus och skuggor (ljus, radial) räknas inte."""
+        fore = self.a.copy()
+        self._ljusat = np.zeros((H, W), dtype=bool)
+        yield
+        andrat = (self.a != fore) & ~self._ljusat
+        self._ljusat = None
+        self.ytkarta[andrat] = self._ytindex(namn)
+
+    def markera(self, namn, x0, y0, x1, y1):
+        """Lägger till en rektangel som klickyta (för ytor som är svåra att rita fram)."""
+        self.ytkarta[max(0, y0):max(0, y1), max(0, x0):max(0, x1)] = self._ytindex(namn)
 
     # --- grundformer ---
     def rekt(self, x0, y0, x1, y1, c):
@@ -93,6 +118,8 @@ class Duk:
         trä = mask & (TROSKEL < styrka)
         lut = np.array([tabell[i] for i in range(16)], dtype=np.uint8)
         self.a[trä] = lut[self.a[trä]]
+        if getattr(self, "_ljusat", None) is not None:
+            self._ljusat |= trä
 
     def radial(self, cx, cy, r, max_styrka=1.0, tabell=LJUSARE, mask=None):
         d = np.sqrt((XX - cx) ** 2 + ((YY - cy) * 1.2) ** 2)
@@ -203,8 +230,29 @@ def skylt(d, cx, y, s, bg, fg, ram, pad=3):
 # ======================================================================
 #  EXPORT
 # ======================================================================
+def ytdata(duk, marginal=2):
+    """Klickytorna som run-length-kodad karta. Ytorna växer med några pixlar
+    (där inget annat ligger) så att små föremål blir lättare att träffa."""
+    k = duk.ytkarta.copy()
+    for _ in range(marginal):
+        ny = k.copy()
+        p = np.pad(k, 1)   # kanter utan omlindning
+        for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+            flytt = p[1 + dy:1 + dy + k.shape[0], 1 + dx:1 + dx + k.shape[1]]
+            ny = np.where((ny == 0) & (flytt > 0), flytt, ny)
+        k = ny
+    platt, buf, i = k.ravel(), bytearray(), 0
+    while i < len(platt):
+        v, n = platt[i], 1
+        while i + n < len(platt) and platt[i + n] == v and n < 255:
+            n += 1
+        buf += bytes((int(v), n))
+        i += n
+    return {"namn": duk.ytnamn, "karta": base64.b64encode(bytes(buf)).decode("ascii")}
+
+
 def exportera(scener, namn):
-    """Sparar grundbilden som PNG och returnerar animationerna som pixeldiffar."""
+    """Sparar grundbilden som PNG. Returnerar animationerna som pixeldiffar och klickytorna."""
     scen, animationer = scener[namn]
     bas = scen()
     bas.spara(namn)
@@ -226,7 +274,7 @@ def exportera(scener, namn):
         if slinga:
             post["slinga"] = slinga
         ut.append(post)
-    return ut
+    return ut, (ytdata(bas) if bas.ytnamn else None)
 
 
 def exportera_alla(scener, mapp, palett=None):
@@ -234,9 +282,11 @@ def exportera_alla(scener, mapp, palett=None):
     import json
     global UT
     UT = Path(mapp)
-    data = {"palett": palett or PALETT, "bredd": W, "hojd": H, "bilder": {}}
+    data = {"palett": palett or PALETT, "bredd": W, "hojd": H, "bilder": {}, "ytor": {}}
     for namn in scener:
-        data["bilder"][namn] = exportera(scener, namn)
+        data["bilder"][namn], ytor = exportera(scener, namn)
+        if ytor:
+            data["ytor"][namn] = ytor
         print("Ritade", UT / f"{namn}.png", "med", len(data["bilder"][namn]), "animationer")
     (UT / "bilddata.json").write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
     print("Skrev", UT / "bilddata.json", "- kör motor/verktyg/bygg.py för att bygga spelet.")

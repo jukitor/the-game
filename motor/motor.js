@@ -55,6 +55,11 @@ const TEXTER = Object.assign({
   at: "Det där ska inte ätas.",
   klappa: "Det vill inte bli klappat.",
   taPaSig: "Det kan du inte ta på dig.",
+  anvand: "Du kommer inte på hur det skulle gå till.",
+  hjalpKlick: [
+    "Tryck på saker i bilden för att se vad du kan göra med dem. Det du bär visas under texten. Tryck på en sak där för att undersöka, använda eller ge bort den.",
+    "Tryck på en tom del av bilden för att se dig omkring igen. Under MENY finns ledtrådar, poäng, sparning, ljud och hjälp.",
+  ],
   ejMojligt: "Det går inte.",
   vanta: ["Tiden går."],
   mataMed: "Vad vill du mata med?",
@@ -85,7 +90,12 @@ const TEXTER = Object.assign({
     "Undersök det du ser och prata med dem du möter. Kör du fast kan du skriva LEDTRÅD.",
   ],
   hjalpOvrigt: "Övrigt: POÄNG, LEDTRÅD, BILD (bilder av/på), LJUD (allt ljud av/på), MUSIK (musiken av/på), SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.",
+  // Varianter för klickläget, där man inte kan skriva. Används i stället för texten med samma namn utan "Klick".
+  spelSlutKlick: "Spelet är slut. Välj Börja om i menyn för att spela igen.",
+  ljudAvKlick: "Ljudet är avstängt. Du kan slå på det igen under Meny.",
+  bilderAvKlick: "Bilderna är avstängda.",
 }, A.texter || {});
+if (A.lage === "klick") for (const k of Object.keys(TEXTER)) if (k.endsWith("Klick") && k !== "hjalpKlick") TEXTER[k.slice(0, -5)] = TEXTER[k];
 
 // ---------------------------------------------------------------------------
 //  Svenska: riktningar, utfyllnadsord och verb
@@ -112,6 +122,7 @@ const MOTORVERB = {
   ät: ["ät", "smaka"], klappa: ["klappa", "kela"],
   vänta: ["vänta", "z"], lukta: ["lukta", "nosa", "bli"],
   gå: ["gå", "spring", "promenera", "kliv", "kryp"],
+  använd: ["använd", "använda", "nyttja"],
 };
 const VERB = {};   // ord -> kanoniskt verb (två ord före ett)
 function laggTillVerb(tabell) {
@@ -601,6 +612,15 @@ const V = {
     if (!id) return inteHar(fras);
     verb({ verb: "ät", objekt: id, fras }, () => out(TEXTER.at));
   },
+  // "använd dyrken på dörren": äventyrets regler bestämmer vad som händer
+  använd(ord) {
+    const [a, b] = delaVid(ord, ["på", "med", "i", "till", "mot"]);
+    const id = hitta(a);
+    if (!id) return inteHar(a);
+    const t = b ? hitta(b) : null;
+    if (b && !t) return inteHar(b);
+    verb({ verb: "använd", objekt: id, mottagare: t, fras: a }, () => out(TEXTER.anvand));
+  },
   klappa(ord) {
     const fras = rensa(ord);
     verb({ verb: "klappa", objekt: hitta(fras), fras }, () => out(TEXTER.klappa));
@@ -651,7 +671,9 @@ function utfor(rad, intern = false) {
 // ---------------------------------------------------------------------------
 function meta(m) {
   switch (m) {
-    case "hjälp": TEXTER.hjalp.forEach(t => out(t)); out(TEXTER.hjalpOvrigt, "sys"); return;
+    case "hjälp":
+      if (klicklage) { TEXTER.hjalpKlick.forEach(t => out(t)); return; }
+      TEXTER.hjalp.forEach(t => out(t)); out(TEXTER.hjalpOvrigt, "sys"); return;
     case "ledtråd": return ledtrad();
     case "poäng": return poangRapport();
     case "spara": return spara();
@@ -706,6 +728,7 @@ function uppdateraStatus() {
   Ljud.miljo(S.room);
   document.getElementById("where").textContent = RUM[S.room].namn;
   document.getElementById("nums").textContent = `Poäng ${S.score}/${MAX} · Drag ${S.moves}`;
+  uppdateraAgodelar();
 }
 
 // ---------------------------------------------------------------------------
@@ -783,6 +806,7 @@ function uppdateraScen() {
   if (scen.namn !== namn) {
     scen.namn = namn; scen.klar = false; scen.senaste = "";
     cv.setAttribute("aria-label", "Bild: " + RUM[S.room].namn);
+    cv.dataset.bild = namn;   // för automatiska tester
     const img = new Image();
     img.onload = () => {
       if (scen.namn !== namn) return;
@@ -883,7 +907,7 @@ const Ljud = (() => {
   }
   function ladda(namn) {
     if (!buffertar[namn]) {
-      buffertar[namn] = fetch("ljud/" + namn + ".mp3")
+      buffertar[namn] = fetch((A.ljudmapp || "ljud/") + namn + ".mp3")
         .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
         .then(data => new Promise((ok, fel) => ctx.decodeAudioData(data, ok, fel)))
         .then(buf => { langder[namn] = buf.duration; return buf; })
@@ -1053,6 +1077,205 @@ function visaStartskarm() {
 }
 
 // ---------------------------------------------------------------------------
+//  Klickläge (peka och klicka)
+//  Ett klick bygger bara ett vanligt kommando ("öppna lådan", "ge dollarn till sal")
+//  som går genom ordtolkaren och reglerna. Klicket har ingen egen spellogik, så
+//  pusslen fungerar precis som när man skriver.
+// ---------------------------------------------------------------------------
+const YTOR = {};   // bildnamn -> { namn: [...], karta: Uint8Array(BREDD * HOJD) }
+for (const [namn, y] of Object.entries(BD.ytor || {})) {
+  const bin = atob(y.karta), karta = new Uint8Array(BREDD * HOJD);
+  let p = 0;
+  for (let i = 0; i < bin.length; i += 2) { karta.fill(bin.charCodeAt(i), p, p + bin.charCodeAt(i + 1)); p += bin.charCodeAt(i + 1); }
+  YTOR[namn] = { namn: y.namn, karta };
+}
+// Läget bestäms av äventyret, inte av spelaren: "text" (skriv kommandon) eller "klick" (peka och klicka)
+const klicklage = A.lage === "klick";
+const RIKTNINGSNAMN = { n: "norrut", s: "söderut", ö: "österut", v: "västerut", upp: "upp", ner: "ner", in: "in", ut: "ut" };
+
+// Det namn som används i kommandon och etiketter, t.ex. "lådan"
+const kallas = id => OBJ[id].klicknamn || OBJ[id].namn[1] || OBJ[id].namn[0];
+const etikett = id => stor(kallas(id));
+
+const scenFig = document.getElementById("scen");
+const agodelar = document.createElement("div");
+agodelar.className = "agodelar"; agodelar.id = "agodelar";
+document.getElementById("quick").before(agodelar);
+const namnskylt = document.createElement("div");
+namnskylt.className = "namnskylt"; namnskylt.hidden = true;
+scenFig.appendChild(namnskylt);
+const meny = document.createElement("div");
+meny.className = "klickmeny"; meny.hidden = true; meny.setAttribute("role", "menu");
+document.body.appendChild(meny);
+
+// Vad finns under en punkt i bilden?
+function traff(e) {
+  const y = YTOR[scen.namn];
+  if (!y || !klicklage) return null;
+  const r = cv.getBoundingClientRect();
+  const px = Math.floor((e.clientX - r.left) / r.width * BREDD), py = Math.floor((e.clientY - r.top) / r.height * HOJD);
+  if (px < 0 || py < 0 || px >= BREDD || py >= HOJD) return null;
+  const v = y.karta[py * BREDD + px];
+  if (!v) return null;
+  const namn = y.namn[v - 1];
+  if (namn.startsWith("utgang:")) {
+    const dir = namn.slice(7);
+    return RUM[S.room].utgangar[dir] ? { utgang: dir } : null;
+  }
+  // Det man bär nås via ägodelsraden, inte via bilden
+  return OBJ[namn] && inom(namn) && !bar(namn) ? { objekt: namn } : null;
+}
+
+function visaMeny(val, x, y, rubrik) {
+  meny.innerHTML = "";
+  if (rubrik) { const h = document.createElement("div"); h.className = "rubrik"; h.textContent = rubrik; meny.appendChild(h); }
+  for (const [text, gor] of val) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = text; b.setAttribute("role", "menuitem");
+    b.addEventListener("click", ev => { ev.stopPropagation(); gor(); });
+    meny.appendChild(b);
+  }
+  meny.hidden = false;
+  const mw = meny.offsetWidth, mh = meny.offsetHeight;
+  meny.style.left = Math.max(8, Math.min(window.innerWidth - mw - 8, x - mw / 2)) + "px";
+  meny.style.top = Math.max(8, Math.min(window.innerHeight - mh - 8, y + 12)) + "px";
+  const forsta = meny.querySelector("button");
+  if (forsta && !pekskarm) forsta.focus({ preventScroll: true });
+}
+function stangMeny() { meny.hidden = true; }
+const kor = cmd => () => { stangMeny(); skicka(cmd); };
+const personerHar = () => Object.keys(OBJ).filter(id => OBJ[id].person && har(id) && !bar(id));
+
+// Verben i menyn är allmänna för sorten av sak, aldrig lösningen på ett pussel.
+function menyFor(id, x, y) {
+  const o = OBJ[id], n = kallas(id), val = [["Undersök", kor("undersök " + n)]];
+  // Föremål som också är en utgång, t.ex. en dörr: "Gå in"
+  if (o.utgang && RUM[S.room].utgangar[o.utgang]) val.push(["Gå " + RIKTNINGSNAMN[o.utgang], kor(o.utgang)]);
+  if (o.person) val.push(["Prata med", kor("prata med " + n)]);
+  if (!bar(id)) val.push(["Ta", kor("ta " + n)]);
+  if (o.oppningsbar) val.push(S.oppen[id] ? ["Stäng", kor("stäng " + n)] : ["Öppna", kor("öppna " + n)]);
+  if (o.lasbar || o.lasText) val.push(["Läs", kor("läs " + n)]);
+  for (const v of o.klickverb || []) val.push([stor(v), kor(v + " " + n)]);
+  if (o.behallare && (!o.oppningsbar || S.oppen[id])) {
+    for (const inne of Object.keys(OBJ).filter(k => S.loc[k] === id)) val.push(["Ta " + kallas(inne), kor("ta " + kallas(inne))]);
+  }
+  const saker = Object.keys(OBJ).filter(bar);
+  if (o.person && saker.length) {
+    val.push(["Ge …", () => visaMeny(saker.map(s => [etikett(s), kor(`ge ${kallas(s)} till ${n}`)]), x, y, "Ge vad till " + n + "?")]);
+    val.push(["Visa …", () => visaMeny(saker.map(s => [etikett(s), kor(`visa ${kallas(s)} för ${n}`)]), x, y, "Visa vad för " + n + "?")]);
+  }
+  if (A.resor && A.resor.karta === id && A.resor.stationer[S.room]) {
+    for (const [st, info] of Object.entries(A.resor.stationer)) if (st !== S.room) val.push(["Åk till " + info.namn, kor("åk till " + info.ord[0])]);
+  }
+  if (bar(id)) {
+    const mal = Object.keys(OBJ).filter(k => k !== id && (har(k) || bar(k) || (inom(k) && S.loc[k] !== "spelare")));
+    if (mal.length) val.push(["Använd …", () => visaMeny(mal.map(m => [etikett(m), kor(`använd ${n} på ${kallas(m)}`)]), x, y, `Använd ${n} på vad?`)]);
+    val.push(["Släpp", kor("släpp " + n)]);
+    const folk = personerHar();
+    if (folk.length) {
+      val.push(["Ge till …", () => visaMeny(folk.map(p => [etikett(p), kor(`ge ${n} till ${kallas(p)}`)]), x, y, `Ge ${n} till vem?`)]);
+      val.push(["Visa för …", () => visaMeny(folk.map(p => [etikett(p), kor(`visa ${n} för ${kallas(p)}`)]), x, y, `Visa ${n} för vem?`)]);
+    }
+  }
+  visaMeny(val, x, y, etikett(id));
+}
+
+cv.addEventListener("click", e => {
+  const t = traff(e);
+  if (!t) {
+    // Ett tryck på en tom del av bilden betyder "titta" (eller stänger en öppen meny)
+    if (!meny.hidden) { stangMeny(); return; }
+    if (klicklage) { e.stopPropagation(); skicka("titta"); }
+    return;
+  }
+  e.stopPropagation();
+  if (t.utgang) { stangMeny(); skicka(t.utgang); return; }
+  menyFor(t.objekt, e.clientX, e.clientY);
+});
+cv.addEventListener("pointermove", e => {
+  if (e.pointerType !== "mouse") return;
+  const t = traff(e);
+  cv.style.cursor = t ? "pointer" : "";
+  if (!t) { namnskylt.hidden = true; return; }
+  namnskylt.textContent = t.utgang ? "Gå " + RIKTNINGSNAMN[t.utgang] : etikett(t.objekt);
+  namnskylt.hidden = false;
+  const r = scenFig.getBoundingClientRect();
+  namnskylt.style.left = (e.clientX - r.left) + "px";
+  namnskylt.style.top = (e.clientY - r.top) + "px";
+});
+cv.addEventListener("pointerleave", () => { namnskylt.hidden = true; cv.style.cursor = ""; });
+document.addEventListener("click", e => { if (!meny.hidden && !meny.contains(e.target)) stangMeny(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") stangMeny(); });
+
+// Utgångar som inte finns som klickytor i bilden visas som knappar, så att man aldrig fastnar.
+function utgangarUtanYta() {
+  const y = YTOR[RUM[S.room].bild];
+  const iBilden = new Set((y ? y.namn : []).map(n => n.startsWith("utgang:") ? n.slice(7) : OBJ[n] && OBJ[n].utgang).filter(Boolean));
+  const sedda = new Set(), ut = [];
+  for (const [dir, till] of Object.entries(RUM[S.room].utgangar)) {
+    if (iBilden.has(dir) || sedda.has(till)) continue;
+    if ([...iBilden].some(d => RUM[S.room].utgangar[d] === till)) continue;
+    sedda.add(till); ut.push(dir);
+  }
+  return ut;
+}
+const lasbarLista = document.createElement("div");
+lasbarLista.className = "las-endast"; lasbarLista.setAttribute("aria-label", "Saker du kan trycka på");
+scenFig.appendChild(lasbarLista);
+function uppdateraAgodelar() {
+  document.body.classList.toggle("klicklage", klicklage);
+  agodelar.hidden = !klicklage;
+  if (!klicklage) { stangMeny(); return; }
+  agodelar.innerHTML = "";
+  const rad = (rubrik, knappar) => {
+    const r = document.createElement("div"); r.className = "klickrad";
+    const h = document.createElement("span"); h.className = "rubrik"; h.textContent = rubrik; r.appendChild(h);
+    for (const [text, gor] of knappar) {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = text;
+      b.addEventListener("click", e => { e.stopPropagation(); gor(b); });
+      r.appendChild(b);
+    }
+    agodelar.appendChild(r);
+  };
+  const saker = Object.keys(OBJ).filter(bar);
+  const vidKnapp = id => b => { const r = b.getBoundingClientRect(); menyFor(id, r.left + r.width / 2, r.top - 8); };
+  rad(saker.length ? "Du bär:" : "Du bär ingenting.", saker.map(id => [etikett(id), vidKnapp(id)]));
+  const utg = utgangarUtanYta();
+  if (utg.length) rad("Gå:", utg.map(d => [stor(RIKTNINGSNAMN[d]), () => { stangMeny(); skicka(d); }]));
+  // Resor: om linjekartan inte är klickbar i bilden visas stationerna som knappar
+  const yt = YTOR[RUM[S.room].bild];
+  if (A.resor && A.resor.stationer[S.room] && !(yt && yt.namn.includes(A.resor.karta))) {
+    rad("Åk till:", Object.entries(A.resor.stationer).filter(([st]) => st !== S.room).map(([, info]) => [info.namn, () => { stangMeny(); skicka("åk till " + info.ord[0]); }]));
+  }
+  // Saker i bilden, för skärmläsare (syns inte)
+  const y = YTOR[RUM[S.room].bild];
+  lasbarLista.innerHTML = "";
+  for (const n of (y ? y.namn : [])) {
+    const ok = n.startsWith("utgang:") ? RUM[S.room].utgangar[n.slice(7)] : (OBJ[n] && inom(n) && !bar(n));
+    if (!ok) continue;
+    const b = document.createElement("button"); b.type = "button";
+    b.textContent = n.startsWith("utgang:") ? "Gå " + RIKTNINGSNAMN[n.slice(7)] : etikett(n);
+    b.addEventListener("click", e => { e.stopPropagation(); if (n.startsWith("utgang:")) skicka(n.slice(7)); else { const r = cv.getBoundingClientRect(); menyFor(n, r.left + r.width / 2, r.top + r.height / 2); } });
+    lasbarLista.appendChild(b);
+  }
+}
+// I klickläget ersätts inmatningsfältet och knappraden av en menyknapp.
+if (klicklage) {
+  document.body.classList.add("klicklage");
+  document.getElementById("quick").remove();
+  document.querySelector("header.status .wrap").insertAdjacentHTML("beforeend", '<button type="button" id="menyknapp" aria-haspopup="menu">☰ Meny</button>');
+  document.getElementById("menyknapp").addEventListener("click", e => {
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    visaMeny([
+      ["Ledtråd", kor("ledtråd")], ["Poäng", kor("poäng")], ["Spara", kor("spara")], ["Ladda sparat spel", kor("ladda")],
+      [Ljud.pa ? "Stäng av ljudet" : "Slå på ljudet", kor("ljud")], [Ljud.musik ? "Stäng av musiken" : "Slå på musiken", kor("musik")],
+      ["Hjälp", kor("hjälp")], ["Börja om", kor("omstart")],
+    ], r.left + r.width / 2, r.bottom, "Meny");
+  });
+}
+
+// ---------------------------------------------------------------------------
 //  Inmatning och start
 // ---------------------------------------------------------------------------
 const historik = []; let hIdx = 0;
@@ -1079,7 +1302,7 @@ input.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" && hIdx > 0) { hIdx--; input.value = historik[hIdx]; e.preventDefault(); }
   else if (e.key === "ArrowDown") { hIdx = Math.min(historik.length, hIdx + 1); input.value = historik[hIdx] || ""; e.preventDefault(); }
 });
-document.getElementById("quick").addEventListener("click", e => {
+document.getElementById("quick")?.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (b) { skicka(b.dataset.c); if (pekskarm) b.blur(); else input.focus(); }
 });

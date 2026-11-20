@@ -35,11 +35,21 @@ def titel(mapp):
     return mapp.name
 
 
+def ljudmapp(mapp):
+    """Ett äventyr kan låna ljud från ett annat med raden ljudmapp: "../annat/ljud/" i aventyr.js."""
+    for rad in (mapp / "aventyr.js").read_text(encoding="utf-8").splitlines():
+        rad = rad.strip()
+        if rad.startswith("ljudmapp:"):
+            return (mapp / rad.split('"')[1]).resolve()
+    return mapp / "ljud"
+
+
 def bygg(mapp):
+    ljud = ljudmapp(mapp)
     data = {
         "bilder": las_json(mapp / "bilder" / "bilddata.json", {"palett": [], "bilder": {}}),
-        "slingor": las_json(mapp / "ljud" / "slingor.json", {}),
-        "texttider": las_json(mapp / "ljud" / "texttider.json", {}),
+        "slingor": las_json(ljud / "slingor.json", {}),
+        "texttider": las_json(ljud / "texttider.json", {}),
     }
     datajs = ("// Genererad av motor/verktyg/bygg.py. Redigera inte för hand.\n"
               "window.AVENTYRSDATA = " + json.dumps(data, separators=(",", ":"), ensure_ascii=False) + ";\n")
@@ -71,7 +81,9 @@ def bygg(mapp):
     motor = (MOTOR / "motor.js").read_text(encoding="utf-8")
     aventyr = (mapp / "aventyr.js").read_text(encoding="utf-8")
     spel = (f"<meta charset=\"utf-8\">\n<title>{t}</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n{TYPSNITT}"
-            f"<style>\n{css}</style>\n<script>\n{datajs}</script>\n<script>\n{aventyr}</script>\n<script>\n{motor}</script>\n")
+            f"<style>\n{css}</style>\n<script>\n{datajs}</script>\n<script>\n{aventyr}</script>\n"
+            # I den inbakade filen ligger ljuden alltid i ljud/ bredvid sidan
+            f"<script>window.AVENTYR && delete window.AVENTYR.ljudmapp;</script>\n<script>\n{motor}</script>\n")
     (mapp / "spel.html").write_text(spel, encoding="utf-8")
     print(f"Byggde {mapp.relative_to(ROT)}: data.js, index.html, spel.html ({len(spel) // 1024} kB)")
 

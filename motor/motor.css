@@ -127,6 +127,54 @@ form label { font-weight: 700; color: var(--stamp); }
 .quick button:hover { border-color: var(--ink); }
 .quick button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 1px; }
 
+/* Klickläge: ägodelar som knappar, en namnskylt i bilden och en meny vid det man trycker på */
+.scen { position: relative; }
+.klicklage .scen canvas { touch-action: manipulation; }
+.agodelar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.agodelar .rubrik { font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; color: var(--muted); margin-right: 2px; }
+.agodelar button {
+  font-family: var(--font-type); font-size: .85rem; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 2px; padding: 3px 9px; cursor: pointer;
+}
+.agodelar button:hover, .agodelar button:focus-visible { border-color: var(--stamp); outline: none; }
+.namnskylt {
+  position: absolute; transform: translate(-50%, -150%); pointer-events: none; white-space: nowrap;
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem;
+  color: #f1e7cf; background: rgba(10, 10, 16, .82); padding: 2px 8px; border-radius: 2px;
+}
+.klickmeny {
+  position: fixed; z-index: 60; min-width: 150px; max-width: min(260px, calc(100vw - 16px));
+  display: flex; flex-direction: column; background: var(--paper); border: 2px solid var(--ink);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .35); padding: 4px;
+}
+.klickmeny .rubrik {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem;
+  color: var(--stamp); padding: 4px 8px 6px; border-bottom: 1px dashed var(--rule); margin-bottom: 2px;
+}
+.klickmeny button {
+  font-family: var(--font-type); font-size: .95rem; text-align: left; color: var(--ink); background: transparent;
+  border: none; padding: 8px 10px; cursor: pointer;
+}
+.klickmeny button:hover, .klickmeny button:focus-visible { background: var(--bg); outline: none; color: var(--stamp); }
+
+/* Renodlat klickläge: inget inmatningsfält, bara ägodelar, utgångar och en menyknapp */
+.klicklage form { display: none; }
+#menyknapp {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem;
+  color: var(--ink); background: transparent; border: 1px solid var(--ink); border-radius: 2px; padding: 3px 10px; cursor: pointer;
+}
+#menyknapp:hover, #menyknapp:focus-visible { color: var(--stamp); border-color: var(--stamp); outline: none; }
+.agodelar { flex-direction: column; align-items: stretch; }
+.klickrad { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.klickrad .rubrik { font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; color: var(--muted); margin-right: 2px; }
+.klickrad button {
+  font-family: var(--font-type); font-size: .85rem; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 2px; padding: 3px 9px; cursor: pointer;
+}
+.klickrad button:hover, .klickrad button:focus-visible { border-color: var(--stamp); outline: none; }
+.las-endast { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.las-endast button:focus { position: fixed; left: 8px; top: 8px; width: auto; height: auto; clip: auto; z-index: 70; }
+
 /* Gul pil som visar att det finns mer text nedanför: en tonad kant längst ner i textytan och en liten pixelpil.
    Den går inte att klicka på, man scrollar som vanligt. */
 #merpil {
