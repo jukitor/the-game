@@ -7,7 +7,7 @@
 window.AVENTYR = {
   id: "mopsen-labb",
   titel: "Mopsen som försvann (labb)",
-  klick: { pa: true },   // klickläget är på från början i labbet
+  lage: "klick",   // "text" (skriv kommandon) eller "klick" (peka och klicka). Bestäms av den som gör spelet.
   start: "kontor",
 
   startskarm: {
@@ -27,7 +27,7 @@ window.AVENTYR = {
     { text: "Skriv HJÄLP om du inte vet vad du ska göra, eller LEDTRÅD om du kör fast.", klass: "sys" },
     { text: "Spelet har musik och ljud. Det startar när du skriver eller trycker första gången. Skriv LJUD eller MUSIK för att stänga av.", klass: "sys" },
 
-    { text: "Klickläget är på: tryck på saker i bilden, eller på det du bär, för att välja vad du vill göra. Än så länge går det bara att klicka i kontoret. Skriv KLICK för att stänga av.", klass: "sys" },
+    { text: "Tryck på saker i bilden, eller på det du bär, för att välja vad du vill göra. Än så länge går det bara att klicka i kontoret.", klass: "sys" },
   ],
 
   // Motorns standardtexter som det här äventyret byter ut (resten finns i motorn)
@@ -51,7 +51,7 @@ window.AVENTYR = {
     ],
   },
 
-  snabbknappar: [["Titta", "titta"], ["Ägodelar", "inventarie"], ["Upp", "upp"], ["Ner", "ner"], ["In", "in"], ["Ut", "ut"], ["Ledtråd", "ledtråd"], ["Klick", "klick"], ["Bild", "bild"], ["Ljud", "ljud"], ["Hjälp", "hjälp"]],
+  snabbknappar: [["Titta", "titta"], ["Ägodelar", "inventarie"], ["Upp", "upp"], ["Ner", "ner"], ["In", "in"], ["Ut", "ut"], ["Ledtråd", "ledtråd"], ["Bild", "bild"], ["Ljud", "ljud"], ["Hjälp", "hjälp"]],
 
   // Verb som bara det här äventyret använder (motorns egna verb finns redan)
   verb: {
@@ -215,8 +215,25 @@ window.AVENTYR = {
       beskrivning: "En klädhängare av böjträ. Den har sett bättre dagar, och bättre rockar." },
     rock: { namn: ["rock", "rocken", "trenchcoat", "trenchcoaten", "kappa", "kappan", "ficka", "fickan", "fickor", "fickorna"], kort: "din trenchcoat", plats: "kontor",
       beskrivning: "Din beigea trenchcoat. Den har två fickor, tre fläckar och en historia." },
-    fonster: { namn: ["fönster", "fönstret", "regn", "regnet", "utsikt", "utsikten", "stad", "staden"], kort: "ett fönster", plats: "kontor", fast: true,
+    fonster: { namn: ["fönster", "fönstret", "regn", "regnet", "utsikt", "utsikten", "stad", "staden", "persienn", "persienner", "persiennerna", "neonskylt", "neonskylten", "hotell"], kort: "ett fönster", plats: "kontor", fast: true,
       beskrivning: "Grand Harbor ligger utbredd nedanför, grå och blank av regn. Någonstans där ute finns ett fall. Förhoppningsvis ett som betalar." },
+    // Saker i kontoret som mest finns för stämningens skull
+    lampa: { namn: ["lampa", "lampan", "bankirlampa", "bankirlampan", "skärm", "skärmen"], kort: "en bankirlampa", plats: "kontor", fast: true,
+      beskrivning: "En bankirlampa med grön glasskärm. Den kastar ett varmt ljus över skrivbordet och får till och med dina räkningar att se trivsamma ut." },
+    stol: { namn: ["stol", "stolen", "stolar", "stolarna", "kontorsstol", "kontorsstolen"], kort: "en stol", plats: "kontor", fast: true,
+      beskrivning: "Din kontorsstol. Sätet har formats efter tjugo år av väntan. Kundstolen bredvid ser fortfarande ny ut, av förklarliga skäl." },
+    diplom: { namn: ["diplom", "diplomet", "examen", "examensbevis"], kort: "ett diplom", plats: "kontor", fast: true, lasbar: true,
+      beskrivning: "Ett inramat diplom från Grand Harbors korrespondensinstitut för privatdetektiver. Längst ner står det med liten stil: \"Godkänd i skuggning, med anmärkningen att eleven skuggade fel person i tre veckor.\"" },
+    kalender: { namn: ["kalender", "kalendern", "almanacka", "almanackan"], kort: "en kalender", plats: "kontor", fast: true, lasbar: true,
+      beskrivning: "En kalender för 1947 med en bild på hamnen i månsken. Fredagen är inringad med rött och där står det HYRA. Någon har lagt till tre utropstecken. Det var hyresvärden." },
+    rakningar: { namn: ["räkning", "räkningen", "räkningar", "räkningarna", "hög", "högen"], kort: "en hög räkningar", klicknamn: "räkningarna", plats: "kontor", fast: true, lasbar: true,
+      beskrivning: "En hög obetalda räkningar, sorterade efter hur arga de låter. Den översta är från telefonbolaget och slutar med ordet SISTA i versaler." },
+    askkopp: { namn: ["askkopp", "askkoppen", "cigarett", "cigaretten", "rök", "röken", "fimp", "fimpen"], kort: "en askkopp", plats: "kontor", fast: true,
+      beskrivning: "En överfull askkopp. I kanten pyr en cigarett som du inte minns att du tände. Det är ett mysterium du har slutat utreda." },
+    flaska: { namn: ["flaska", "flaskan", "whisky", "whiskyflaska", "whiskyflaskan", "sprit"], kort: "en whiskyflaska", plats: "kontor", fast: true,
+      beskrivning: "En whiskyflaska. Den är tom, precis som kassaskåpet, plånboken och kundregistret." },
+    hatt: { namn: ["hatt", "hatten", "fedora", "fedoran"], kort: "en hatt", plats: "kontor", fast: true,
+      beskrivning: "Din fedora, gråbrun och lite tilltufsad av regnet. En privatdetektiv utan hatt är bara en man med åsikter." },
     kort: { namn: ["tunnelbanekort", "tunnelbanekortet", "kort", "kortet", "månadskort", "månadskortet", "biljett", "biljetten"], kort: "ett tunnelbanekort", plats: "lada",
       beskrivning: "Ditt tunnelbanekort, giltigt på alla stationer. Fotot på det är taget en dag när du hade ännu mindre sömn än vanligt.",
       lasText: "Det står GRAND HARBOR TRANSIT, GILTIGT TILLS VIDARE. Det är det mest optimistiska du har läst på länge.",
@@ -315,6 +332,17 @@ window.AVENTYR = {
     { verb: "öppna", objekt: "skrivbord", gor: [{ utfor: "öppna lådan" }] },
     { verb: "ta på", objekt: "rock", gor: [{ flytta: "rock", till: "spelare" }, "Du drar på dig trenchcoaten och slår upp kragen. Nu ser du ut som en riktig privatdetektiv. Eller som en man som väntar på en buss.", { kor: "rockfynd" }] },
     { verb: "inventarie", nar: "efter", om: { inventarieTom: true, har: "rock" }, gor: [{ sys: "(Din trenchcoat hänger fortfarande på hängaren.)" }] },
+
+    // Stämningssaker i kontoret
+    { verb: "ta", objekt: "lampa", gor: ["Lampan är det enda i kontoret som är avbetalt. Den får stå kvar."] },
+    { verb: "ta", objekt: "flaska", gor: ["Du lyfter flaskan mot ljuset och hoppas på ett mirakel. Det kommer inget. Du ställer tillbaka den."] },
+    { verb: "ta", objekt: "rakningar", gor: ["Du lyfter upp räkningarna. De känns tyngre än papper borde göra. Du lägger tillbaka dem, med den argaste underst."] },
+    { verb: "ta", objekt: "hatt", gor: ["Du låter hatten hänga kvar. Den har haft en lång vecka, den också."] },
+    { verb: "ta", objekt: "askkopp", gor: ["Du tänker tömma askkoppen. Sedan tänker du om. Den är nästan det enda här som fungerar som det ska."] },
+    { verb: "ta", objekt: "stol", gor: ["Du sätter dig en stund i stolen och funderar. Den gnisslar instämmande. Sedan reser du dig. Fallet löser inte sig självt."] },
+    { verb: "ta", objekt: "kalender", gor: ["Kalendern får hänga kvar. Om du tar ner den blir det inte fredag senare för det."] },
+    { verb: "ta", objekt: "diplom", gor: ["Diplomet får hänga kvar. Det är det enda beviset på att du har gått en kurs i något."] },
+    { verb: "ät", objekt: "askkopp", gor: ["Nej. Inte ens på en tisdag."] },
 
     // Telefonsvararen: meddelandet skrivs ut i takt med rösten
     { verb: "lyssna", om: { har: "svarare", nagon: [{ fras: false }, { objekt: "svarare" }, { ord: ["telefon*", "svarare*", "meddelande*", "knapp*"] }] }, gor: [

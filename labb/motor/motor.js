@@ -84,9 +84,7 @@ const TEXTER = Object.assign({
     "TITTA (eller T): se dig omkring\nUNDERSÖK något (eller U): titta närmare på något\nTA, SLÄPP, ÖPPNA, LÄS: hantera saker\nPRATA MED, GE, VISA: ta kontakt med folk\nUPP, NER, IN, UT: gå åt ett håll\nINVENTARIE (eller I): se vad du bär på",
     "Undersök det du ser och prata med dem du möter. Kör du fast kan du skriva LEDTRÅD.",
   ],
-  klickPa: "Klickläget är på. Tryck på saker i bilden, eller på det du bär, för att välja vad du vill göra. Du kan fortfarande skriva.",
-  klickAv: "Klickläget är av. Skriv KLICK för att slå på det igen.",
-  hjalpOvrigt: "Övrigt: POÄNG, LEDTRÅD, KLICK (klickläge av/på), BILD (bilder av/på), LJUD (allt ljud av/på), MUSIK (musiken av/på), SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.",
+  hjalpOvrigt: "Övrigt: POÄNG, LEDTRÅD, BILD (bilder av/på), LJUD (allt ljud av/på), MUSIK (musiken av/på), SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.",
 }, A.texter || {});
 
 // ---------------------------------------------------------------------------
@@ -125,7 +123,7 @@ if (A.resor) laggTillVerb({ "åk": A.resor.verb || ["åk", "res"] });
 const META = {
   hjälp: ["hjälp", "help", "?", "instruktioner"], ledtråd: ["ledtråd", "tips", "hint"], poäng: ["poäng", "score", "status"],
   spara: ["spara", "save"], ladda: ["ladda", "load", "återställ"], bild: ["bild", "bilder"], ljud: ["ljud"], musik: ["musik"],
-  omstart: ["omstart", "restart", "börja om"], klick: ["klick", "klickläge"],
+  omstart: ["omstart", "restart", "börja om"],
 };
 
 // ---------------------------------------------------------------------------
@@ -162,7 +160,7 @@ ${sk ? `<div class="splash" id="splash" role="button" tabindex="0" aria-label="$
   <form id="f" autocomplete="off"><label for="cmd">&gt;</label>
     <input id="cmd" type="text" spellcheck="false" autocapitalize="off" aria-label="Skriv ett kommando" placeholder="${esc(TEXTER.inmatning)}"></form>
   <div class="quick" id="quick">${(A.snabbknappar || [["Titta", "titta"], ["Ägodelar", "inventarie"], ["Upp", "upp"], ["Ner", "ner"], ["In", "in"], ["Ut", "ut"], ["Ledtråd", "ledtråd"], ["Bild", "bild"], ["Ljud", "ljud"], ["Hjälp", "hjälp"]])
-    .map(([t, c]) => `<button type="button" data-c="${esc(c)}"${c === "ljud" ? ' id="ljudknapp"' : c === "klick" ? ' id="klickknapp"' : ""}>${esc(t)}</button>`).join("")}</div>
+    .map(([t, c]) => `<button type="button" data-c="${esc(c)}"${c === "ljud" ? ' id="ljudknapp"' : ""}>${esc(t)}</button>`).join("")}</div>
 </div></footer>`);
 function esc(t) { return String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
@@ -635,7 +633,6 @@ function meta(m) {
     case "ljud": { const pa = Ljud.vaxlaLjud(); visaLjudknapp(); return out(pa ? TEXTER.ljudPa : TEXTER.ljudAv, "sys"); }
     case "musik": { const pa = Ljud.vaxlaMusik(); return out(pa ? TEXTER.musikPa : TEXTER.musikAv, "sys"); }
     case "omstart": return omstart();
-    case "klick": return vaxlaKlick();
   }
 }
 function ledtrad() {
@@ -1042,9 +1039,8 @@ for (const [namn, y] of Object.entries(BD.ytor || {})) {
   for (let i = 0; i < bin.length; i += 2) { karta.fill(bin.charCodeAt(i), p, p + bin.charCodeAt(i + 1)); p += bin.charCodeAt(i + 1); }
   YTOR[namn] = { namn: y.namn, karta };
 }
-const KLICK_KEY = NYCKEL + "-klick";
-let klicklage = !!(A.klick && A.klick.pa);
-try { const v = localStorage.getItem(KLICK_KEY); if (v) klicklage = v === "pa"; } catch (e) {}
+// Läget bestäms av äventyret, inte av spelaren: "text" (skriv kommandon) eller "klick" (peka och klicka)
+const klicklage = A.lage === "klick";
 const RIKTNINGSNAMN = { n: "norrut", s: "söderut", ö: "österut", v: "västerut", upp: "upp", ner: "ner", in: "in", ut: "ut" };
 
 // Det namn som används i kommandon och etiketter, t.ex. "lådan"
@@ -1165,17 +1161,6 @@ function uppdateraAgodelar() {
     agodelar.appendChild(b);
   }
 }
-function vaxlaKlick() {
-  klicklage = !klicklage;
-  try { localStorage.setItem(KLICK_KEY, klicklage ? "pa" : "av"); } catch (e) {}
-  out(klicklage ? TEXTER.klickPa : TEXTER.klickAv, "sys");
-  uppdateraAgodelar();
-  visaKlickknapp();
-}
-function visaKlickknapp() {
-  const b = document.getElementById("klickknapp");
-  if (b) { b.textContent = klicklage ? "Klick på" : "Klick av"; b.setAttribute("aria-pressed", String(klicklage)); }
-}
 
 // ---------------------------------------------------------------------------
 //  Inmatning och start
@@ -1211,7 +1196,6 @@ document.getElementById("quick").addEventListener("click", e => {
 
 function start(data) {
   visaLjudknapp();
-  visaKlickknapp();
   const medStartskarm = !!sk && !(data && data.state);
   if (medStartskarm) visaStartskarm();
   else if (sk) document.getElementById("splash").hidden = true;

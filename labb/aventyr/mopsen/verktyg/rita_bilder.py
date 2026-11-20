@@ -132,25 +132,29 @@ def kontor(v=None):
         d.px(15, 60, 10)
         d.px(15, 61, 9)
 
-    # --- Diplom och kalender på väggen ---
-    d.rekt(98, 16, 114, 30, 8)
-    d.rekt(99, 17, 113, 29, 15)
-    for y in (19, 21, 23):
-        d.rekt(101, y, 111, y + 1, 9)
-    d.px(110, 26, 13)
-    d.px(111, 26, 13)
-    d.rekt(120, 18, 131, 33, 15)
-    d.rekt(120, 18, 131, 22, 13)
-    for y in range(24, 32, 2):
-        for xx in range(121, 131, 2):
-            d.px(xx, y, 4)
-    d.px(127, 28, 13)
+    # --- Diplom på väggen ---
+    with d.yta("diplom"):
+        d.rekt(98, 16, 114, 30, 8)
+        d.rekt(99, 17, 113, 29, 15)
+        for y in (19, 21, 23):
+            d.rekt(101, y, 111, y + 1, 9)
+        d.px(110, 26, 13)
+        d.px(111, 26, 13)
+    # --- Kalender ---
+    with d.yta("kalender"):
+        d.rekt(120, 18, 131, 33, 15)
+        d.rekt(120, 18, 131, 22, 13)
+        for y in range(24, 32, 2):
+            for xx in range(121, 131, 2):
+                d.px(xx, y, 4)
+        d.px(127, 28, 13)
 
     # --- Stolen bakom skrivbordet ---
-    d.poly([(116, 66), (116, 50), (119, 46), (133, 46), (136, 50), (136, 66)], 6)
-    d.rekt(118, 49, 134, 51, 7)
-    for y in range(52, 64, 3):
-        d.rekt(118, y, 134, y + 1, 7)
+    with d.yta("stol"):
+        d.poly([(116, 66), (116, 50), (119, 46), (133, 46), (136, 50), (136, 66)], 6)
+        d.rekt(118, 49, 134, 51, 7)
+        for y in range(52, 64, 3):
+            d.rekt(118, y, 134, y + 1, 7)
 
     # --- Skrivbordet ---
     with d.yta("skrivbord"):
@@ -186,26 +190,29 @@ def kontor(v=None):
     # --- Bankirlampa med grön skärm ---
     d.radial(105, 56, 30, 0.6, mask=YY < 66)
     d.radial(104, 67, 18, 0.9, mask=(YY >= 66) & (YY < 70))
-    d.rekt(99, 63, 111, 66, 9)
-    d.rekt(99, 63, 111, 64, 10)
-    d.rekt(104, 57, 106, 63, 9)
-    d.poly([(96, 58), (114, 58), (111, 52), (99, 52)], 12)
-    d.rekt(100, 52, 110, 53, 4)
-    d.rekt(97, 58, 113, 59, 10)
-    d.rekt(98, 59, 112, 60, 11)
-    # Papper i ljuskäglan
-    d.poly([(114, 67), (128, 66), (130, 69), (115, 70)], 15)
-    d.linje(117, 68, 126, 67, 4)
+    with d.yta("lampa"):
+        d.rekt(99, 63, 111, 66, 9)
+        d.rekt(99, 63, 111, 64, 10)
+        d.rekt(104, 57, 106, 63, 9)
+        d.poly([(96, 58), (114, 58), (111, 52), (99, 52)], 12)
+        d.rekt(100, 52, 110, 53, 4)
+        d.rekt(97, 58, 113, 59, 10)
+        d.rekt(98, 59, 112, 60, 11)
+    # Obetalda räkningar i ljuskäglan
+    with d.yta("rakningar"):
+        d.poly([(114, 67), (128, 66), (130, 69), (115, 70)], 15)
+        d.linje(117, 68, 126, 67, 4)
 
     # --- Askkopp och rök ---
-    d.rekt(131, 66, 137, 68, 4)
-    d.px(136, 65, 15)
-    d.px(137, 65, 13)
-    sx = 137
-    for y in range(64, 40, -1):
-        sx += [0, 1, 1, 0, -1, -1][((y + 2 * rok) // 2) % 6]
-        if (y + 2 * rok) % 3:
-            d.px(sx, y, 4 if y > 52 else 3)
+    with d.yta("askkopp"):
+        d.rekt(131, 66, 137, 68, 4)
+        d.px(136, 65, 15)
+        d.px(137, 65, 13)
+        sx = 137
+        for y in range(64, 40, -1):
+            sx += [0, 1, 1, 0, -1, -1][((y + 2 * rok) // 2) % 6]
+            if (y + 2 * rok) % 3:
+                d.px(sx, y, 4 if y > 52 else 3)
 
     # --- Telefonsvarare med röd lampa och telefon ---
     with d.yta("svarare"):
@@ -228,11 +235,12 @@ def kontor(v=None):
         d.px(163, 63, 3)
 
     # --- Whiskyflaska (tom) ---
-    d.rekt(92, 58, 96, 66, 8)
-    d.rekt(93, 55, 95, 58, 8)
-    d.rekt(93, 54, 95, 55, 0)
-    d.rekt(93, 59, 95, 64, 9)
-    d.px(93, 59, 10)
+    with d.yta("flaska"):
+        d.rekt(92, 58, 96, 66, 8)
+        d.rekt(93, 55, 95, 58, 8)
+        d.rekt(93, 54, 95, 55, 0)
+        d.rekt(93, 59, 95, 64, 9)
+        d.px(93, 59, 10)
 
     # --- Klädhängare med hatt ---
     with d.yta("hangare"):
@@ -241,7 +249,8 @@ def kontor(v=None):
         d.linje(180, 99, 186, 103, 6)
         d.linje(180, 24, 175, 21, 7)
         d.linje(180, 24, 185, 21, 7)
-        # Fedora
+    # Fedoran på kroken
+    with d.yta("hatt"):
         d.rekt(172, 18, 189, 20, 7)
         d.poly([(174, 18), (176, 11), (185, 11), (187, 18)], 7)
         d.rekt(175, 15, 187, 17, 0)
