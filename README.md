@@ -161,6 +161,8 @@ Bilderna är 192 × 120 pixlar med 16 färger och ritas av äventyrets skript me
 
 Ljuden skapas med `motor/verktyg/ljudverktyg.py` och ligger som mp3 i `ljud/`. Slingornas exakta längd (`ljud/slingor.json`) gör att motorn kan loopa dem utan glapp. En replik behöver ljudfilen och tider per mening i `ljud/texttider.json` (`{ "svarare": [[start, slut, "mening"], ...] }`). Handlingen `{ replik: "svarare", sedan: [...] }` spelar ljudet och skriver ut orden i takt med det.
 
+Spelet sparas automatiskt i webbläsaren (localStorage) efter varje drag, och när sidan laddas om fortsätter spelaren där hen var. När spelet är slut eller spelaren börjar om försvinner den automatiska sparningen. SPARA och LADDA är en separat sparning som spelaren själv styr över.
+
 Ljudet startar när spelaren klickar på startskärmen eller gör något första gången, eftersom webbläsare inte tillåter ljud innan dess. Kommandona `ljud` och `musik` stänger av och slår på, och valet sparas.
 
 ### Klickläget

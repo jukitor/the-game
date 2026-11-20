@@ -76,6 +76,8 @@ const TEXTER = Object.assign({
   laddat: "Sparat spel laddat.",
   kanInteLadda: "Det gick inte att ladda det sparade spelet.",
   tillbaka: "Du är tillbaka i spelet.",
+  fortsatter: "Du fortsätter där du slutade förra gången. Vill du börja om från början skriver du OMSTART.",
+  fortsatterKlick: "Du fortsätter där du slutade förra gången. Vill du börja om från början väljer du Börja om i menyn.",
   bilderPa: "Bilderna är påslagna.",
   bilderAv: "Bilderna är avstängda. Skriv BILD för att slå på dem igen.",
   ljudPa: "Ljudet är påslaget.",
@@ -713,6 +715,23 @@ function poangRapport() {
   if (r) out(mall(TEXTER.rang, { rang: r[1] }), "sys");
 }
 const SPARNYCKEL = NYCKEL + "-sparning";
+// Spelet sparas också automatiskt efter varje drag, så att man fortsätter där man var när sidan laddas om.
+// SPARA och LADDA är en separat sparning som spelaren själv styr över.
+const PAGAR_NYCKEL = NYCKEL + "-pagar";
+let autosparaPa = false;
+function autospara() {
+  if (!autosparaPa) return;
+  try {
+    if (S.over) localStorage.removeItem(PAGAR_NYCKEL);
+    else localStorage.setItem(PAGAR_NYCKEL, JSON.stringify(S));
+  } catch (e) {}
+}
+function pagaendeSpel() {
+  try {
+    const raw = localStorage.getItem(PAGAR_NYCKEL);
+    return raw ? Object.assign(nyttTillstand(), JSON.parse(raw)) : null;
+  } catch (e) { return null; }
+}
 function spara() {
   try { localStorage.setItem(SPARNYCKEL, JSON.stringify(S)); out(TEXTER.sparat, "sys"); }
   catch (e) { out(TEXTER.kanInteSpara, "sys"); }
@@ -746,6 +765,7 @@ function uppdateraStatus() {
   document.getElementById("where").textContent = RUM[S.room].namn;
   document.getElementById("nums").textContent = `Poäng ${S.score}/${MAX} · Drag ${S.moves}`;
   uppdateraAgodelar();
+  autospara();
 }
 
 // ---------------------------------------------------------------------------
@@ -1329,8 +1349,17 @@ function start(data) {
   const medStartskarm = !!sk && !(data && data.state);
   if (medStartskarm) visaStartskarm();
   else if (sk) document.getElementById("splash").hidden = true;
+  const pagar = data && data.state ? null : pagaendeSpel();
   if (data && data.state) { S = data.state; out(TEXTER.tillbaka, "sys"); titta(); }
+  else if (pagar && pagar.moves > 0) {
+    S = pagar;
+    const banner = (A.intro || []).find(d => d && d.klass === "banner");
+    if (banner) out(banner.text, "banner");
+    out(TEXTER.fortsatter, "sys");
+    titta();
+  }
   else { S = nyttTillstand(); intro(); }
+  autosparaPa = true;
   uppdateraStatus();
   scrollTill(null);
   window.claude?.hot?.snapshot?.(() => ({ state: S }));
