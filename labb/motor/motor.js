@@ -90,7 +90,12 @@ const TEXTER = Object.assign({
     "Undersök det du ser och prata med dem du möter. Kör du fast kan du skriva LEDTRÅD.",
   ],
   hjalpOvrigt: "Övrigt: POÄNG, LEDTRÅD, BILD (bilder av/på), LJUD (allt ljud av/på), MUSIK (musiken av/på), SPARA, LADDA, OMSTART. Pil upp hämtar förra kommandot.",
+  // Varianter för klickläget, där man inte kan skriva. Används i stället för texten med samma namn utan "Klick".
+  spelSlutKlick: "Spelet är slut. Välj Börja om i menyn för att spela igen.",
+  ljudAvKlick: "Ljudet är avstängt. Du kan slå på det igen under Meny.",
+  bilderAvKlick: "Bilderna är avstängda.",
 }, A.texter || {});
+if (A.lage === "klick") for (const k of Object.keys(TEXTER)) if (k.endsWith("Klick") && k !== "hjalpKlick") TEXTER[k.slice(0, -5)] = TEXTER[k];
 
 // ---------------------------------------------------------------------------
 //  Svenska: riktningar, utfyllnadsord och verb
@@ -774,6 +779,7 @@ function uppdateraScen() {
   if (scen.namn !== namn) {
     scen.namn = namn; scen.klar = false; scen.senaste = "";
     cv.setAttribute("aria-label", "Bild: " + RUM[S.room].namn);
+    cv.dataset.bild = namn;   // för automatiska tester
     const img = new Image();
     img.onload = () => {
       if (scen.namn !== namn) return;
@@ -1116,6 +1122,8 @@ const personerHar = () => Object.keys(OBJ).filter(id => OBJ[id].person && har(id
 // Verben i menyn är allmänna för sorten av sak, aldrig lösningen på ett pussel.
 function menyFor(id, x, y) {
   const o = OBJ[id], n = kallas(id), val = [["Undersök", kor("undersök " + n)]];
+  // Föremål som också är en utgång, t.ex. en dörr: "Gå in"
+  if (o.utgang && RUM[S.room].utgangar[o.utgang]) val.push(["Gå " + RIKTNINGSNAMN[o.utgang], kor(o.utgang)]);
   if (o.person) val.push(["Prata med", kor("prata med " + n)]);
   if (!bar(id)) val.push(["Ta", kor("ta " + n)]);
   if (o.oppningsbar) val.push(S.oppen[id] ? ["Stäng", kor("stäng " + n)] : ["Öppna", kor("öppna " + n)]);
@@ -1175,7 +1183,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") stangMeny();
 // Utgångar som inte finns som klickytor i bilden visas som knappar, så att man aldrig fastnar.
 function utgangarUtanYta() {
   const y = YTOR[RUM[S.room].bild];
-  const iBilden = new Set((y ? y.namn : []).filter(n => n.startsWith("utgang:")).map(n => n.slice(7)));
+  const iBilden = new Set((y ? y.namn : []).map(n => n.startsWith("utgang:") ? n.slice(7) : OBJ[n] && OBJ[n].utgang).filter(Boolean));
   const sedda = new Set(), ut = [];
   for (const [dir, till] of Object.entries(RUM[S.room].utgangar)) {
     if (iBilden.has(dir) || sedda.has(till)) continue;

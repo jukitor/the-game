@@ -65,10 +65,13 @@ class Duk:
     @contextmanager
     def yta(self, namn):
         """Allt som ritas inuti blocket blir klickytan namn (ett föremål i äventyret eller "utgang:<riktning>").
-        Senare ritat ligger överst, precis som i bilden."""
+        Senare ritat ligger överst, precis som i bilden. Ljus och skuggor (ljus, radial) räknas inte."""
         fore = self.a.copy()
+        self._ljusat = np.zeros((H, W), dtype=bool)
         yield
-        self.ytkarta[self.a != fore] = self._ytindex(namn)
+        andrat = (self.a != fore) & ~self._ljusat
+        self._ljusat = None
+        self.ytkarta[andrat] = self._ytindex(namn)
 
     def markera(self, namn, x0, y0, x1, y1):
         """Lägger till en rektangel som klickyta (för ytor som är svåra att rita fram)."""
@@ -115,6 +118,8 @@ class Duk:
         trä = mask & (TROSKEL < styrka)
         lut = np.array([tabell[i] for i in range(16)], dtype=np.uint8)
         self.a[trä] = lut[self.a[trä]]
+        if getattr(self, "_ljusat", None) is not None:
+            self._ljusat |= trä
 
     def radial(self, cx, cy, r, max_styrka=1.0, tabell=LJUSARE, mask=None):
         d = np.sqrt((XX - cx) ** 2 + ((YY - cy) * 1.2) ** 2)
