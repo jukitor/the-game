@@ -175,18 +175,13 @@ form label { font-weight: 700; color: var(--stamp); }
 .las-endast { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .las-endast button:focus { position: fixed; left: 8px; top: 8px; width: auto; height: auto; clip: auto; z-index: 70; }
 
-/* Gul pil som visar att det finns mer text nedanför: en tonad kant längst ner i textytan och en pixelpil */
+/* Gul pil som visar att det finns mer text nedanför: en tonad kant längst ner i textytan och en liten pixelpil.
+   Den går inte att klicka på, man scrollar som vanligt. */
 #merpil {
-  position: fixed; z-index: 5; height: 44px; padding: 0 14px 6px; border: 0; border-radius: 0;
+  position: fixed; z-index: 5; height: 36px; padding: 0 16px 6px;
   display: flex; align-items: flex-end; justify-content: flex-end;
   background: linear-gradient(to bottom, transparent, var(--bg) 80%);
-  color: var(--pil); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  color: var(--pil); pointer-events: none;
 }
-#merpil svg { width: 27px; height: 18px; filter: drop-shadow(0 2px 0 var(--pilskugga)); }
+#merpil svg { width: 18px; height: 12px; filter: drop-shadow(0 1px 0 var(--pilskugga)); }
 #merpil[hidden] { display: none; }
-#merpil:focus-visible { outline: none; }
-#merpil:focus-visible svg { outline: 2px solid var(--stamp); outline-offset: 3px; }
-@media (prefers-reduced-motion: no-preference) {
-  #merpil:not([hidden]) svg { animation: merpil 1.4s steps(2, jump-none) infinite; }
-  @keyframes merpil { 50% { transform: translateY(3px); } }
-}

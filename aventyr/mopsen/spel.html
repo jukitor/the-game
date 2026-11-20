@@ -133,21 +133,16 @@ form label { font-weight: 700; color: var(--stamp); }
 .quick button:hover { border-color: var(--ink); }
 .quick button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 1px; }
 
-/* Gul pil som visar att det finns mer text nedanför: en tonad kant längst ner i textytan och en pixelpil */
+/* Gul pil som visar att det finns mer text nedanför: en tonad kant längst ner i textytan och en liten pixelpil.
+   Den går inte att klicka på, man scrollar som vanligt. */
 #merpil {
-  position: fixed; z-index: 5; height: 44px; padding: 0 14px 6px; border: 0; border-radius: 0;
+  position: fixed; z-index: 5; height: 36px; padding: 0 16px 6px;
   display: flex; align-items: flex-end; justify-content: flex-end;
   background: linear-gradient(to bottom, transparent, var(--bg) 80%);
-  color: var(--pil); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  color: var(--pil); pointer-events: none;
 }
-#merpil svg { width: 27px; height: 18px; filter: drop-shadow(0 2px 0 var(--pilskugga)); }
+#merpil svg { width: 18px; height: 12px; filter: drop-shadow(0 1px 0 var(--pilskugga)); }
 #merpil[hidden] { display: none; }
-#merpil:focus-visible { outline: none; }
-#merpil:focus-visible svg { outline: 2px solid var(--stamp); outline-offset: 3px; }
-@media (prefers-reduced-motion: no-preference) {
-  #merpil:not([hidden]) svg { animation: merpil 1.4s steps(2, jump-none) infinite; }
-  @keyframes merpil { 50% { transform: translateY(3px); } }
-}
 </style>
 <script>
 // Genererad av motor/verktyg/bygg.py. Redigera inte för hand.
@@ -826,9 +821,9 @@ if (window.visualViewport) window.visualViewport.addEventListener("resize", hall
 ["touchstart", "wheel"].forEach(ev => scroller.addEventListener(ev, () => { haller = null; }, { passive: true }));
 
 // En liten gul pil till höger när det finns mer text att läsa längre ner
-const merPil = document.createElement("button");
-merPil.type = "button"; merPil.id = "merpil"; merPil.hidden = true;
-merPil.setAttribute("aria-label", "Mer text nedanför");
+const merPil = document.createElement("div");
+merPil.id = "merpil"; merPil.hidden = true;
+merPil.setAttribute("aria-hidden", "true");   // bara en visuell indikering, går inte att klicka på
 merPil.innerHTML = '<svg viewBox="0 0 9 6" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M0 0h2v1H0zM7 0h2v1H7zM1 1h2v1H1zM6 1h2v1H6zM2 2h2v1H2zM5 2h2v1H5zM3 3h3v1H3zM4 4h1v1H4z"/></svg>';
 document.body.appendChild(merPil);
 let pilRaf = 0;
@@ -846,10 +841,6 @@ function visaMerPil() {
     merPil.style.width = (Math.min(r.right, window.innerWidth) - r.left) + "px";
   });
 }
-merPil.addEventListener("click", () => {
-  haller = null;
-  scroller.scrollBy({ top: scroller.clientHeight * 0.75, behavior: rorelseOk ? "smooth" : "auto" });
-});
 scroller.addEventListener("scroll", visaMerPil, { passive: true });
 window.addEventListener("resize", visaMerPil);
 if (window.visualViewport) window.visualViewport.addEventListener("resize", visaMerPil);
