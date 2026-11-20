@@ -12,6 +12,7 @@ För varje äventyr i aventyr/<namn>/ skapas:
               för publicering som Claude-artefakt. Bilder och ljud ligger kvar i bilder/ och ljud/.
 """
 import hashlib
+import os
 import json
 import sys
 from pathlib import Path
@@ -45,11 +46,24 @@ def ljudmapp(mapp):
 
 
 def bygg(mapp):
-    ljud = ljudmapp(mapp)
+    # Ljuden: äventyrets egna i ljud/ och de lånade i ljudmapp. Egna går före lånade med samma namn.
+    egna, lanade = mapp / "ljud", ljudmapp(mapp)
+    kallor = [k for k in dict.fromkeys([lanade, egna]) if k.exists()]
+    slingor, texttider, ljudfiler = {}, {}, {}
+    for k in kallor:
+        slingor.update(las_json(k / "slingor.json", {}))
+        texttider.update(las_json(k / "texttider.json", {}))
+        if k != egna:
+            for f in sorted(k.glob("*.mp3")):
+                ljudfiler[f.stem] = os.path.relpath(f, mapp).replace(os.sep, "/")
+    if egna.exists():
+        for f in egna.glob("*.mp3"):
+            ljudfiler.pop(f.stem, None)
     data = {
         "bilder": las_json(mapp / "bilder" / "bilddata.json", {"palett": [], "bilder": {}}),
-        "slingor": las_json(ljud / "slingor.json", {}),
-        "texttider": las_json(ljud / "texttider.json", {}),
+        "slingor": slingor,
+        "texttider": texttider,
+        "ljudfiler": ljudfiler,   # lånade ljud: namn -> sökväg. Övriga ligger i ljud/
     }
     datajs = ("// Genererad av motor/verktyg/bygg.py. Redigera inte för hand.\n"
               "window.AVENTYRSDATA = " + json.dumps(data, separators=(",", ":"), ensure_ascii=False) + ";\n")
@@ -83,7 +97,8 @@ def bygg(mapp):
     spel = (f"<meta charset=\"utf-8\">\n<title>{t}</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n{TYPSNITT}"
             f"<style>\n{css}</style>\n<script>\n{datajs}</script>\n<script>\n{aventyr}</script>\n"
             # I den inbakade filen ligger ljuden alltid i ljud/ bredvid sidan
-            f"<script>window.AVENTYR && delete window.AVENTYR.ljudmapp;</script>\n<script>\n{motor}</script>\n")
+            f"<script>window.AVENTYR && delete window.AVENTYR.ljudmapp; window.AVENTYRSDATA && delete window.AVENTYRSDATA.ljudfiler;</script>\n"
+            f"<script>\n{motor}</script>\n")
     (mapp / "spel.html").write_text(spel, encoding="utf-8")
     print(f"Byggde {mapp.relative_to(ROT)}: data.js, index.html, spel.html ({len(spel) // 1024} kB)")
 

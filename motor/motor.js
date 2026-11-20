@@ -976,7 +976,7 @@ const Ljud = (() => {
   }
   function ladda(namn) {
     if (!buffertar[namn]) {
-      buffertar[namn] = fetch((A.ljudmapp || "ljud/") + namn + ".mp3")
+      buffertar[namn] = fetch(D.ljudfiler ? (D.ljudfiler[namn] || "ljud/" + namn + ".mp3") : (A.ljudmapp || "ljud/") + namn + ".mp3")
         .then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
         .then(data => new Promise((ok, fel) => ctx.decodeAudioData(data, ok, fel)))
         .then(buf => { langder[namn] = buf.duration; return buf; })

@@ -10,6 +10,7 @@ Motorn är generisk. Varje äventyr är en konfiguration med egna bilder och lju
 |---|---|---|
 | Mopsen som försvann | [`aventyr/mopsen/`](aventyr/mopsen/) | [jukitor.github.io/the-game](https://jukitor.github.io/the-game/) |
 | Mopsen som försvann, klickversionen | [`aventyr/mopsen-klick/`](aventyr/mopsen-klick/) | [jukitor.github.io/the-game/aventyr/mopsen-klick](https://jukitor.github.io/the-game/aventyr/mopsen-klick/) |
+| Papegojan som visste för mycket (fall 2, klick) | [`aventyr/papegojan/`](aventyr/papegojan/) | [jukitor.github.io/the-game/aventyr/papegojan](https://jukitor.github.io/the-game/aventyr/papegojan/) |
 
 Rotens `index.html` skickar vidare till Mopsen som försvann.
 
@@ -78,7 +79,7 @@ window.AVENTYR = {
 | `id` | Används för sparade spel och inställningar i webbläsaren |
 | `titel`, `start` | Spelets namn och startplats |
 | `lage` | `"text"` (standard: spelaren skriver kommandon) eller `"klick"` (peka och klicka, se nedan). Bestäms av den som gör spelet |
-| `ljudmapp` | Läs ljuden från en annan mapp, t.ex. `"../mopsen/ljud/"` för att låna ett annat äventyrs ljud |
+| `ljudmapp` | Låna ljud från en annan mapp, t.ex. `"../mopsen/ljud/"`. Äventyrets egna ljud i `ljud/` går före de lånade |
 | `intro` | Texter när spelet börjar: strängar eller `{ text, klass }` där klass kan vara `banner` eller `sys` |
 | `startskarm` | `{ bild, bildStaende, alt, ort, titel, under, regn }`. Utan den startar spelet direkt |
 | `rum` | Platserna, se nedan |
