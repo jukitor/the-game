@@ -76,6 +76,10 @@ const TEXTER = Object.assign({
   laddat: "Sparat spel laddat.",
   kanInteLadda: "Det gick inte att ladda det sparade spelet.",
   tillbaka: "Du är tillbaka i spelet.",
+  omstartRubrik: "Börja om?",
+  omstartFraga: "Allt du har gjort hittills försvinner och spelet börjar från början. Ett spel du har sparat med Spara finns kvar.",
+  omstartJa: "Börja om", omstartNej: "Fortsätt spela",
+  omstartAvbruten: "Du fortsätter där du är.",
   fortsatter: "Du fortsätter där du slutade förra gången. Vill du börja om från början skriver du OMSTART.",
   fortsatterKlick: "Du fortsätter där du slutade förra gången. Vill du börja om från början väljer du Börja om i menyn.",
   bilderPa: "Bilderna är påslagna.",
@@ -700,7 +704,7 @@ function meta(m) {
     case "bild": return vaxlaBilder();
     case "ljud": { const pa = Ljud.vaxlaLjud(); visaLjudknapp(); return out(pa ? TEXTER.ljudPa : TEXTER.ljudAv, "sys"); }
     case "musik": { const pa = Ljud.vaxlaMusik(); return out(pa ? TEXTER.musikPa : TEXTER.musikAv, "sys"); }
-    case "omstart": return omstart();
+    case "omstart": return fragaOmstart();
   }
 }
 function ledtrad() {
@@ -752,6 +756,34 @@ function intro() {
     else out(d.text, d.klass);
   }
   titta();
+}
+// Fråga innan spelet börjar om, utom när det inte finns något att förlora
+let omstartDialog = null;
+function fragaOmstart() {
+  if (S.over || S.moves === 0 || typeof HTMLDialogElement === "undefined") return omstart();
+  if (!omstartDialog) {
+    omstartDialog = document.createElement("dialog");
+    omstartDialog.className = "bekrafta";
+    omstartDialog.setAttribute("aria-labelledby", "bekrafta-rubrik");
+    omstartDialog.innerHTML = `<h2 id="bekrafta-rubrik"></h2><p></p>
+      <div class="knappar"><button type="button" class="nej"></button><button type="button" class="ja"></button></div>`;
+    omstartDialog.querySelector(".nej").addEventListener("click", () => omstartDialog.close("nej"));
+    omstartDialog.querySelector(".ja").addEventListener("click", () => omstartDialog.close("ja"));
+    omstartDialog.querySelector("h2").textContent = TEXTER.omstartRubrik;
+    omstartDialog.querySelector("p").textContent = TEXTER.omstartFraga;
+    omstartDialog.querySelector(".nej").textContent = TEXTER.omstartNej;
+    omstartDialog.querySelector(".ja").textContent = TEXTER.omstartJa;
+    omstartDialog.addEventListener("click", e => { if (e.target === omstartDialog) omstartDialog.close("nej"); });   // tryck utanför rutan
+    omstartDialog.addEventListener("close", () => {
+      if (omstartDialog.returnValue === "ja") { omstart(); uppdateraStatus(); scrollTill(null); }
+      else { out(TEXTER.omstartAvbruten, "sys"); }
+      if (!pekskarm && !klicklage) input.focus();
+    });
+    document.body.appendChild(omstartDialog);
+  }
+  omstartDialog.returnValue = "";
+  omstartDialog.showModal();
+  omstartDialog.querySelector(".nej").focus();
 }
 function omstart() {
   spelOmgang++;

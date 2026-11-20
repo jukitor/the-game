@@ -185,3 +185,23 @@ form label { font-weight: 700; color: var(--stamp); }
 }
 #merpil svg { width: 18px; height: 12px; filter: drop-shadow(0 1px 0 var(--pilskugga)); }
 #merpil[hidden] { display: none; }
+
+/* Bekräftelsedialog, t.ex. innan spelet börjar om */
+dialog.bekrafta {
+  width: min(340px, calc(100vw - 32px)); padding: 18px 20px 16px; color: var(--ink); background: var(--paper);
+  border: 2px solid var(--ink); box-shadow: 0 10px 40px rgba(0, 0, 0, .45);
+}
+dialog.bekrafta::backdrop { background: rgba(5, 7, 11, .6); }
+dialog.bekrafta h2 {
+  margin: 0 0 8px; font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em;
+  font-size: 1.1rem; font-weight: 600; color: var(--stamp);
+}
+dialog.bekrafta p { margin: 0 0 16px; font-size: .95rem; }
+dialog.bekrafta .knappar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+dialog.bekrafta button {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .85rem;
+  padding: 8px 14px; border-radius: 2px; cursor: pointer; border: 1px solid var(--ink);
+  background: transparent; color: var(--ink);
+}
+dialog.bekrafta button.ja { background: var(--stamp); border-color: var(--stamp); color: var(--paper); }
+dialog.bekrafta button:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
