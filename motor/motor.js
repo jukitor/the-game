@@ -193,6 +193,35 @@ window.addEventListener("resize", hallKvar);
 if (window.visualViewport) window.visualViewport.addEventListener("resize", hallKvar);
 ["touchstart", "wheel"].forEach(ev => scroller.addEventListener(ev, () => { haller = null; }, { passive: true }));
 
+// En liten gul pil till höger när det finns mer text att läsa längre ner
+const merPil = document.createElement("button");
+merPil.type = "button"; merPil.id = "merpil"; merPil.hidden = true;
+merPil.setAttribute("aria-label", "Mer text nedanför"); merPil.textContent = "↓";
+document.body.appendChild(merPil);
+let pilRaf = 0;
+function visaMerPil() {
+  if (pilRaf) return;
+  pilRaf = requestAnimationFrame(() => {
+    pilRaf = 0;
+    const kvar = scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop - fyll.offsetHeight;
+    const mer = kvar > 24;
+    merPil.hidden = !mer;
+    if (!mer) return;
+    const r = scroller.getBoundingClientRect();
+    merPil.style.top = (r.bottom - merPil.offsetHeight - 10) + "px";
+    merPil.style.left = (Math.min(r.right, window.innerWidth) - merPil.offsetWidth - 12) + "px";
+  });
+}
+merPil.addEventListener("click", () => {
+  haller = null;
+  scroller.scrollBy({ top: scroller.clientHeight * 0.75, behavior: rorelseOk ? "smooth" : "auto" });
+});
+scroller.addEventListener("scroll", visaMerPil, { passive: true });
+window.addEventListener("resize", visaMerPil);
+if (window.visualViewport) window.visualViewport.addEventListener("resize", visaMerPil);
+new MutationObserver(visaMerPil).observe(logEl, { childList: true, subtree: true, characterData: true });
+if (window.ResizeObserver) new ResizeObserver(visaMerPil).observe(scroller);
+
 // ---------------------------------------------------------------------------
 //  Textmallar och hjälpfunktioner
 // ---------------------------------------------------------------------------

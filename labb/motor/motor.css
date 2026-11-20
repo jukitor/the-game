@@ -171,3 +171,17 @@ form label { font-weight: 700; color: var(--stamp); }
 .klickrad button:hover, .klickrad button:focus-visible { border-color: var(--stamp); outline: none; }
 .las-endast { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .las-endast button:focus { position: fixed; left: 8px; top: 8px; width: auto; height: auto; clip: auto; z-index: 70; }
+
+/* Gul pil som visar att det finns mer text nedanför */
+#merpil {
+  position: fixed; z-index: 5; width: 34px; height: 34px; padding: 0; border-radius: 50%;
+  border: 2px solid #2a251d; background: #f2c230; color: #2a251d;
+  font: 700 18px/1 var(--font-head); cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+#merpil[hidden] { display: none; }
+#merpil:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) {
+  #merpil:not([hidden]) { animation: merpil 1.6s ease-in-out infinite; }
+  @keyframes merpil { 50% { transform: translateY(3px); } }
+}
