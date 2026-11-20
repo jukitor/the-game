@@ -153,3 +153,21 @@ form label { font-weight: 700; color: var(--stamp); }
   border: none; padding: 8px 10px; cursor: pointer;
 }
 .klickmeny button:hover, .klickmeny button:focus-visible { background: var(--bg); outline: none; color: var(--stamp); }
+
+/* Renodlat klickläge: inget inmatningsfält, bara ägodelar, utgångar och en menyknapp */
+.klicklage form { display: none; }
+#menyknapp {
+  font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .8rem;
+  color: var(--ink); background: transparent; border: 1px solid var(--ink); border-radius: 2px; padding: 3px 10px; cursor: pointer;
+}
+#menyknapp:hover, #menyknapp:focus-visible { color: var(--stamp); border-color: var(--stamp); outline: none; }
+.agodelar { flex-direction: column; align-items: stretch; }
+.klickrad { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.klickrad .rubrik { font-family: var(--font-head); text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; color: var(--muted); margin-right: 2px; }
+.klickrad button {
+  font-family: var(--font-type); font-size: .85rem; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 2px; padding: 3px 9px; cursor: pointer;
+}
+.klickrad button:hover, .klickrad button:focus-visible { border-color: var(--stamp); outline: none; }
+.las-endast { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.las-endast button:focus { position: fixed; left: 8px; top: 8px; width: auto; height: auto; clip: auto; z-index: 70; }

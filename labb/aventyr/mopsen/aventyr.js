@@ -27,7 +27,8 @@ window.AVENTYR = {
     { text: "Skriv HJÄLP om du inte vet vad du ska göra, eller LEDTRÅD om du kör fast.", klass: "sys" },
     { text: "Spelet har musik och ljud. Det startar när du skriver eller trycker första gången. Skriv LJUD eller MUSIK för att stänga av.", klass: "sys" },
 
-    { text: "Tryck på saker i bilden, eller på det du bär, för att välja vad du vill göra. Än så länge går det bara att klicka i kontoret.", klass: "sys" },
+    { text: "Tryck på saker i bilden, eller på det du bär, för att välja vad du vill göra. Tryck på en tom del av bilden för att se dig omkring. Under MENY finns ledtrådar, sparning och ljud.", klass: "sys" },
+    { text: "Labbet: än så länge går det bara att klicka i bilden i kontoret. På andra platser visas utgångarna som knappar.", klass: "sys" },
   ],
 
   // Motorns standardtexter som det här äventyret byter ut (resten finns i motorn)
@@ -69,6 +70,7 @@ window.AVENTYR = {
   resor: {
     verb: ["åk", "res", "ta tunnelbanan", "ta tåget"],
     ljud: "tunnelbana",
+    karta: "karta",   // i klickläget: tryck på linjekartan för att åka
     stationer: {
       p_main:  { namn: "Main Street", ord: ["main", "mainstreet", "main street", "centrum", "kontoret", "hem"] },
       p_park:  { namn: "Park Avenue", ord: ["park", "parkavenue", "park avenue", "avenue"] },
@@ -266,7 +268,7 @@ window.AVENTYR = {
       beskrivning: "Benny är kock på Golden Dragon och kan allt om alla i kvarteret. Han lagar mat med ena handen och läser travresultat med den andra." },
     akvarium: { namn: ["akvarium", "akvariet", "karp", "karpen", "fisk", "fisken"], kort: "ett akvarium", plats: "restaurang", fast: true,
       beskrivning: "Karpen tittar på dig. Du tittar på karpen. Ingen av er får ut något av det." },
-    lyckokaka: { namn: ["lyckokaka", "lyckokakan", "lyckokakor", "lyckokakorna", "kaka", "kakan", "skål", "skålen"], kort: "en lyckokaka", plats: "restaurang",
+    lyckokaka: { namn: ["lyckokaka", "lyckokakan", "lyckokakor", "lyckokakorna", "kaka", "kakan", "skål", "skålen"], kort: "en lyckokaka", plats: "restaurang", klickverb: ["bryt"],
       beskrivning: "En lyckokaka. Det ligger en lapp inuti. Du får BRYTA den för att läsa den." },
     bruno: { namn: ["bruno", "gorilla", "gorillan", "vakt", "vakten", "kylskåp", "kylskåpet", "man", "mannen", "torped", "torpeden"], kort: "en jättelik vakt", plats: "pir", fast: true, person: true,
       beskrivning: "Han har en tatuering på knogarna som stavar B-R-U-N-O, och en på andra handen som stavar M-A-M-M-A. Hans mage kurrar så högt att måsarna lyfter." },
@@ -421,6 +423,14 @@ window.AVENTYR = {
     { verb: "bryt", om: { inteInom: "lyckokaka" }, gor: ["Du har ingen lyckokaka."] },
     { verb: "bryt", gor: [{ kor: "lyckokaka" }] },
     { verb: ["läs", "öppna", "ät"], objekt: "lyckokaka", gor: [{ kor: "lyckokaka" }] },
+
+    // Använd X på Y (i klickläget, men det går också att skriva)
+    { verb: "använd", objekt: "dyrk", mottagare: "dorr", gor: [{ utfor: "dyrka upp dörren" }] },
+    { verb: "använd", objekt: "kex", mottagare: "mops", gor: [{ utfor: "ge kex till mopsen" }] },
+    { verb: "använd", objekt: "korv", mottagare: "bruno", gor: [{ utfor: "ge korv till bruno" }] },
+    { verb: "använd", objekt: "dollar", mottagare: "kiosk", gor: [{ utfor: "köp korv" }] },
+    { verb: "använd", objekt: "kort", mottagare: "karta", gor: ["Kortet ska användas vid spärren, inte på kartan. Det sköter sig själv när du går ner till perrongen."] },
+    { verb: "använd", objekt: "dyrk", gor: ["Dyrken passar bara i lås. Riktiga lås, inte metaforiska."] },
 
     // Lagerdörren
     { verb: "dyrka", om: { intePlats: "pir" }, gor: ["Det finns inget här att dyrka upp."] },

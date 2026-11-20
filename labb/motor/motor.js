@@ -55,6 +55,11 @@ const TEXTER = Object.assign({
   at: "Det där ska inte ätas.",
   klappa: "Det vill inte bli klappat.",
   taPaSig: "Det kan du inte ta på dig.",
+  anvand: "Du kommer inte på hur det skulle gå till.",
+  hjalpKlick: [
+    "Tryck på saker i bilden för att se vad du kan göra med dem. Det du bär visas under texten. Tryck på en sak där för att undersöka, använda eller ge bort den.",
+    "Tryck på en tom del av bilden för att se dig omkring igen. Under MENY finns ledtrådar, poäng, sparning, ljud och hjälp.",
+  ],
   ejMojligt: "Det går inte.",
   vanta: ["Tiden går."],
   mataMed: "Vad vill du mata med?",
@@ -112,6 +117,7 @@ const MOTORVERB = {
   ät: ["ät", "smaka"], klappa: ["klappa", "kela"],
   vänta: ["vänta", "z"], lukta: ["lukta", "nosa", "bli"],
   gå: ["gå", "spring", "promenera", "kliv", "kryp"],
+  använd: ["använd", "använda", "nyttja"],
 };
 const VERB = {};   // ord -> kanoniskt verb (två ord före ett)
 function laggTillVerb(tabell) {
@@ -574,6 +580,15 @@ const V = {
     if (!id) return inteHar(fras);
     verb({ verb: "ät", objekt: id, fras }, () => out(TEXTER.at));
   },
+  // "använd dyrken på dörren": äventyrets regler bestämmer vad som händer
+  använd(ord) {
+    const [a, b] = delaVid(ord, ["på", "med", "i", "till", "mot"]);
+    const id = hitta(a);
+    if (!id) return inteHar(a);
+    const t = b ? hitta(b) : null;
+    if (b && !t) return inteHar(b);
+    verb({ verb: "använd", objekt: id, mottagare: t, fras: a }, () => out(TEXTER.anvand));
+  },
   klappa(ord) {
     const fras = rensa(ord);
     verb({ verb: "klappa", objekt: hitta(fras), fras }, () => out(TEXTER.klappa));
@@ -624,7 +639,9 @@ function utfor(rad, intern = false) {
 // ---------------------------------------------------------------------------
 function meta(m) {
   switch (m) {
-    case "hjälp": TEXTER.hjalp.forEach(t => out(t)); out(TEXTER.hjalpOvrigt, "sys"); return;
+    case "hjälp":
+      if (klicklage) { TEXTER.hjalpKlick.forEach(t => out(t)); return; }
+      TEXTER.hjalp.forEach(t => out(t)); out(TEXTER.hjalpOvrigt, "sys"); return;
     case "ledtråd": return ledtrad();
     case "poäng": return poangRapport();
     case "spara": return spara();
@@ -1112,7 +1129,12 @@ function menyFor(id, x, y) {
     val.push(["Ge …", () => visaMeny(saker.map(s => [etikett(s), kor(`ge ${kallas(s)} till ${n}`)]), x, y, "Ge vad till " + n + "?")]);
     val.push(["Visa …", () => visaMeny(saker.map(s => [etikett(s), kor(`visa ${kallas(s)} för ${n}`)]), x, y, "Visa vad för " + n + "?")]);
   }
+  if (A.resor && A.resor.karta === id && A.resor.stationer[S.room]) {
+    for (const [st, info] of Object.entries(A.resor.stationer)) if (st !== S.room) val.push(["Åk till " + info.namn, kor("åk till " + info.ord[0])]);
+  }
   if (bar(id)) {
+    const mal = Object.keys(OBJ).filter(k => k !== id && (har(k) || bar(k) || (inom(k) && S.loc[k] !== "spelare")));
+    if (mal.length) val.push(["Använd …", () => visaMeny(mal.map(m => [etikett(m), kor(`använd ${n} på ${kallas(m)}`)]), x, y, `Använd ${n} på vad?`)]);
     val.push(["Släpp", kor("släpp " + n)]);
     const folk = personerHar();
     if (folk.length) {
@@ -1125,7 +1147,12 @@ function menyFor(id, x, y) {
 
 cv.addEventListener("click", e => {
   const t = traff(e);
-  if (!t) { stangMeny(); return; }
+  if (!t) {
+    // Ett tryck på en tom del av bilden betyder "titta" (eller stänger en öppen meny)
+    if (!meny.hidden) { stangMeny(); return; }
+    if (klicklage) { e.stopPropagation(); skicka("titta"); }
+    return;
+  }
   e.stopPropagation();
   if (t.utgang) { stangMeny(); skicka(t.utgang); return; }
   menyFor(t.objekt, e.clientX, e.clientY);
@@ -1145,21 +1172,72 @@ cv.addEventListener("pointerleave", () => { namnskylt.hidden = true; cv.style.cu
 document.addEventListener("click", e => { if (!meny.hidden && !meny.contains(e.target)) stangMeny(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") stangMeny(); });
 
+// Utgångar som inte finns som klickytor i bilden visas som knappar, så att man aldrig fastnar.
+function utgangarUtanYta() {
+  const y = YTOR[RUM[S.room].bild];
+  const iBilden = new Set((y ? y.namn : []).filter(n => n.startsWith("utgang:")).map(n => n.slice(7)));
+  const sedda = new Set(), ut = [];
+  for (const [dir, till] of Object.entries(RUM[S.room].utgangar)) {
+    if (iBilden.has(dir) || sedda.has(till)) continue;
+    if ([...iBilden].some(d => RUM[S.room].utgangar[d] === till)) continue;
+    sedda.add(till); ut.push(dir);
+  }
+  return ut;
+}
+const lasbarLista = document.createElement("div");
+lasbarLista.className = "las-endast"; lasbarLista.setAttribute("aria-label", "Saker du kan trycka på");
+scenFig.appendChild(lasbarLista);
 function uppdateraAgodelar() {
   document.body.classList.toggle("klicklage", klicklage);
   agodelar.hidden = !klicklage;
   if (!klicklage) { stangMeny(); return; }
-  const saker = Object.keys(OBJ).filter(bar);
   agodelar.innerHTML = "";
-  const rubrik = document.createElement("span");
-  rubrik.className = "rubrik"; rubrik.textContent = saker.length ? "Du bär:" : "Du bär ingenting.";
-  agodelar.appendChild(rubrik);
-  for (const id of saker) {
-    const b = document.createElement("button");
-    b.type = "button"; b.textContent = etikett(id);
-    b.addEventListener("click", e => { e.stopPropagation(); const r = b.getBoundingClientRect(); menyFor(id, r.left + r.width / 2, r.top - 8); });
-    agodelar.appendChild(b);
+  const rad = (rubrik, knappar) => {
+    const r = document.createElement("div"); r.className = "klickrad";
+    const h = document.createElement("span"); h.className = "rubrik"; h.textContent = rubrik; r.appendChild(h);
+    for (const [text, gor] of knappar) {
+      const b = document.createElement("button"); b.type = "button"; b.textContent = text;
+      b.addEventListener("click", e => { e.stopPropagation(); gor(b); });
+      r.appendChild(b);
+    }
+    agodelar.appendChild(r);
+  };
+  const saker = Object.keys(OBJ).filter(bar);
+  const vidKnapp = id => b => { const r = b.getBoundingClientRect(); menyFor(id, r.left + r.width / 2, r.top - 8); };
+  rad(saker.length ? "Du bär:" : "Du bär ingenting.", saker.map(id => [etikett(id), vidKnapp(id)]));
+  const utg = utgangarUtanYta();
+  if (utg.length) rad("Gå:", utg.map(d => [stor(RIKTNINGSNAMN[d]), () => { stangMeny(); skicka(d); }]));
+  // Resor: om linjekartan inte är klickbar i bilden visas stationerna som knappar
+  const yt = YTOR[RUM[S.room].bild];
+  if (A.resor && A.resor.stationer[S.room] && !(yt && yt.namn.includes(A.resor.karta))) {
+    rad("Åk till:", Object.entries(A.resor.stationer).filter(([st]) => st !== S.room).map(([, info]) => [info.namn, () => { stangMeny(); skicka("åk till " + info.ord[0]); }]));
   }
+  // Saker i bilden, för skärmläsare (syns inte)
+  const y = YTOR[RUM[S.room].bild];
+  lasbarLista.innerHTML = "";
+  for (const n of (y ? y.namn : [])) {
+    const ok = n.startsWith("utgang:") ? RUM[S.room].utgangar[n.slice(7)] : (OBJ[n] && inom(n) && !bar(n));
+    if (!ok) continue;
+    const b = document.createElement("button"); b.type = "button";
+    b.textContent = n.startsWith("utgang:") ? "Gå " + RIKTNINGSNAMN[n.slice(7)] : etikett(n);
+    b.addEventListener("click", e => { e.stopPropagation(); if (n.startsWith("utgang:")) skicka(n.slice(7)); else { const r = cv.getBoundingClientRect(); menyFor(n, r.left + r.width / 2, r.top + r.height / 2); } });
+    lasbarLista.appendChild(b);
+  }
+}
+// I klickläget ersätts inmatningsfältet och knappraden av en menyknapp.
+if (klicklage) {
+  document.body.classList.add("klicklage");
+  document.getElementById("quick").remove();
+  document.querySelector("header.status .wrap").insertAdjacentHTML("beforeend", '<button type="button" id="menyknapp" aria-haspopup="menu">☰ Meny</button>');
+  document.getElementById("menyknapp").addEventListener("click", e => {
+    e.stopPropagation();
+    const r = e.currentTarget.getBoundingClientRect();
+    visaMeny([
+      ["Ledtråd", kor("ledtråd")], ["Poäng", kor("poäng")], ["Spara", kor("spara")], ["Ladda sparat spel", kor("ladda")],
+      [Ljud.pa ? "Stäng av ljudet" : "Slå på ljudet", kor("ljud")], [Ljud.musik ? "Stäng av musiken" : "Slå på musiken", kor("musik")],
+      ["Hjälp", kor("hjälp")], ["Börja om", kor("omstart")],
+    ], r.left + r.width / 2, r.bottom, "Meny");
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1189,7 +1267,7 @@ input.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" && hIdx > 0) { hIdx--; input.value = historik[hIdx]; e.preventDefault(); }
   else if (e.key === "ArrowDown") { hIdx = Math.min(historik.length, hIdx + 1); input.value = historik[hIdx] || ""; e.preventDefault(); }
 });
-document.getElementById("quick").addEventListener("click", e => {
+document.getElementById("quick")?.addEventListener("click", e => {
   const b = e.target.closest("button");
   if (b) { skicka(b.dataset.c); if (pekskarm) b.blur(); else input.focus(); }
 });
