@@ -13,4 +13,6 @@ Tryck på saker i bilden för att få en meny med vad du kan göra. Det du bär 
 - `ljud/`: de nya ljuden, skapade av `verktyg/skapa_ljud.py`. Musiken och övriga ljud lånas från `aventyr/mopsen/ljud/` (`ljudmapp` i `aventyr.js`).
 - `verktyg/klicktest.js`: spelar hela spelet till full poäng på en simulerad iPhone med bara tryck (`node aventyr/papegojan/verktyg/klicktest.js`, kräver Playwright).
 
-Bygg med `python3 motor/verktyg/bygg.py papegojan`.
+Det finns också en textversion i [`aventyr/papegojan-text/`](../papegojan-text/). Den genereras från den här mappens `aventyr.js` av `verktyg/gor_textversion.py`, så ändra alltid här och kör skriptet igen. `verktyg/texttest.js` spelar igenom textversionen.
+
+Bygg med `python3 motor/verktyg/bygg.py papegojan papegojan-text`.

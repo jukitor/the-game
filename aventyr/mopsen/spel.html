@@ -760,7 +760,7 @@ window.AVENTYR = {
   },
 };
 </script>
-<script>window.AVENTYR && delete window.AVENTYR.ljudmapp; window.AVENTYRSDATA && delete window.AVENTYRSDATA.ljudfiler;</script>
+<script>window.AVENTYR && (delete window.AVENTYR.ljudmapp, delete window.AVENTYR.bildmapp); window.AVENTYRSDATA && delete window.AVENTYRSDATA.ljudfiler;</script>
 <script>
 /* ==========================================================================
    SPELMOTORN
@@ -924,11 +924,13 @@ function nyttTillstand() {
 //  Gränssnittet (byggs av motorn)
 // ---------------------------------------------------------------------------
 const sk = A.startskarm;
+// Bilder kan lånas från ett annat äventyr med A.bildmapp, t.ex. "../annat/bilder/"
+const bildvag = p => A.bildmapp && p.startsWith("bilder/") ? A.bildmapp + p.slice(7) : p;
 document.title = A.titel;
 document.body.insertAdjacentHTML("afterbegin", `
 ${sk ? `<div class="splash" id="splash" role="button" tabindex="0" aria-label="${esc(A.titel)}. Klicka för att börja spela.">
-  <picture>${sk.bildStaende ? `<source media="(orientation: portrait)" srcset="${esc(sk.bildStaende)}">` : ""}
-    <img src="${esc(sk.bild)}" alt="${esc(sk.alt || "")}"></picture>
+  <picture>${sk.bildStaende ? `<source media="(orientation: portrait)" srcset="${esc(bildvag(sk.bildStaende))}">` : ""}
+    <img src="${esc(bildvag(sk.bild))}" alt="${esc(sk.alt || "")}"></picture>
   ${sk.regn ? `<canvas id="splashregn" aria-hidden="true"></canvas>` : ""}
   <h1 class="logo" id="splashtitel">${sk.ort ? `<span class="ort">${esc(sk.ort)}</span>` : ""}<span class="titel">${esc(sk.titel || A.titel)}</span>${sk.under ? `<span class="under">${esc(sk.under)}</span>` : ""}</h1>
 </div>` : ""}
@@ -1646,7 +1648,7 @@ function uppdateraScen() {
       scen.bas = img; scen.klar = true; scen.start = performance.now();
       ritaScen(true); startaAnim();
     };
-    img.src = "bilder/" + namn + ".png";
+    img.src = bildvag("bilder/" + namn + ".png");
     cv.classList.remove("ritar"); void cv.offsetWidth; cv.classList.add("ritar");
   } else { ritaScen(true); startaAnim(); }
 }

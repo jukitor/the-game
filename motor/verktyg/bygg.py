@@ -13,6 +13,7 @@ För varje äventyr i aventyr/<namn>/ skapas:
 """
 import hashlib
 import os
+import re
 import json
 import sys
 from pathlib import Path
@@ -36,31 +37,34 @@ def titel(mapp):
     return mapp.name
 
 
-def ljudmapp(mapp):
-    """Ett äventyr kan låna ljud från ett annat med raden ljudmapp: "../annat/ljud/" i aventyr.js."""
+def mappar(mapp, nyckel):
+    """Mappar som ett äventyr lånar från, t.ex. raden ljudmapp: "../annat/ljud/" eller
+    ljudmapp: ["../ett/ljud/", "../annat/ljud/"] i aventyr.js. Den första går före de senare."""
     for rad in (mapp / "aventyr.js").read_text(encoding="utf-8").splitlines():
         rad = rad.strip()
-        if rad.startswith("ljudmapp:"):
-            return (mapp / rad.split('"')[1]).resolve()
-    return mapp / "ljud"
+        if rad.startswith(nyckel + ":"):
+            return [(mapp / v).resolve() for v in re.findall(r'"([^"]+)"', rad.split("//")[0])]
+    return []
 
 
 def bygg(mapp):
-    # Ljuden: äventyrets egna i ljud/ och de lånade i ljudmapp. Egna går före lånade med samma namn.
-    egna, lanade = mapp / "ljud", ljudmapp(mapp)
-    kallor = [k for k in dict.fromkeys([lanade, egna]) if k.exists()]
+    # Ljuden: äventyrets egna i ljud/ och de lånade i ljudmapp. Egna går före lånade med samma namn,
+    # och en tidigare ljudmapp före en senare.
+    egna = mapp / "ljud"
+    kallor = [k for k in dict.fromkeys(list(reversed(mappar(mapp, "ljudmapp"))) + [egna]) if k.exists()]
     slingor, texttider, ljudfiler = {}, {}, {}
     for k in kallor:
         slingor.update(las_json(k / "slingor.json", {}))
         texttider.update(las_json(k / "texttider.json", {}))
-        if k != egna:
-            for f in sorted(k.glob("*.mp3")):
+        for f in sorted(k.glob("*.mp3")):
+            if k == egna:
+                ljudfiler.pop(f.stem, None)
+            else:
                 ljudfiler[f.stem] = os.path.relpath(f, mapp).replace(os.sep, "/")
-    if egna.exists():
-        for f in egna.glob("*.mp3"):
-            ljudfiler.pop(f.stem, None)
+    # Bilderna: äventyrets egna i bilder/, eller lånade från bildmapp
+    bildmapp = (mappar(mapp, "bildmapp") or [mapp / "bilder"])[0]
     data = {
-        "bilder": las_json(mapp / "bilder" / "bilddata.json", {"palett": [], "bilder": {}}),
+        "bilder": las_json(bildmapp / "bilddata.json", {"palett": [], "bilder": {}}),
         "slingor": slingor,
         "texttider": texttider,
         "ljudfiler": ljudfiler,   # lånade ljud: namn -> sökväg. Övriga ligger i ljud/
@@ -97,7 +101,7 @@ def bygg(mapp):
     spel = (f"<meta charset=\"utf-8\">\n<title>{t}</title>\n<meta name=\"claude:viewport-fit-sides\" content=\"cover\">\n{TYPSNITT}"
             f"<style>\n{css}</style>\n<script>\n{datajs}</script>\n<script>\n{aventyr}</script>\n"
             # I den inbakade filen ligger ljuden alltid i ljud/ bredvid sidan
-            f"<script>window.AVENTYR && delete window.AVENTYR.ljudmapp; window.AVENTYRSDATA && delete window.AVENTYRSDATA.ljudfiler;</script>\n"
+            f"<script>window.AVENTYR && (delete window.AVENTYR.ljudmapp, delete window.AVENTYR.bildmapp); window.AVENTYRSDATA && delete window.AVENTYRSDATA.ljudfiler;</script>\n"
             f"<script>\n{motor}</script>\n")
     (mapp / "spel.html").write_text(spel, encoding="utf-8")
     print(f"Byggde {mapp.relative_to(ROT)}: data.js, index.html, spel.html ({len(spel) // 1024} kB)")
