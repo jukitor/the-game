@@ -11,6 +11,7 @@ För varje äventyr i aventyr/<namn>/ skapas:
   spel.html   samma spel i en enda fil (motor, äventyr och data inbakade), utan <head>,
               för publicering som Claude-artefakt. Bilder och ljud ligger kvar i bilder/ och ljud/.
 """
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -45,18 +46,22 @@ def bygg(mapp):
     (mapp / "data.js").write_text(datajs, encoding="utf-8")
 
     t = titel(mapp)
+    # Versionsnummer efter innehållet, så att webbläsaren hämtar nya filer när något har ändrats
+    v = lambda fil: hashlib.sha1(fil.read_bytes()).hexdigest()[:10]
+    vcss, vmotor = v(MOTOR / "motor.css"), v(MOTOR / "motor.js")
+    vdata, vaventyr = v(mapp / "data.js"), v(mapp / "aventyr.js")
     index = f"""<!doctype html>
 <html lang="sv">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{t}</title>
-{TYPSNITT}<link rel="stylesheet" href="../../motor/motor.css">
+{TYPSNITT}<link rel="stylesheet" href="../../motor/motor.css?v={vcss}">
 </head>
 <body>
-<script src="data.js"></script>
-<script src="aventyr.js"></script>
-<script src="../../motor/motor.js"></script>
+<script src="data.js?v={vdata}"></script>
+<script src="aventyr.js?v={vaventyr}"></script>
+<script src="../../motor/motor.js?v={vmotor}"></script>
 </body>
 </html>
 """

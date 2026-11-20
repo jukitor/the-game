@@ -37,7 +37,7 @@ python3 motor/verktyg/bygg.py mopsen    # bygger ett äventyr
 python3 -m http.server                  # öppna sedan http://localhost:8000/aventyr/mopsen/
 ```
 
-`index.html` i äventyrets mapp laddar motorn direkt från `motor/`, så en ändring i `motor.js` eller `motor.css` syns i alla äventyr utan att något byggs om. `bygg.py` behövs när äventyrets genererade data har ändrats (nya bilder, animationer eller ljud) och för att skapa `spel.html`, där motor, äventyr och data är inbakade i en enda fil för publicering som Claude-artefakt. Kör därför `bygg.py` innan du publicerar en ny version av motorn.
+`index.html` i äventyrets mapp laddar motorn direkt från `motor/`. Länkarna har ett versionsnummer (`?v=…`) som räknas ut från filernas innehåll, så att webbläsare och GitHub Pages inte visar en gammal motor ur cachen. Kör därför alltid `bygg.py` efter en ändring i motorn eller äventyret innan du pushar eller publicerar. `bygg.py` skapar också `spel.html`, där motor, äventyr och data är inbakade i en enda fil för publicering som Claude-artefakt.
 
 Ljudfilerna hämtas från webbservern. Öppnar du `index.html` direkt från disken fungerar spelet, men utan ljud.
 
