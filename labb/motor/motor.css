@@ -8,17 +8,20 @@
   --muted: #6e6552;
   --stamp: #a8281f;    /* stämpelrött */
   --rule: #cdbf98;
+  --pil: #c48b00; --pilskugga: rgba(42, 37, 29, .35);   /* pilen för mer text */
   --font-type: "Courier Prime", "Courier New", Courier, monospace;
   --font-head: "Oswald", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #141922; --paper: #1c2330; --ink: #e5e0d2; --muted: #8e95a3; --stamp: #ff7c6c; --rule: #2e3746;
+    --pil: #f2c230; --pilskugga: rgba(0, 0, 0, .6);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #141922; --paper: #1c2330; --ink: #e5e0d2; --muted: #8e95a3; --stamp: #ff7c6c; --rule: #2e3746;
+    --pil: #f2c230; --pilskugga: rgba(0, 0, 0, .6);
   color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -172,16 +175,18 @@ form label { font-weight: 700; color: var(--stamp); }
 .las-endast { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .las-endast button:focus { position: fixed; left: 8px; top: 8px; width: auto; height: auto; clip: auto; z-index: 70; }
 
-/* Gul pil som visar att det finns mer text nedanför */
+/* Gul pil som visar att det finns mer text nedanför: en tonad kant längst ner i textytan och en pixelpil */
 #merpil {
-  position: fixed; z-index: 5; width: 34px; height: 34px; padding: 0; border-radius: 50%;
-  border: 2px solid #2a251d; background: #f2c230; color: #2a251d;
-  font: 700 18px/1 var(--font-head); cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  position: fixed; z-index: 5; height: 44px; padding: 0 14px 6px; border: 0; border-radius: 0;
+  display: flex; align-items: flex-end; justify-content: flex-end;
+  background: linear-gradient(to bottom, transparent, var(--bg) 80%);
+  color: var(--pil); cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
+#merpil svg { width: 27px; height: 18px; filter: drop-shadow(0 2px 0 var(--pilskugga)); }
 #merpil[hidden] { display: none; }
-#merpil:focus-visible { outline: 2px solid var(--stamp); outline-offset: 2px; }
+#merpil:focus-visible { outline: none; }
+#merpil:focus-visible svg { outline: 2px solid var(--stamp); outline-offset: 3px; }
 @media (prefers-reduced-motion: no-preference) {
-  #merpil:not([hidden]) { animation: merpil 1.6s ease-in-out infinite; }
+  #merpil:not([hidden]) svg { animation: merpil 1.4s steps(2, jump-none) infinite; }
   @keyframes merpil { 50% { transform: translateY(3px); } }
 }

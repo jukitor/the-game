@@ -207,7 +207,8 @@ if (window.visualViewport) window.visualViewport.addEventListener("resize", hall
 // En liten gul pil till höger när det finns mer text att läsa längre ner
 const merPil = document.createElement("button");
 merPil.type = "button"; merPil.id = "merpil"; merPil.hidden = true;
-merPil.setAttribute("aria-label", "Mer text nedanför"); merPil.textContent = "↓";
+merPil.setAttribute("aria-label", "Mer text nedanför");
+merPil.innerHTML = '<svg viewBox="0 0 9 6" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M0 0h2v1H0zM7 0h2v1H7zM1 1h2v1H1zM6 1h2v1H6zM2 2h2v1H2zM5 2h2v1H5zM3 3h3v1H3zM4 4h1v1H4z"/></svg>';
 document.body.appendChild(merPil);
 let pilRaf = 0;
 function visaMerPil() {
@@ -219,8 +220,9 @@ function visaMerPil() {
     merPil.hidden = !mer;
     if (!mer) return;
     const r = scroller.getBoundingClientRect();
-    merPil.style.top = (r.bottom - merPil.offsetHeight - 10) + "px";
-    merPil.style.left = (Math.min(r.right, window.innerWidth) - merPil.offsetWidth - 12) + "px";
+    merPil.style.top = (r.bottom - merPil.offsetHeight) + "px";
+    merPil.style.left = r.left + "px";
+    merPil.style.width = (Math.min(r.right, window.innerWidth) - r.left) + "px";
   });
 }
 merPil.addEventListener("click", () => {
