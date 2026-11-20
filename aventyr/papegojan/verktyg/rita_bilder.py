@@ -72,11 +72,18 @@ def kontor(v=None):
 
     # Brevkniven ligger på räkningarna
     if kniv:
+        # Större och blankare än förut, så att den syns och går att träffa
         with d.yta("brevkniv"):
-            d.linje(112, 65, 124, 63, 5)
-            d.linje(112, 66, 124, 64, 15)
-            d.rekt(124, 62, 129, 65, 9)
-            d.rekt(125, 63, 128, 64, 10)
+            d.rekt(101, 69, 121, 71, 0)                    # skugga på bordsskivan
+            d.poly([(100, 67), (120, 66), (120, 69), (101, 69)], 15)   # blank klinga
+            d.linje(101, 68, 120, 68, 5)
+            d.px(99, 68, 15)
+            d.rekt(120, 65, 130, 70, 10)                   # handtag i mässing
+            d.rekt(121, 66, 129, 69, 9)
+            d.rekt(127, 62, 129, 66, 10)                   # svanhalsen
+            d.rekt(129, 61, 131, 63, 10)
+            d.px(131, 62, 13)                              # näbben
+        d.markera("brevkniv", 97, 59, 133, 74)
 
     # Ett telegram har stuckits in under dörren
     if telegram:
