@@ -1111,9 +1111,21 @@ function visaLjudknapp() {
 // ---------------------------------------------------------------------------
 //  Startskärmen
 // ---------------------------------------------------------------------------
+// Långa titlar krymps så att de får plats i bredden (t.ex. på en smal mobil)
+function anpassaTitel() {
+  const t = document.querySelector("#splashtitel .titel");
+  if (!t) return;
+  t.style.fontSize = "";
+  const max = Math.min(window.innerWidth, document.documentElement.clientWidth || window.innerWidth) * 0.92;
+  let fs = parseFloat(getComputedStyle(t).fontSize);
+  for (let i = 0; i < 40 && t.scrollWidth > max && fs > 12; i++) { fs *= 0.95; t.style.fontSize = fs + "px"; }
+}
 function visaStartskarm() {
   const sp = document.getElementById("splash");
   startskarmVisas = true;
+  anpassaTitel();
+  window.addEventListener("resize", anpassaTitel);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(anpassaTitel);
   let stangd = false, raf = 0;
   const cvr = document.getElementById("splashregn");
   if (cvr && rorelseOk && cvr.getContext) {
