@@ -378,6 +378,8 @@ function gor(handlingar, ctx = {}) {
     if (h.utfor) utfor(mall(h.utfor, ctx), true);
     if (h.kor) gor(A.handlingar[h.kor], ctx);
     if (h.replik) replik(h);
+    if (h.samtal) startaSamtal(h.samtal, h.nod);
+    if (h.avslutaSamtal) avslutaSamtal();
     if (h.slutsummering) out(mall(TEXTER.slutsummering));
     if (h.spelSlut) { S.over = true; uppdateraStatus(); }
     if (h.stopp) stoppaRorelse = true;
@@ -799,6 +801,7 @@ function uppdateraStatus() {
   document.getElementById("where").textContent = RUM[S.room].namn;
   document.getElementById("nums").textContent = `Poäng ${S.score}/${MAX} · Drag ${S.moves}`;
   uppdateraAgodelar();
+  ritaSamtalsval();
   autospara();
 }
 
@@ -1347,12 +1350,84 @@ if (klicklage) {
 }
 
 // ---------------------------------------------------------------------------
+//  Samtal: personer som man pratar med genom att välja vad man svarar
+//  A.samtal = { id: { start: "nod", noder: { nod: { text, gor, val: [{ text, om, engang, gor, till }] } } } }
+//  Handlingen { samtal: "id" } (eller { samtal: "id", nod: "nod" }) startar ett samtal. Ett val utan
+//  "till" avslutar samtalet. Svaren visas som knappar, och i textläget också som en numrerad lista.
+// ---------------------------------------------------------------------------
+const samtalsval = document.createElement("div");
+samtalsval.className = "samtalsval"; samtalsval.hidden = true; samtalsval.setAttribute("role", "group");
+samtalsval.setAttribute("aria-label", "Vad svarar du?");
+agodelar.before(samtalsval);
+const samtalsNod = () => S.samtal && A.samtal && A.samtal[S.samtal.id] && A.samtal[S.samtal.id].noder[S.samtal.nod];
+const valNyckel = i => S.samtal.id + "/" + S.samtal.nod + "/" + i;
+function samtalsAlternativ() {
+  const n = samtalsNod();
+  if (!n) return [];
+  S.valda = S.valda || {};
+  return (n.val || []).map((v, i) => ({ v, i })).filter(({ v, i }) => (!v.om || uppfyllt(v.om)) && !(v.engang && S.valda[valNyckel(i)]));
+}
+function startaSamtal(id, nod) {
+  if (!A.samtal || !A.samtal[id]) return;
+  S.samtal = { id, nod: nod || A.samtal[id].start };
+  visaNod();
+}
+function visaNod() {
+  const n = samtalsNod(), dettaSamtal = S.samtal;
+  if (!n) return avslutaSamtal();
+  if (n.text !== undefined) { const t = text(n.text); if (t) out(t); }
+  if (n.gor) gor(n.gor);
+  if (S.samtal !== dettaSamtal) return;          // handlingarna startade eller avslutade ett samtal
+  const alt = samtalsAlternativ();
+  if (!alt.length) return avslutaSamtal();
+  if (!klicklage) alt.forEach((a, k) => out(`${k + 1}. ${a.v.text}`, "val"));
+  ritaSamtalsval();
+}
+function avslutaSamtal() { S.samtal = null; ritaSamtalsval(); }
+function ritaSamtalsval() {
+  const alt = S && S.samtal ? samtalsAlternativ() : [];
+  samtalsval.innerHTML = "";
+  samtalsval.hidden = !alt.length;
+  document.body.classList.toggle("samtal-pagar", alt.length > 0);
+  alt.forEach((a, k) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = (klicklage ? "" : (k + 1) + ". ") + a.v.text;
+    b.addEventListener("click", e => { e.stopPropagation(); valjSvar(k); if (pekskarm) b.blur(); });
+    samtalsval.appendChild(b);
+  });
+}
+function valjSvar(k) {
+  const a = samtalsAlternativ()[k];
+  if (!a) return;
+  fyll.style.height = "0px";
+  ljudFordrojning = 0;
+  nyScen = false;
+  const rad = out(a.v.text, "cmd");
+  if (a.v.engang) S.valda[valNyckel(a.i)] = true;
+  const nasta = a.v.till ? { id: S.samtal.id, nod: a.v.till } : null;
+  S.samtal = nasta;
+  gor(a.v.gor || []);
+  if (nasta && S.samtal === nasta) visaNod(); else ritaSamtalsval();
+  uppdateraStatus();
+  rullaTill(rad);
+}
+
+// ---------------------------------------------------------------------------
 //  Inmatning och start
 // ---------------------------------------------------------------------------
 const historik = []; let hIdx = 0;
+function rullaTill(rad) {
+  if (pekskarm || nyScen) { scrollTill(rad); haller = { el: rad, tills: performance.now() + 1200 }; }
+  else scrollDown();
+}
 function skicka(t) {
   t = t.trim();
   if (!t) return;
+  if (S.samtal) {
+    // I textläget väljer en siffra ett svar. Allt annat avslutar samtalet.
+    if (/^\d+$/.test(t)) { valjSvar(+t - 1); historik.push(t); hIdx = historik.length; return; }
+    avslutaSamtal();
+  }
   fyll.style.height = "0px";
   ljudFordrojning = 0;
   const rad = out(t, "cmd");
@@ -1360,8 +1435,7 @@ function skicka(t) {
   nyScen = false;
   utfor(t);
   uppdateraStatus();
-  if (pekskarm || nyScen) { scrollTill(rad); haller = { el: rad, tills: performance.now() + 1200 }; }
-  else scrollDown();
+  rullaTill(rad);
 }
 document.getElementById("f").addEventListener("submit", e => {
   e.preventDefault();

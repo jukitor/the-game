@@ -12,6 +12,7 @@ Motorn är generisk. Varje äventyr är en konfiguration med egna bilder och lju
 | Mopsen som försvann, klickversionen | [`aventyr/mopsen-klick/`](aventyr/mopsen-klick/) | [jukitor.github.io/the-game/aventyr/mopsen-klick](https://jukitor.github.io/the-game/aventyr/mopsen-klick/) |
 | Papegojan som visste för mycket (fall 2, klick) | [`aventyr/papegojan/`](aventyr/papegojan/) | [jukitor.github.io/the-game/aventyr/papegojan](https://jukitor.github.io/the-game/aventyr/papegojan/) |
 | Papegojan som visste för mycket (fall 2, text) | [`aventyr/papegojan-text/`](aventyr/papegojan-text/) | [jukitor.github.io/the-game/aventyr/papegojan-text](https://jukitor.github.io/the-game/aventyr/papegojan-text/) |
+| Borgmästarens långkalsonger (fall 3, klick) | [`aventyr/kalsongerna/`](aventyr/kalsongerna/) | [jukitor.github.io/the-game/aventyr/kalsongerna](https://jukitor.github.io/the-game/aventyr/kalsongerna/) |
 
 Rotens `index.html` skickar vidare till Mopsen som försvann.
 
@@ -88,6 +89,7 @@ window.AVENTYR = {
 | `objekt` | Föremål och personer, se nedan |
 | `regler` | Pussel och särskilda svar, se nedan |
 | `handlingar` | Namngivna listor med handlingar som flera regler kan köra med `{ kor: "namn" }` |
+| `samtal` | Samtal där spelaren väljer vad hen svarar, se nedan |
 | `passager` | Namngivna passageregler som flera rum kan dela (`passage: "namn"`) |
 | `verb` | Egna verb: `{ köp: ["köp", "beställ"], dyrka: ["dyrka", "lås upp"] }`. Verb på två ord fungerar |
 | `alias` | Kommandon som skrivs om: `{ betala: "köp korv" }` |
@@ -157,6 +159,26 @@ Motorns verb: `titta`, `undersök`, `sök`, `ta`, `ta på`, `släpp`, `inventari
 **Handlingar** (`gor`): en sträng skrivs ut. Ett objekt kan ha `om` och någon av: `text` (kan vara villkorad), `texter` (en lista att växla mellan), `sys`, `stampel`, `flytta` + `till`, `satt`, `nollstall`, `oppna`, `stang`, `lista` (visa innehåll), `poang`, `ljud` + `fordrojning`, `ljudFordrojning` (väntar med poängljudet), `ledtrad`, `beskriv`, `flyttaSpelare`, `ga` (flytta och visa platsen), `utfor` (kör ett annat kommando, räknas inte som drag), `kor` (en namngiven handlingslista), `replik` + `sedan` (orden skrivs ut i takt med en inspelad röst, se nedan), `ejDrag`, `slutsummering` och `spelSlut`.
 
 I texter ersätts `{objekt}`, `{Objekt}`, `{mottagare}`, `{poang}`, `{max}` och `{drag}`.
+
+### Samtal
+
+Ett samtal är ett träd av noder där spelaren väljer vad hen svarar. Svaren visas som knappar, och i textläget också som en numrerad lista där en siffra väljer svaret. Allt annat spelaren gör avslutar samtalet.
+
+```js
+samtal: {
+  vakt: { start: "a", noder: {
+    a: { text: "\"Lösenord?\"", val: [
+      { text: "Sesam, öppna dig.", till: "fel" },
+      { text: "Den gyllene draken sover aldrig.", till: "ratt" },
+      { text: "Har du sett en man i röd uniform?", om: { flagga: "uniform" }, engang: true, till: "a" },
+    ] },
+    fel: { text: "Luckan smäller igen.", val: [] },
+    ratt: { text: "Dörren går upp.", gor: [{ satt: "losen" }, { poang: "losen" }], val: [] },
+  } },
+},
+```
+
+En nod har `text` (kan vara villkorad), `gor` (handlingar) och `val`. Ett val har `text`, valfritt `om` (visas bara när villkoren stämmer), `engang` (försvinner när det har valts), `gor` och `till` (nästa nod). Ett val utan `till`, eller en nod utan val, avslutar samtalet. Handlingen `{ samtal: "vakt" }` startar ett samtal, `{ samtal: "vakt", nod: "ratt" }` börjar i en viss nod och `{ avslutaSamtal: true }` avslutar det.
 
 ### Bilder, animationer och ljud
 
