@@ -140,12 +140,25 @@ def tvatteri(v=None):
         for x, y in pts:
             d.px(x, y, 15)
         d.rekt(38, 9, 41, 14, 0)
-        farger = [13, 15, 4, 9, 12, 14, 15]
+        # Vita, grå, blå, en randig och en med hjärtan. Längst till vänster ett tomt mellanrum
+        # med två ensamma klädnypor, där de röda hängde.
+        farger = [None, 15, 5, 4, "randig", 15, "hjartan"]
         for i, lx in enumerate(range(46, 186, 20)):
             if 128 < lx < 160:
                 continue
             ly = pts[lx - 40][1] + 1
             c = farger[i % len(farger)]
+            if c is None:
+                d.px(lx + 1, ly - 1, 8)
+                d.px(lx + 9, ly - 1, 8)
+                d.px(lx + 1, ly, 8)
+                d.px(lx + 9, ly, 8)
+                continue
+            monster = c
+            if c == "randig":
+                c = 15
+            elif c == "hjartan":
+                c = 9
             # Långkalsonger: midja, två ben, knappar, fickflik
             d.rekt(lx, ly, lx + 10, ly + 6, c)
             d.rekt(lx, ly + 6, lx + 4, ly + 22, c)
@@ -158,6 +171,16 @@ def tvatteri(v=None):
                 d.px(lx + 5, ly + ky, 0 if c != 0 else 15)
             if i == 3:  # en har en lucka bak
                 d.rekt(lx + 2, ly + 2, lx + 5, ly + 5, MORKARE[c])
+            if monster == "randig":
+                for ry in range(ly + 2, ly + 22, 3):
+                    for rx in range(lx, lx + 11):
+                        if d.a[ry, rx] == 15:
+                            d.px(rx, ry, 4)
+            if monster == "hjartan":                       # hjärtan
+                for hx, hy in ((lx + 2, ly + 9), (lx + 8, ly + 13), (lx + 2, ly + 17), (lx + 5, ly + 3)):
+                    d.px(hx, hy, 13)
+                    d.px(hx - 1, hy - 1, 13)
+                    d.px(hx + 1, hy - 1, 13)
             d.px(lx + 1, ly - 1, 8)
             d.px(lx + 9, ly - 1, 8)
             d.ljus(ruta(lx + 7, ly + 1, lx + 10, ly + 22), 0.5, MORKARE)
