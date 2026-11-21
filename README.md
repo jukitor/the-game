@@ -162,7 +162,7 @@ I texter ersätts `{objekt}`, `{Objekt}`, `{mottagare}`, `{poang}`, `{max}` och 
 
 ### Samtal
 
-Ett samtal är ett träd av noder där spelaren väljer vad hen svarar. Svaren visas som knappar, och i textläget också som en numrerad lista där en siffra väljer svaret. Allt annat spelaren gör avslutar samtalet.
+Ett samtal är ett träd av noder där spelaren väljer vad hen svarar. Svaren visas som knappar direkt efter texten. I textläget är knapparna numrerade, och spelaren kan också skriva siffran. Allt annat spelaren gör avslutar samtalet.
 
 ```js
 samtal: {

@@ -260,6 +260,7 @@ window.AVENTYR = {
       beskrivning: "En rökig spelhåla bakom den röda dörren. Gröna lampor hänger över ett mahjongbord och ett roulettbord. En croupier med väst och armhållare snurrar hjulet med en uttråkad min, och en nervös spelare med spelkort i hattbandet räknar sina sista mynt.",
       kortBeskrivning: ["Spelhålan. Rouletthjulet snurrar. Mahjongbrickorna smattrar som regn."],
       utgangar: { ut: "bakgata" },
+      passage: [{ om: { inteFlagga: "losen" }, stopp: true, gor: ["Den röda dörren är låst. Den har inget handtag på utsidan, bara en lucka. Bredvid hänger en gonggong i mässing."] }],
       animationer: { sedel: [{ om: { inteObjektPa: ["skuldsedel", "spelhala"] }, ram: 1 }, { ram: 0 }] },
     },
     // ---- Boulevarden
@@ -308,6 +309,7 @@ window.AVENTYR = {
         "Borgmästarens kontor. Borgmästaren tittar på flaggstången, sedan på dig, sedan på flaggstången igen.",
       ],
       utgangar: { ner: "radhus_hall", ut: "radhus_hall" },
+      passage: [{ om: { inteFlagga: "radhus" }, stopp: true, gor: ["Du sätter foten på första trappsteget. \"Ursäkta!\" Fröken Blom har inte ens tittat upp. \"Trappan är för personal och folk med ärende. Vad gäller saken?\"", { samtal: "reception" }] }],
       vidIntrade: [
         { om: { bar: "kalsonger", inteFlagga: "vunnit" }, gor: [{ kor: "vinst" }] },
         { om: { inteFlagga: "klient" }, gor: [{ samtal: "borgmastare" }] },
@@ -714,7 +716,7 @@ window.AVENTYR = {
     fyrvaktare: { namn: ["fyrvaktare", "fyrvaktaren", "gunnar", "gubbe", "gubben", "skägg", "man"], kort: "en fyrvaktare", klicknamn: "fyrvaktaren", plats: "fyr", fast: true, person: true,
       beskrivning: "Gamle Gunnar, fyrvaktare sedan fyren byggdes, och enligt honom själv även innan dess. Han har ett skägg som en vit storm och stövlar som har gått på botten av hamnen." },
     fyrtorn: { namn: ["fyrtorn", "fyrtornet", "fyr", "fyren", "ljus", "ljuset", "ljuskägla"], kort: "ett fyrtorn", plats: "fyr", fast: true,
-      beskrivning: "En röd och vit randig fyr. Ljuset sveper runt, runt, och ser allt och säger inget. Precis som en bra detektiv, eller en dålig vittne." },
+      beskrivning: "En röd och vit randig fyr. Ljuset sveper runt, runt, och ser allt och säger inget. Precis som en bra detektiv, eller ett dåligt vittne." },
     mistlur2: { namn: ["mistlur", "mistluren", "lur", "luren"], kort: "en mistlur", plats: "fyr", fast: true,
       beskrivning: "En mistlur stor som en tuba för jättar. Den har ett handtag. Det står RÖR EJ. Det står också, med mindre text: SÄRSKILT INTE DU, GUNNAR." },
 
@@ -724,7 +726,7 @@ window.AVENTYR = {
     titthal: { namn: ["gonggong", "gonggongen", "gong", "klapp", "dörrklapp", "lucka", "luckan", "titthål"], kort: "en gonggong", plats: "bakgata", fast: true, klickverb: ["slå på"],
       beskrivning: "En liten gonggong i mässing bredvid den röda dörren, med en klubba på ett snöre. Den ser ut att vara till för att man ska tillkännage sig. Över den sitter en lucka i dörren, stängd." },
     apotekare: { namn: ["apotekare", "apotekaren", "mäster wu", "wu", "gubbe", "gubben", "skägg"], kort: "en apotekare", klicknamn: "apotekaren", plats: "apotek", fast: true, person: true,
-      beskrivning: "Mäster Wu, apotekare, med ett skägg som en vit vattenfall och glasögon runda som månar. Han har drivit apoteket i femtio år och har sett allt, inklusive dig, flera gånger, när du gick förbi utan att gå in." },
+      beskrivning: "Mäster Wu, apotekare, med ett skägg som ett vitt vattenfall och glasögon runda som månar. Han har drivit apoteket i femtio år och har sett allt, inklusive dig, flera gånger, när du gick förbi utan att gå in." },
     burkar: { namn: ["burk", "burkar", "burkarna", "låda", "lådor", "lådorna"], kort: "burkar och lådor", plats: "apotek", fast: true,
       beskrivning: "Tusen små lådor med etiketter du inte kan läsa, och burkar med saker du inte vill kunna läsa om. En burk heter, enligt den lilla engelska lappen, MOT ENVISA POLITIKER. Den är nästan tom." },
     vag2: { namn: ["våg", "vågen", "balansvåg"], kort: "en våg", plats: "apotek", fast: true,
@@ -770,7 +772,7 @@ window.AVENTYR = {
     grubb: { namn: ["grubb", "fru grubb", "tvätterska", "tvätterskan", "kvinna", "kvinnan", "dam"], kort: "fru Grubb", plats: "tvatteri", fast: true, person: true,
       beskrivning: "Fru Grubb, tvätterska, med uppkavlade ärmar, hårnät och underarmar som kan vrida ur en matta. Hon har drivit Steam Laundry i trettio år och har aldrig tappat bort ett plagg. Förrän nu." },
     mangel: { namn: ["mangel", "mangeln"], kort: "en mangel", plats: "tvatteri", fast: true,
-      beskrivning: "En mangel stor som en lokomotiv, som dånar och pressar lakan platta som pannkakor. Du håller händerna i fickorna." },
+      beskrivning: "En mangel stor som ett lokomotiv, som dånar och pressar lakan platta som pannkakor. Du håller händerna i fickorna." },
     paket: { namn: ["paket", "paketen", "hylla", "hyllor", "hyllorna"], kort: "paket", plats: "tvatteri", fast: true,
       beskrivning: "Hyllor med inslagna paket och lappar: NR 1312 PICKLES, SKJORTOR. NR 1340 O'HARA, EN SLIPS, 14 KAFFEFLÄCKAR. NR 1313 BIGSBY. Det sista facket är tomt." },
     kalsonglina: { namn: ["kalsonger", "långkalsonger", "lina", "linan", "torklina"], kort: "långkalsonger på tork", plats: "tvatteri", fast: true,
@@ -916,8 +918,9 @@ window.AVENTYR = {
         { text: "Märkte du något annat?", till: "annat", engang: true },
         { text: "Tack, fru Grubb.", till: "slut" },
       ] },
-      slut: { text: "\"Hitta honom\", säger fru Grubb. \"Ingen stjäl från mitt tvätteri. Ingen. Och kom tillbaka med kalsongerna, för de är inte struka.\"", gor: [{ om: { flagga: ["uniform", "vissling", "lukt"] }, poang: "grubb" }], val: [] },
+      slut: { text: "\"Hitta honom\", säger fru Grubb. \"Ingen stjäl från mitt tvätteri. Ingen. Och kom tillbaka med kalsongerna, för de är inte strukna.\"", gor: [{ om: { flagga: ["uniform", "vissling", "lukt"] }, poang: "grubb" }, { om: { flagga: ["uniform", "vissling", "lukt"] }, satt: "grubb" }], val: [] },
       igen: { text: "\"Ni igen. Vad vill ni?\"", val: [
+        { text: "Här är min tvättlapp.", om: { bar: "tvattlapp" }, till: "lapp" },
         { text: "Berätta om natten igen.", om: { flagga: "rockHamtad" }, till: "natt" },
         { text: "Ingenting. Hej då.", till: "titta" },
       ] },
@@ -967,7 +970,7 @@ window.AVENTYR = {
       chef: { text: "\"Det är ingen hemlighet. Hank är en enkel man. Någon måste tänka åt honom, och någon måste se till att han vinner.\" Hon ler. Det är inte ett varmt leende. Det är ett leende för fotografer.", val: [{ text: "Något annat.", till: "a" }] },
       alibi: { text: "\"Här. Vid det här bordet. Med en martini. Fråga Ramón.\" Bartendern nickar utan att sluta skaka. Han skulle nicka åt vad som helst hon sa.", val: [{ text: "Något annat.", till: "a" }] },
       black: { text: "Hennes ögon smalnar bakom slöjan. \"Lila är min färg. Så vad? Läser ni andras gästböcker, detektiven? Det är inte särskilt artigt.\" Hon dricker. Lite för fort.", val: [{ text: "Något annat.", till: "a" }] },
-      papper: { text: "\"Halva stan stjäl Majestics brevpapper. Det är det enda som är gratis här. Ni har säkert själv ett ark i fickan.\" Hon fäller askan i askkoppen med en liten darrning.", val: [{ text: "Något annat.", till: "a" }] },
+      papper: { text: "\"Halva stan stjäl Majestics brevpapper. Det är det enda som är gratis här. Ni har säkert ett ark i fickan själv.\" Hon fäller askan i askkoppen med en liten darrning.", val: [{ text: "Något annat.", till: "a" }] },
       erkann: { text: "Vivian Vane sitter alldeles stilla en lång stund. Sedan fimpar hon cigaretten och säger, mycket lugnt: \"Okej. Jag skrev brevet. Hank vet ingenting, han tror att en flaggstång är något man äter till frukost. Men jag har inte kalsongerna. Jag betalade en karl tjugo dollar för att hämta dem på tvätteriet och gömma dem till debatten. En utropare från Nöjespiren. Han kallar sig Lucky. Var han har gömt dem vet jag inte. Jag ville inte veta.\"", gor: [{ satt: "vane" }, { poang: "vane" }], val: [
         { text: "Ni får förklara det för kommissarien.", till: "kommissarie" },
         { text: "Varför kalsonger?", till: "varfor" },
@@ -1235,7 +1238,7 @@ window.AVENTYR = {
     { verb: ["ge", "visa"], objekt: "utpressningsbrev", mottagare: "vane", gor: ["Vivian Vane tittar på brevet utan att röra en min. \"Vackert skrivet. Vem det än var. Halva stan har lila bläck, detektiven.\" Hon blåser rök på det."] },
     { verb: ["ge", "visa"], mottagare: "vane", gor: ["\"Hur gulligt\", säger Vivian Vane och tittar på {objekt}. \"Behåll det.\""] },
     { verb: "prata", objekt: "hotellbartender", gor: ["\"Vad får det vara?\" frågar Ramón och skakar. \"Vi har lila, lila och lila. Miss Vane har bestämt menyn den här veckan.\""] },
-    { verb: ["ta", "köp", "ät"], objekt: "cocktail", gor: ["Det är miss Vanes cocktail. Att ta den vore ungefär som att ta en tigers kött. Ungefär lika gott också, gissar du."] },
+    { verb: ["ta", "köp", "ät"], objekt: "cocktail", gor: ["Det är miss Vanes cocktail. Att ta den vore ungefär som att ta köttbiten från en tiger. Ungefär lika hälsosamt också, gissar du."] },
     { verb: "ta", objekt: "bordslampa", gor: ["Du låter lampan stå. Den lyser upp något som kanske behöver lysas upp. Kanske din utredning."] },
 
     // Biografen
@@ -1376,6 +1379,7 @@ window.AVENTYR = {
     { om: { inteBar: "skuldsedel", inteFlagga: "lou" }, text: "Titta på roulettbordet i spelhålan." },
     { om: { inteFlagga: "lou" }, text: "Konfrontera Lucky Lou på Nöjespiren med det du vet, och visa honom skuldsedeln." },
     { om: { inteFlagga: "polis" }, text: "Berätta för kommissarie O'Hara på polisstationen, västra Main Street, vilka som är skyldiga." },
+    { om: { inteFlagga: "fiskvittne" }, text: "Fiskhandlaren på fiskmarknaden ser det mesta som händer i hamnen. Fråga honom om mannen i uniform som fru Grubb beskrev." },
     { om: { inteFlagga: "vunnit" }, text: "Lämna tillbaka långkalsongerna till borgmästaren i rådhuset." },
     { text: "Du har gjort allt. Ta en kopp kaffe. Om du har råd." },
   ],

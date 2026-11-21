@@ -101,7 +101,11 @@ const TEXTER = Object.assign({
   ljudAvKlick: "Ljudet är avstängt. Du kan slå på det igen under Meny.",
   bilderAvKlick: "Bilderna är avstängda.",
 }, A.texter || {});
-if (A.lage === "klick") for (const k of Object.keys(TEXTER)) if (k.endsWith("Klick") && k !== "hjalpKlick") TEXTER[k.slice(0, -5)] = TEXTER[k];
+// I klickläget används <namn>Klick i stället för <namn>, utom när äventyret självt har bytt ut <namn> men inte <namn>Klick
+if (A.lage === "klick") for (const k of Object.keys(TEXTER)) {
+  const bas = k.slice(0, -5), egna = A.texter || {};
+  if (k.endsWith("Klick") && k !== "hjalpKlick" && !(egna[bas] !== undefined && egna[k] === undefined)) TEXTER[bas] = TEXTER[k];
+}
 
 // ---------------------------------------------------------------------------
 //  Svenska: riktningar, utfyllnadsord och verb
@@ -1370,7 +1374,7 @@ if (klicklage) {
 const samtalsval = document.createElement("div");
 samtalsval.className = "samtalsval"; samtalsval.hidden = true; samtalsval.setAttribute("role", "group");
 samtalsval.setAttribute("aria-label", "Vad svarar du?");
-agodelar.before(samtalsval);
+logEl.after(samtalsval);   // svaren hamnar direkt efter texten, i den rullbara textytan
 const samtalsNod = () => S.samtal && A.samtal && A.samtal[S.samtal.id] && A.samtal[S.samtal.id].noder[S.samtal.nod];
 const valNyckel = i => S.samtal.id + "/" + S.samtal.nod + "/" + i;
 function samtalsAlternativ() {
@@ -1392,7 +1396,6 @@ function visaNod() {
   if (S.samtal !== dettaSamtal) return;          // handlingarna startade eller avslutade ett samtal
   const alt = samtalsAlternativ();
   if (!alt.length) return avslutaSamtal();
-  if (!klicklage) alt.forEach((a, k) => out(`${k + 1}. ${a.v.text}`, "val"));
   ritaSamtalsval();
 }
 function avslutaSamtal() { S.samtal = null; ritaSamtalsval(); }
@@ -1488,7 +1491,7 @@ function start(data) {
 window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 
 // För tester och felsökning
-window.Spelmotor = { utfor: t => { utfor(t); uppdateraStatus(); }, get tillstand() { return S; }, Ljud };
+window.Spelmotor = { utfor: t => { utfor(t); uppdateraStatus(); }, skicka, samtal: (id, nod) => { startaSamtal(id, nod); uppdateraStatus(); }, get tillstand() { return S; }, Ljud };
 window.Ljud = Ljud;
 }
 // Starta när sidan är redo (skripten kan ligga i <head> eller sist i <body>)
