@@ -56,10 +56,10 @@ const S = process.argv[2] || '.', URL = 'file://' + path.resolve(__dirname, '../
   await tryck('utgang:ut'); await tryck('utgang:ner'); await tryck('karta'); await valj('Åk till Boulevarden'); await vanta(3000);
   await tryck('utgang:upp'); await tryck('utgang:v'); await tryck('utgang:v'); await tryck('utgang:n'); await logg('rådhuset');
   await tryck('receptionist'); await valj('Prata med'); await svara('Jag kommer från tvätteriet'); await logg('receptionen', 2);
-  await tryck('utgang:upp'); await svarAlla('Jag lovar', 'Vad står det', 'Fortsätt', 'Var ligger tvätteriet', 'Fortsätt', 'Jag ska hitta dem'); await logg('borgmästaren', 2);
+  await tryck('utgang:upp'); await svarAlla('Jag lovar', 'Vad står det', 'Var ligger tvätteriet', 'Jag ska hitta dem'); await logg('borgmästaren', 2);
   await tryck('utgang:ner'); await tryck('utgang:ut'); await tryck('utgang:ö'); await tryck('utgang:n'); await tryck('utgang:in'); await logg('tvätteriet');
   await tryck('grubb'); await valj('Prata med');
-  await svarAlla('Här är min tvättlapp', 'Får jag fråga', 'Hur såg han ut', 'Något mer', 'Sa han något', 'Något mer', 'Märkte du', 'Något mer', 'Tack, fru Grubb'); await logg('fru Grubb', 2);
+  await svarAlla('Här är min tvättlapp', 'Får jag fråga', 'Hur såg han ut', 'Sa han något', 'Märkte du', 'Tack, fru Grubb'); await logg('fru Grubb', 2);
   await tryck('utgang:ut'); await tryck('utgang:s'); await tryck('utgang:ö'); await tryck('utgang:ö'); await tryck('utgang:n'); await logg('radiohuset');
   await tryck('rex'); await valj('Prata med'); await svarAlla('Varje kväll', 'Gärna'); await logg('Rex Rapp', 2);
   await tryck('utgang:s'); await tryck('utgang:v'); await tryck('utgang:ner'); await tryck('karta'); await valj('Åk till Main Street'); await vanta(3000);
@@ -79,7 +79,7 @@ const S = process.argv[2] || '.', URL = 'file://' + path.resolve(__dirname, '../
   await tryck('fiskhandlare'); await valj('Prata med'); await svarAlla('Har du sett', 'Tack'); await logg('fiskhandlaren', 2);
   await tryck('utgang:ö'); await tryck('utgang:in'); await logg('in utan frågesport');
   await tryck('lou'); await valj('Prata med'); await svarAlla('Jag tar frågesporten', 'Ezekiel Harbor', '1889', 'Femte'); await logg('frågesporten', 2);
-  await tryck('lou'); await valj('Prata med'); await svarAlla('Jag vet att du stal', 'Din skuldsedel', 'Fortsätt', 'Erkänn'); await logg('Lou erkänner', 2);
+  await tryck('lou'); await valj('Prata med'); await svarAlla('Jag vet att du stal', 'Din skuldsedel', 'Erkänn'); await logg('Lou erkänner', 2);
   await tryck('utgang:in'); await tryck('utgang:in'); await logg('spöktåget', 2);
   await tryck('kalsonger'); await valj('Ta'); await logg('långkalsongerna', 2);
   await tryck('utgang:ut'); await tryck('utgang:ut'); await tryck('utgang:v'); await tryck('utgang:n'); await tryck('utgang:ner'); await tryck('karta'); await valj('Åk till Main Street'); await vanta(3000);

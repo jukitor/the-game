@@ -2151,12 +2151,16 @@ samtalsval.className = "samtalsval"; samtalsval.hidden = true; samtalsval.setAtt
 samtalsval.setAttribute("aria-label", "Vad svarar du?");
 logEl.after(samtalsval);   // svaren hamnar direkt efter texten, i den rullbara textytan
 const samtalsNod = () => S.samtal && A.samtal && A.samtal[S.samtal.id] && A.samtal[S.samtal.id].noder[S.samtal.nod];
-const valNyckel = i => S.samtal.id + "/" + S.samtal.nod + "/" + i;
+// En nod kan låna en annan nods svar med val: "nodnamn". Då visas svaren direkt efter
+// nodens text, utan något "Något mer?" emellan, och redan ställda frågor (engang) är borta.
+const valNyckel = (kalla, i) => S.samtal.id + "/" + kalla + "/" + i;
 function samtalsAlternativ() {
   const n = samtalsNod();
   if (!n) return [];
   S.valda = S.valda || {};
-  return (n.val || []).map((v, i) => ({ v, i })).filter(({ v, i }) => (!v.om || uppfyllt(v.om)) && !(v.engang && S.valda[valNyckel(i)]));
+  const kalla = typeof n.val === "string" ? n.val : S.samtal.nod;
+  const lista = typeof n.val === "string" ? (A.samtal[S.samtal.id].noder[n.val] || {}).val : n.val;
+  return (lista || []).map((v, i) => ({ v, i, kalla })).filter(({ v, i }) => (!v.om || uppfyllt(v.om)) && !(v.engang && S.valda[valNyckel(kalla, i)]));
 }
 function startaSamtal(id, nod) {
   if (!A.samtal || !A.samtal[id]) return;
@@ -2193,7 +2197,7 @@ function valjSvar(k) {
   ljudFordrojning = 0;
   nyScen = false;
   const rad = out(a.v.text, "cmd");
-  if (a.v.engang) S.valda[valNyckel(a.i)] = true;
+  if (a.v.engang) S.valda[valNyckel(a.kalla, a.i)] = true;
   const nasta = a.v.till ? { id: S.samtal.id, nod: a.v.till } : null;
   S.samtal = nasta;
   gor(a.v.gor || []);

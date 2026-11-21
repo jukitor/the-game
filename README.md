@@ -178,7 +178,7 @@ samtal: {
 },
 ```
 
-En nod har `text` (kan vara villkorad), `gor` (handlingar) och `val`. Ett val har `text`, valfritt `om` (visas bara när villkoren stämmer), `engang` (försvinner när det har valts), `gor` och `till` (nästa nod). Ett val utan `till`, eller en nod utan val, avslutar samtalet. Handlingen `{ samtal: "vakt" }` startar ett samtal, `{ samtal: "vakt", nod: "ratt" }` börjar i en viss nod och `{ avslutaSamtal: true }` avslutar det.
+En nod har `text` (kan vara villkorad), `gor` (handlingar) och `val`. Ett val har `text`, valfritt `om` (visas bara när villkoren stämmer), `engang` (försvinner när det har valts), `gor` och `till` (nästa nod). En nod kan också ha `val: "nodnamn"` och låna en annan nods svar. Det är praktiskt för frågor: efter svaret visas direkt de frågor som är kvar, och de som har ställts (`engang`) är borta. Ett val utan `till`, eller en nod utan val, avslutar samtalet. Handlingen `{ samtal: "vakt" }` startar ett samtal, `{ samtal: "vakt", nod: "ratt" }` börjar i en viss nod och `{ avslutaSamtal: true }` avslutar det.
 
 ### Bilder, animationer och ljud
 

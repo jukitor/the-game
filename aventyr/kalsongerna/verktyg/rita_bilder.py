@@ -115,9 +115,36 @@ def torget(v=None):
 
 def blvd_o(v=None):
     d = SB_BLVD_O(v)
+    # Lolas affisch har fått en lapp: på turné
+    with d.yta("lolaaffisch"):
+        d.rekt(27, 66, 62, 75, 0)
+        d.rekt(28, 67, 61, 74, 11)
+        d.rekt(28, 73, 61, 74, 9)
+        text(d, 35, 68, "TURNE", 0)
     with d.yta("utgang:n"):
         pil(d, 2, 10, 30, 20, "n", "WGHR")
         d.rekt(14, 20, 16, 58, 4)
+    return d
+
+
+def perrong_blvd(v=None):
+    """Lolas konsertaffisch har ersatts av en affisch för radiodebatten."""
+    d = SA_PBLVD(v)
+    with d.yta("affisch"):
+        x0, y0, x1, y1 = 74, 37, 128, 73
+        d.rekt(x0, y0, x1, y1, 0)
+        d.rekt(x0 + 1, y0 + 1, x1 - 1, y1 - 1, 1)
+        d.rekt(x0 + 1, y0 + 1, x1 - 1, y0 + 10, 13)
+        text(d, x0 + 4, y0 + 3, "RADIODEBATT", 15)
+        for cx, farg in ((x0 + 15, 9), (x1 - 15, 8)):     # två kandidater med mustasch
+            d.a[d.mask_ellips(cx - 7, y0 + 13, cx + 7, y0 + 27)] = farg
+            d.px(cx - 3, y0 + 18, 0)
+            d.px(cx + 3, y0 + 18, 0)
+            d.rekt(cx - 5, y0 + 22, cx + 5, y0 + 23, 0)
+            d.rekt(cx - 6, y0 + 27, cx + 6, y0 + 31, 2)
+        text(d, x0 + 23, y0 + 17, "MOT", 11)
+        text(d, x0 + 6, y0 + 33, "BIGSBY", 15)
+        text(d, x0 + 31, y0 + 33, "WGHR", 11)
     return d
 
 
@@ -137,7 +164,7 @@ def grand(v=None):
 
 def _scener():
     s = {}
-    for namn in ("p_main", "p_park", "p_china", "p_pir", "restaurang", "p_blvd", "blvd_m", "blvd_v", "pantbank", "urmakare", "klubb"):
+    for namn in ("p_main", "p_park", "p_china", "p_pir", "restaurang", "blvd_m", "blvd_v", "pantbank", "urmakare", "klubb"):
         s[namn] = P.SCENER[namn]
     kontor_anim = [a for a in P.SCENER["kontor"][1] if a[0] not in ("telegram", "check", "kniv")]
     kontor_anim.append(("tvattlapp", "tvattlapp", [(True, 1000), (False, 1000)], 1))
@@ -148,6 +175,7 @@ def _scener():
     s["torget"] = (torget, P.SCENER["torget"][1])
     s["blvd_o"] = (blvd_o, P.SCENER["blvd_o"][1])
     s["pir"] = (pir9, P.SCENER["pir"][1])
+    s["p_blvd"] = (perrong_blvd, P.SCENER["p_blvd"][1])
     s["grand"] = (grand, P.SCENER["grand"][1])
     for bok in "abcde":
         fil = VERKTYG / f"scener_{bok}.py"
@@ -159,6 +187,7 @@ def _scener():
 SA_TORGET = P.SCENER["torget"][0]
 SB_BLVD_O = P.SCENER["blvd_o"][0]
 SC_GRAND = P.SCENER["grand"][0]
+SA_PBLVD = P.SCENER["p_blvd"][0]
 SCENER = _scener()
 
 if __name__ == "__main__":
