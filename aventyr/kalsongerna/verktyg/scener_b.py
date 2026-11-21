@@ -437,7 +437,7 @@ def hotell_lobby(v=None):
 # ======================================================================
 def lila(d, mask, ton=1):
     """Lila genom raster: ton 0 mörk, 1 mellan, 2 ljus."""
-    c1, c2 = [(6, 3), (13, 3), (14, 4)][ton]
+    c1, c2 = [(14, 1), (14, 2), (14, 3)][ton]
     dither(d, mask, c1, c2)
 
 

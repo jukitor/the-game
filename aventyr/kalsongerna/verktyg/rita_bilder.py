@@ -77,7 +77,7 @@ def kontor(v=None):
             d.linje(113, 67, 119, 66, 4)
             d.rekt(121, 63, 123, 65, 13)
             d.linje(123, 64, 128, 61, 9)               # snöret
-        d.markera("tvattlapp", 106, 58, 130, 72)
+        d.markera("tvattlapp", 106, 58, 124, 72)
     return d
 
 
@@ -148,6 +148,26 @@ def perrong_blvd(v=None):
     return d
 
 
+def pantbank(v=None):
+    """Fru Pettigrews check står nu i en glasmonter på disken."""
+    d = SC_PANTBANK(v)
+    with d.yta("checkmonter"):
+        x0, y0, x1, y1 = 134, 44, 166, 68
+        d.rekt(x0, y1 - 3, x1, y1, 7)                      # sockel i trä
+        d.rekt(x0, y1 - 3, x1, y1 - 2, 9)
+        d.rekt(x0 + 1, y0, x1 - 1, y1 - 3, 2)              # glaset
+        d.rekt(x0 + 3, y0 + 5, x1 - 3, y1 - 6, 15)         # checken
+        d.rekt(x0 + 3, y0 + 5, x1 - 3, y0 + 7, 12)
+        for x in range(x0 + 5, x1 - 4, 2):
+            d.px(x, y0 + 10, 2)                            # alla nollorna
+        d.linje(x0 + 12, y0 + 13, x1 - 5, y0 + 13, 2)
+        d.linje(x0 + 1, y0, x0 + 1, y1 - 3, 5)             # glasets kanter
+        d.linje(x1 - 1, y0, x1 - 1, y1 - 3, 5)
+        d.linje(x0 + 1, y0, x1 - 1, y0, 5)
+        d.linje(x0 + 4, y0 + 2, x0 + 9, y0 + 2, 15)        # glans
+    return d
+
+
 def pir9(v=None):
     d = P.pir9(v)
     with d.yta("utgang:s"):
@@ -164,7 +184,7 @@ def grand(v=None):
 
 def _scener():
     s = {}
-    for namn in ("p_main", "p_park", "p_china", "p_pir", "restaurang", "blvd_m", "blvd_v", "pantbank", "urmakare", "klubb"):
+    for namn in ("p_main", "p_park", "p_china", "p_pir", "restaurang", "blvd_m", "blvd_v", "urmakare", "klubb"):
         s[namn] = P.SCENER[namn]
     kontor_anim = [a for a in P.SCENER["kontor"][1] if a[0] not in ("telegram", "check", "kniv")]
     kontor_anim.append(("tvattlapp", "tvattlapp", [(True, 1000), (False, 1000)], 1))
@@ -176,6 +196,7 @@ def _scener():
     s["blvd_o"] = (blvd_o, P.SCENER["blvd_o"][1])
     s["pir"] = (pir9, P.SCENER["pir"][1])
     s["p_blvd"] = (perrong_blvd, P.SCENER["p_blvd"][1])
+    s["pantbank"] = (pantbank, P.SCENER["pantbank"][1])
     s["grand"] = (grand, P.SCENER["grand"][1])
     for bok in "abcde":
         fil = VERKTYG / f"scener_{bok}.py"
@@ -188,6 +209,7 @@ SA_TORGET = P.SCENER["torget"][0]
 SB_BLVD_O = P.SCENER["blvd_o"][0]
 SC_GRAND = P.SCENER["grand"][0]
 SA_PBLVD = P.SCENER["p_blvd"][0]
+SC_PANTBANK = P.SCENER["pantbank"][0]
 SCENER = _scener()
 
 if __name__ == "__main__":

@@ -344,7 +344,7 @@ window.AVENTYR = {
     },
     pir: {
       namn: "Pir 9", bild: "pir", ord: ["pir", "piren", "hamn", "hamnen"],
-      beskrivning: "Pir 9. Dimman ligger tjock över vattnet. Dörren till Lager 13 är förseglad med polisens avspärrning, och framför den står en korvvagn med ett rött och vitt parasoll. Bakom vagnen står en välbekant figur, byggd som ett kylskåp med två kylskåp på axlarna. Det är Bruno. Han har ett förkläde. En skylt till vänster pekar tillbaka upp mot Boulevarden, och tunnelbanetrappan leder ner.",
+      beskrivning: "Pir 9. Dimman ligger tjock över vattnet. Dörren till Lager 13 är förseglad med polisens avspärrning, och framför den står en korvvagn med ett rött och vitt parasoll. Bakom vagnen står en välbekant figur, byggd som ett kylskåp med två kylskåp på axlarna. Det är Bruno. Han säljer korv nu. En skylt till vänster pekar tillbaka upp mot Boulevarden, och tunnelbanetrappan leder ner.",
       kortBeskrivning: [
         "Pir 9. Bruno står vid korvvagnen och vänder korvarna med en koncentration som bara kan beskrivas som andlig.",
         "Pir 9. Dimma, mistlurar och doften av senap. Bruno har hittat sitt kall.",
@@ -493,9 +493,9 @@ window.AVENTYR = {
       beskrivning: "En lyckokaka med en lapp inuti. Du får bryta den för att läsa den." },
     // ---- Pir 9
     bruno: { namn: ["bruno", "gorilla", "gorillan", "vakt", "vakten", "kylskåp", "kylskåpet", "man", "mannen"], kort: "Bruno", plats: "pir", fast: true, person: true,
-      beskrivning: "Bruno, i ett randigt förkläde och en liten pappersmössa. Efter förra fallet satt han av sitt straff i fängelsets kök, där han hittade sitt kall. Tatueringen på knogarna stavar fortfarande B-R-U-N-O, men någon har lagt till ett S och ett ENAP på andra handen." },
+      beskrivning: "Bruno, i svart tröja och keps. Efter förra fallet satt han av sitt straff i fängelsets kök, där han hittade sitt kall. Tatueringen på knogarna stavar fortfarande B-R-U-N-O, men någon har lagt till ett S och ett ENAP på andra handen." },
     korvvagn: { namn: ["korvvagn", "korvvagnen", "vagn", "vagnen", "parasoll", "parasollet", "korv", "korvar", "korvarna"], kort: "en korvvagn", plats: "pir", fast: true,
-      beskrivning: "En korvvagn med texten BRUNOS KORV. MED SENAP. ALLTID SENAP. Korvarna ligger i rader som soldater och väntar på sitt öde." },
+      beskrivning: "En korvvagn med texten KORV. Under den har någon klottrat med krita: MED SENAP. ALLTID SENAP. Korvarna ligger i rader som soldater och väntar på sitt öde." },
     dorr: { namn: ["dörr", "dörren", "lager", "lagret", "lagerdörr", "lagerdörren", "avspärrning", "avspärrningen", "band", "bandet"], kort: "en dörr", plats: "pir", fast: true,
       beskrivning: "Dörren till Lager 13, förseglad med polisens avspärrningsband i ett stort kryss. På en lapp står det: BEVISPLATS. MOPSÄRENDET 1947. RÖR EJ. Du rör den inte. Du har varit där." },
     karta: { namn: ["linjekarta", "linjekartan", "karta", "kartan", "skylt", "skylten"], kort: "en linjekarta", plats: "överallt", grupp: "station", fast: true, lasbar: true,
@@ -577,7 +577,7 @@ window.AVENTYR = {
       beskrivning: [{ om: { inteFlagga: "stegeTvatt" }, text: "Tvätteriets brandstege, rostig och fuktig av ångan. Fyra våningar. Den nedersta stegen är uppdragen och hänger högt ovanför marken." },
         { om: { flagga: "stegeTvatt" }, text: "Tvätteriets brandstege, nu nedfälld till marken. Fyra våningar av fuktigt järn." }] },
     soptunnor: { namn: ["soptunna", "soptunnan", "soptunnor", "soptunnorna", "sopor", "soporna", "lock", "locket"], kort: "soptunnor", plats: "grand", fast: true,
-      beskrivning: "Tre soptunnor i plåt, fulla till bredden. Du lyfter på ett lock: fiskben, en trasig väckarklocka och en tom flaska hårvatten av märket SLICK. Någon i kvarteret är mycket noga med sin frisyr." },
+      beskrivning: "Två soptunnor i plåt, fulla till bredden. Du lyfter på ett lock: fiskben, en trasig väckarklocka och en tom flaska hårvatten av märket SLICK. Någon i kvarteret är mycket noga med sin frisyr." },
     grandkatt: { namn: ["katt", "katten", "gatukatt", "gatukatten"], kort: "en katt", klicknamn: "katten", plats: "grand", fast: true,
       beskrivning: "En mager gatukatt med ett halvt öra och hela sin värdighet i behåll. Den sitter på soptunnan som om den ägde den. Den gör det." },
 
@@ -611,7 +611,7 @@ window.AVENTYR = {
 
     // ---- Blå Ostronet utifrån
     neonostron: { namn: ["neonskylt", "neonskylten", "ostron", "ostronet", "pärla", "pärlan", "skylt", "skylten"], kort: "en neonskylt", plats: "blvd_o", fast: true,
-      beskrivning: "En blå neonskylt formad som ett ostron, som öppnar sig långsamt och visar en vit pärla, och sedan stänger sig igen. Under den står det BLÅ OSTRONET i skrivstil. Det surrar som en bisvärm med goda manér." },
+      beskrivning: "En blå neonskylt formad som ett ostron, som öppnar sig långsamt och visar en vit pärla, och sedan stänger sig igen. Under den står det BLÅ OSTRONET med stora bokstäver. Det surrar som en bisvärm med goda manér." },
     dorrvakt: { namn: ["dörrvakt", "dörrvakten", "sid", "vakt", "vakten", "smoking", "garderob"], kort: "en dörrvakt", klicknamn: "dörrvakten", plats: "blvd_o", fast: true, person: true,
       beskrivning: "Dörrvakten Sid, i en smoking som är sydd av ungefär lika mycket tyg som ett cirkustält. Han har armarna i kors och ett ansikte som har sett allt två gånger och inte brytt sig någon av gångerna." },
     lolaaffisch: { namn: ["affisch", "affischen", "lola", "sångerska", "sångerskan", "glasskåp"], kort: "en affisch", plats: "blvd_o", fast: true, lasbar: true,
